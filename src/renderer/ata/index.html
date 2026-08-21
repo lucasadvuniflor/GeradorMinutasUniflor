@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Gerador de Atas de Registro de Preços – Uniflor/PR</title>
+<link rel="stylesheet" href="style.css" />
+  <style>
+    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
+    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
+      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
+    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
+    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
+  </style>
+</head>
+<body>
+  <nav class="uniflor-anexo-nav">
+    <a href="../edital/index.html" class="uniflor-anexo-tab">📄 Edital</a>
+    <a href="../ata/index.html" class="uniflor-anexo-tab active">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
+    <a href="../contrato/index.html" class="uniflor-anexo-tab">📝 Anexo III – Minuta de Contrato</a>
+  </nav>
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="../../LOGO_UNIFLOR.png" alt="Brasão" class="logo" />
+      <div>
+        <h1>Gerador de Atas de Registro de Preços</h1>
+        <p>Procuradoria Jurídica · Município de Uniflor/PR · Lei 14.133/2021</p>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="gerar">Gerar Atas</button>
+      <button class="tab-btn" data-tab="config">Configurações do Órgão</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- TAB: GERAR ATAS -->
+    <section id="tab-gerar" class="tab-content active">
+
+      <div class="card hidden" id="card-importar-edital" style="background:#eef6ff; border:1px solid #b6d7ff;">
+        <p style="margin:0;">🔗 <strong>Dados do Edital <span id="importar-edital-label"></span> encontrados.</strong> Importar os dados em comum (nº licitação/processo, objeto, SRP, renovação de quantitativo, correção monetária) para esta Ata?</p>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button id="btn-importar-edital" class="btn-primary">Importar dados do Edital</button>
+          <button id="btn-ignorar-edital" class="btn-secondary">Ignorar</button>
+        </div>
+      </div>
+
+      <div class="card" id="card-modo">
+        <h2>Qual documento você quer gerar?</h2>
+        <p class="hint">A ata pode ser gerada em dois momentos diferentes do processo — escolha o que se aplica agora.</p>
+        <div style="display:flex; gap:12px; margin-top:10px; flex-wrap:wrap;">
+          <label style="flex:1; min-width:260px; border:2px solid #dee2e6; border-radius:8px; padding:14px; cursor:pointer; display:block;">
+            <input type="radio" name="modo-geracao" id="modo-minuta" value="minuta" checked style="margin-right:8px;">
+            <strong>📋 Minuta (fase de planejamento, pré-sessão)</strong>
+            <p class="hint" style="margin-top:4px; margin-left:22px;">Documento genérico, sem fornecedor definido — para aprovar junto com o Edital como Anexo II, antes da sessão pública.</p>
+          </label>
+          <label style="flex:1; min-width:260px; border:2px solid #dee2e6; border-radius:8px; padding:14px; cursor:pointer; display:block;">
+            <input type="radio" name="modo-geracao" id="modo-pos-sessao" value="pos-sessao" style="margin-right:8px;">
+            <strong>📄 Ata específica (pós-sessão, com fornecedor)</strong>
+            <p class="hint" style="margin-top:4px; margin-left:22px;">A partir do relatório de vencedores do LICITANET, já com fornecedor(es) e itens definidos após a sessão pública.</p>
+          </label>
+        </div>
+      </div>
+
+      <div class="card" id="card-upload">
+        <h2>1. Relatório de Vencedores (LICITANET)</h2>
+        <p class="hint">Selecione o PDF "Vencedor(es) do(s) Item(s)" exportado pelo LICITANET após a homologação do pregão. O sistema extrai automaticamente fornecedores, CNPJs e itens vencidos.</p>
+        <button id="btn-selecionar-pdf" class="btn-primary">📄 Selecionar PDF do Relatório</button>
+        <span id="pdf-status" class="status"></span>
+      </div>
+
+      <div class="card hidden" id="card-dados">
+        <h2>2. Dados da Licitação</h2>
+        <div class="form-grid">
+          <div class="form-group wide">
+            <label>Secretaria/Departamento Solicitante</label>
+            <select id="f-departamento">
+              <option value="">Selecione a Secretaria...</option>
+              <option value="Chefe de Gabinete">Chefe de Gabinete</option>
+              <option value="Dep. de Assistência Social">Dep. de Assistência Social</option>
+              <option value="Dep. Recursos Humanos">Dep. Recursos Humanos</option>
+              <option value="Departamento Administrativo">Departamento Administrativo</option>
+              <option value="Departamento de Agricultura">Departamento de Agricultura</option>
+              <option value="Departamento de Compras">Departamento de Compras</option>
+              <option value="Departamento de Cultura">Departamento de Cultura</option>
+              <option value="Departamento de Educação e Esportes">Departamento de Educação e Esportes</option>
+              <option value="Departamento de Licitação">Departamento de Licitação</option>
+              <option value="Departamento de Meio Ambiente">Departamento de Meio Ambiente</option>
+              <option value="Departamento de Obras">Departamento de Obras</option>
+              <option value="Departamento de Saúde">Departamento de Saúde</option>
+              <option value="Departamento Financeiro">Departamento Financeiro</option>
+              <option value="Departamento Tributário">Departamento Tributário</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Modalidade</label>
+            <input type="text" id="f-modalidade" />
+          </div>
+          <div class="form-group">
+            <label>Nº da Licitação</label>
+            <input type="text" id="f-numero" />
+          </div>
+          <div class="form-group">
+            <label>Ano</label>
+            <input type="text" id="f-ano" />
+          </div>
+          <div class="form-group">
+            <label>Processo Administrativo nº</label>
+            <input type="text" id="f-processo" />
+          </div>
+          <div class="form-group">
+            <label>Nº inicial da Ata</label>
+            <input type="number" id="f-ata-inicial" value="1" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Ano da Ata</label>
+            <input type="text" id="f-ata-ano" />
+          </div>
+          <div class="form-group">
+            <label>Data de assinatura</label>
+            <input type="date" id="f-data-assinatura" />
+          </div>
+        </div>
+        <div class="form-group wide">
+          <label>Objeto da licitação <span class="req">*</span></label>
+          <textarea id="f-objeto" rows="2" placeholder="Ex: aquisição de fórmulas e suplementos alimentares para atendimento a pacientes da rede municipal de saúde"></textarea>
+        </div>
+      </div>
+
+      <div class="card hidden" id="card-srp">
+        <h2>2b. Sistema de Registro de Preços</h2>
+        <p class="hint">Esses campos determinam quais cláusulas legais entram na Ata (Art. 82, §3º e Decreto nº 11.462/2023) e variam conforme o tipo de objeto e as opções do edital — mesma lógica do Gerador de Editais.</p>
+        <div class="form-grid">
+          <div class="form-group wide">
+            <label>Tipo de Objeto</label>
+            <select id="f-tipo-objeto">
+              <option value="bens_comuns">Bens Comuns</option>
+              <option value="servicos_comuns">Serviços Comuns</option>
+              <option value="servicos_mo">Serviços com Mão de Obra Exclusiva</option>
+              <option value="obras">Obras e Serviços de Engenharia</option>
+              <option value="tic">Tecnologia da Informação (TIC)</option>
+            </select>
+          </div>
+          <div class="form-group wide hidden" id="grupo-cct">
+            <label>Convenção Coletiva de Trabalho (CCT) vigente</label>
+            <input type="text" id="f-cct" placeholder="ex: CCT 2026 — Sindicato dos Empregados em Empresas de Asseio e Conservação" />
+          </div>
+
+          <div class="form-group">
+            <label>Indicação Limitada (sem quantitativo total)? <span title="Art. 82, §3º, Lei 14.133. Se sim, é VEDADA a adesão de outros órgãos.">ℹ</span></label>
+            <select id="f-indicacao-limitada">
+              <option value="nao">Não (Regra Geral — Com quantitativo total)</option>
+              <option value="sim">Sim (Exceção — Apenas unidade de contratação)</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="grupo-justificativa-limitacao">
+            <label>Justificativa Legal para Indicação Limitada</label>
+            <select id="f-justificativa-limitacao">
+              <option value="primeira_licitacao">1ª Licitação para o objeto e órgão não tem demandas anteriores</option>
+              <option value="alimento_perecivel">Alimento perecível</option>
+              <option value="servico_integrado">Serviço integrado ao fornecimento de bens</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="grupo-valor-maximo-despesa">
+            <label>Valor Máximo da Despesa <span title="Art. 82, §4º — obrigatório quando há indicação limitada.">ℹ</span></label>
+            <input type="number" id="f-valor-maximo-despesa" step="0.01" placeholder="ex: 50000.00" />
+          </div>
+
+          <div class="form-group">
+            <label>Critério de Julgamento <span title="Art. 82, V — no SRP, apenas menor preço ou maior desconto.">ℹ</span></label>
+            <select id="f-criterio-julgamento">
+              <option value="menor_preco">Menor Preço</option>
+              <option value="maior_desconto">Maior Desconto sobre Tabela de Mercado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantidade Mínima a Cotar (% da máxima) <span title="Art. 82, II — se igual a 100%, mínima = máxima.">ℹ</span></label>
+            <input type="number" id="f-qtd-minima-pct" value="100" min="1" max="100" />
+          </div>
+
+          <div class="form-group">
+            <label>Adjudicação por Grupo de Itens? <span title="Art. 82, §1º/§2º — exige inviabilidade demonstrada de adjudicação por item.">ℹ</span></label>
+            <select id="f-adjudicacao-grupo">
+              <option value="nao">Não (por item)</option>
+              <option value="sim">Sim (por grupo de itens)</option>
+            </select>
+          </div>
+          <div class="form-group wide hidden" id="grupo-adjudicacao-grupo">
+            <label>Justificativa da Inviabilidade por Item / Critério de Aceitabilidade de Preços Unitários</label>
+            <textarea id="f-justificativa-grupo" rows="2" placeholder="Justificativa da inviabilidade de adjudicação por item e vantagem técnica/econômica"></textarea>
+            <input type="text" id="f-criterio-aceitabilidade" placeholder="Critério de aceitabilidade de preços unitários máximos (ex: preço unitário não superior à média de mercado)" style="margin-top:6px" />
+          </div>
+
+          <div class="form-group">
+            <label>Preços Diferenciados para o Mesmo Item? <span title="Art. 82, III — local de entrega, acondicionamento, lote, etc.">ℹ</span></label>
+            <select id="f-precos-diferenciados">
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="grupo-motivo-preco-diferenciado">
+            <label>Motivo da Diferenciação</label>
+            <select id="f-motivo-preco-diferenciado">
+              <option value="local_entrega">Local de realização/entrega diferente</option>
+              <option value="acondicionamento">Forma/local de acondicionamento</option>
+              <option value="tamanho_lote">Cotação variável por tamanho do lote</option>
+              <option value="outro">Outro motivo justificado no processo</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Houve IRP (participação de outros órgãos)?</label>
+            <select id="f-houve-irp">
+              <option value="nao">Não (Apenas o órgão gerenciador)</option>
+              <option value="sim">Sim (Existem órgãos participantes)</option>
+            </select>
+          </div>
+          <div class="form-group wide hidden" id="grupo-orgaos-participantes">
+            <label>Órgãos Participantes (um por linha, com quantidade)</label>
+            <textarea id="f-orgaos-participantes" rows="2" placeholder="ex: Secretaria de Saúde de Cidade Gaúcha — 100 unidades"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Permitir adesão posterior (carona)?</label>
+            <select id="f-permitir-adesao">
+              <option value="true">Sim</option>
+              <option value="false">Não (vedar adesão de não participantes)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Formação de Cadastro de Reserva?</label>
+            <select id="f-cadastro-reserva">
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Vigência da Ata (meses)</label>
+            <input type="number" id="f-vigencia-meses" value="12" min="1" />
+          </div>
+
+          <div class="form-group">
+            <label>Em caso de prorrogação, poderá ser renovado o quantitativo originalmente registrado? <span title="Acórdão nº 392/26 - Tribunal Pleno do TCE-PR. Exige previsão expressa no edital E na ata, exercício dentro do prazo de vigência original e tratamento no PCA.">ℹ</span></label>
+            <select id="f-renovar-arp">
+              <option value="sim" selected>Sim, renovar a totalidade (Acórdão 392/26 - TCE-PR)</option>
+              <option value="nao">Não, só o saldo remanescente</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>O objeto é bem ou serviço de fornecimento contínuo? <span title="Necessidade permanente ou prolongada da Administração (art. 6º, XV, da Lei 14.133/2021) — habilita a cláusula dos arts. 106/107 sobre a vigência do contrato decorrente.">ℹ</span></label>
+            <select id="f-fornecimento-continuo">
+              <option value="nao" selected>Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group wide hidden" id="grupo-continuo-10anos" style="margin-top:10px; padding:12px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px;">
+          <label style="display:flex; align-items:center; gap:6px; margin-bottom:0;">
+            <input type="checkbox" id="f-clausula-continuo-10anos" style="width:auto;" checked />
+            Incluir cláusula informando que o contrato decorrente desta Ata poderá ter vigência inicial de até 5 (cinco) anos, prorrogável sucessivamente até o limite de 10 (dez) anos, com o quantitativo anual limitado ao teto registrado e renovado a cada prorrogação
+            <span title="Arts. 106 e 107 da Lei 14.133/2021 — aplicável apenas ao CONTRATO decorrente da Ata, e não à vigência da própria Ata (que permanece limitada a 1+1 ano pelo art. 84).">ℹ Arts. 106 e 107</span>
+          </label>
+        </div>
+
+        <div class="form-group wide hidden" id="grupo-correcao-monetaria" style="margin-top:10px; padding:12px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px;">
+          <label style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+            <input type="checkbox" id="f-correcao-monetaria" style="width:auto;" />
+            Permitir correção monetária do preço registrado, por índice oficial contado da data da sessão pública, no momento da renovação do quantitativo?
+            <span title="Art. 6º, LVIII c/c art. 25 da Lei 14.133/2021 — reajustamento em sentido estrito, com data-base na data da sessão/orçamento.">ℹ</span>
+          </label>
+          <div id="grupo-indice-correcao" class="hidden">
+            <label>Índice de correção monetária</label>
+            <select id="f-indice-correcao">
+              <option value="INPC" selected>INPC (IBGE)</option>
+              <option value="IPCA">IPCA (IBGE)</option>
+              <option value="IPCA-E">IPCA-E (IBGE)</option>
+              <option value="IGP-M">IGP-M (FGV)</option>
+            </select>
+          </div>
+          <p class="hint" style="margin-top:6px;">A correção monetária apenas restabelece o valor real do preço já registrado (sem gerar vantagem econômica ao fornecedor) e não dispensa a comprovação de que, mesmo corrigido, o preço permanece vantajoso perante o mercado.</p>
+        </div>
+      </div>
+
+      <div class="card hidden" id="card-itens-minuta">
+        <h2>3. Itens do Termo de Referência (opcional)</h2>
+        <p class="hint">Se desejar, informe já os itens e quantitativos do Termo de Referência — esses dados são conhecidos na fase de planejamento, independentemente de quem vencer a licitação. Marca, modelo e o preço definitivo só são conhecidos após a sessão pública, por isso não entram aqui. Se deixar em branco, a minuta apenas remeterá ao Termo de Referência, Anexo I do Edital.</p>
+        <table class="itens-table" style="width:100%; border-collapse:collapse; margin-top:10px;">
+          <thead>
+            <tr style="background:#eef2f7;">
+              <th style="text-align:left; padding:6px; font-size:.78rem;">Item TR</th>
+              <th style="text-align:left; padding:6px; font-size:.78rem;">Descrição</th>
+              <th style="text-align:left; padding:6px; font-size:.78rem;">Unid.</th>
+              <th style="text-align:left; padding:6px; font-size:.78rem;">Qtd. Máxima</th>
+              <th style="text-align:left; padding:6px; font-size:.78rem;">Valor Unit. Estimado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-itens-minuta"></tbody>
+        </table>
+        <button id="btn-add-item-minuta" class="btn-secondary" type="button" style="margin-top:10px;">+ Adicionar Item</button>
+      </div>
+
+      <div class="card hidden" id="card-fornecedores">
+        <h2>3. Fornecedores Vencedores</h2>
+        <p class="hint">Cada fornecedor marcado abaixo gerará uma Ata de Registro de Preços individual, contendo apenas os itens que ele venceu.</p>
+        <div class="toolbar">
+          <button id="btn-buscar-cnpjs" class="btn-secondary">🔎 Buscar endereço dos fornecedores (CNPJ)</button>
+          <span id="cnpj-status" class="status"></span>
+        </div>
+        <div id="lista-fornecedores"></div>
+      </div>
+
+      <div class="card hidden" id="card-gerar-minuta">
+        <h2>3. Gerar Minuta</h2>
+        <p class="hint">Gera um único documento com lacunas para o fornecedor (nome, CNPJ, itens e preços), a serem preenchidas após a sessão pública e a homologação.</p>
+        <button id="btn-gerar-minuta" class="btn-primary btn-large">⚙️ Gerar Minuta da Ata (.docx)</button>
+        <div id="resultado-geracao-minuta"></div>
+      </div>
+
+      <div class="card hidden" id="card-gerar">
+        <h2>4. Gerar Atas</h2>
+        <button id="btn-gerar" class="btn-primary btn-large">⚙️ Gerar Atas Selecionadas (.docx)</button>
+        <div id="resultado-geracao"></div>
+      </div>
+    </section>
+
+    <!-- TAB: CONFIGURAÇÕES -->
+    <section id="tab-config" class="tab-content">
+      <div class="card">
+        <h2>Dados do Órgão Gerenciador</h2>
+        <p class="hint">Esses dados raramente mudam e são reaproveitados em todas as atas geradas. Preencha uma vez e salve.</p>
+        <div class="form-grid">
+          <div class="form-group wide"><label>Nome do Órgão</label><input type="text" id="c-orgaoNome" /></div>
+          <div class="form-group wide"><label>Endereço</label><input type="text" id="c-orgaoEndereco" /></div>
+          <div class="form-group"><label>Cidade</label><input type="text" id="c-orgaoCidade" /></div>
+          <div class="form-group"><label>UF</label><input type="text" id="c-orgaoUF" maxlength="2" /></div>
+          <div class="form-group"><label>CEP</label><input type="text" id="c-orgaoCEP" /></div>
+          <div class="form-group"><label>CNPJ do Órgão</label><input type="text" id="c-orgaoCNPJ" /></div>
+          <div class="form-group"><label>Cargo do Representante</label><input type="text" id="c-representanteCargo" /></div>
+          <div class="form-group"><label>Nome do Representante</label><input type="text" id="c-representanteNome" /></div>
+          <div class="form-group"><label>Nº da Portaria</label><input type="text" id="c-portariaNumero" /></div>
+          <div class="form-group"><label>Data da Portaria</label><input type="date" id="c-portariaData" /></div>
+          <div class="form-group wide"><label>Publicação da Portaria</label><input type="text" id="c-portariaPublicacao" placeholder="ex: DOU de 10/01/2026" /></div>
+          <div class="form-group"><label>Matrícula Funcional</label><input type="text" id="c-matricula" /></div>
+          <div class="form-group">
+            <label>Permitir adesão (carona)?</label>
+            <select id="c-permitirAdesao"><option value="true">Sim</option><option value="false">Não</option></select>
+          </div>
+          <div class="form-group"><label>Vigência da Ata (meses)</label><input type="number" id="c-vigenciaMeses" value="12" /></div>
+        </div>
+        <button id="btn-salvar-config" class="btn-primary">💾 Salvar Configurações</button>
+        <span id="config-status" class="status"></span>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

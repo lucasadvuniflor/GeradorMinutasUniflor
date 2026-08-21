@@ -1,0 +1,83 @@
+{
+  "name": "uniflor-gerador-minutas",
+  "productName": "Gerador de Minutas – Edital, Ata e Contrato – Uniflor/PR",
+  "version": "1.0.1",
+  "description": "Gerador de Minutas de Edital, Ata de Registro de Preços (Anexo II) e Contrato (Anexo III) – Município de Uniflor/PR (Lei 14.133/2021)",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win nsis --x64",
+    "build:portable": "electron-builder --win portable --x64",
+    "build:msi": "electron-builder --win msi --x64"
+  },
+  "keywords": [
+    "licitacao",
+    "edital",
+    "ata",
+    "registro-de-precos",
+    "contrato",
+    "uniflor",
+    "14133"
+  ],
+  "author": "Procuradoria Jurídica – Município de Uniflor/PR",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "docx": "^8.5.0",
+    "pdf-parse": "1.1.1"
+  },
+  "devDependencies": {
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3",
+    "electron-packager": "^17.1.2"
+  },
+  "build": {
+    "appId": "br.gov.uniflor.gerador-minutas",
+    "productName": "Gerador de Minutas Uniflor",
+    "copyright": "© 2026 Município de Uniflor/PR",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "build/**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,readme.md,changelog.md}",
+      "!**/node_modules/**/test/**",
+      "!**/node_modules/**/tests/**",
+      "!**/node_modules/**/*.map"
+    ],
+    "asar": true,
+    "compression": "maximum",
+    "win": {
+      "icon": "src/LOGO_UNIFLOR.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "publisherName": "Município de Uniflor"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Gerador de Minutas – Uniflor",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "GeradorMinutasUniflor-Portable.exe"
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Gerador de Minutas – Uniflor",
+      "runAfterFinish": false,
+      "warningsAsErrors": false
+    }
+  }
+}

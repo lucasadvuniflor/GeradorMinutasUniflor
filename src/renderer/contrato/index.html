@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Contratos – Uniflor/PR</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #1e4d8c;
+      --blue-light: #2b6cb0;
+      --blue-pale: #ebf4ff;
+      --green: #276749;
+      --red: #c0392b;
+      --gray: #4a5568;
+      --gray-light: #e2e8f0;
+      --border: #cbd5e0;
+      --bg: #f7fafc;
+      --white: #ffffff;
+      --shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--gray); min-height: 100vh; }
+
+    /* ── Header ─────────── */
+    .header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%);
+      color: #fff;
+      padding: 16px 28px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .header-logo { width: 40px; height: 40px; opacity: .9; }
+    .header-title { font-size: 1.15rem; font-weight: 700; }
+    .header-sub { font-size: .78rem; opacity: .8; }
+
+    /* ── Progress ─────────── */
+    .progress-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 28px;
+      display: flex; gap: 6px; align-items: center;
+    }
+    .step-chip {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: .72rem; font-weight: 600; cursor: default;
+      transition: all .2s;
+      background: var(--gray-light); color: var(--gray);
+    }
+    .step-chip.active { background: var(--blue); color: #fff; }
+    .step-chip.done { background: var(--green); color: #fff; }
+    .step-sep { color: var(--border); font-size: .9rem; }
+
+    /* ── Layout ─────────── */
+    .main { display: flex; min-height: calc(100vh - 112px); }
+    .sidebar {
+      width: 220px; background: var(--white);
+      border-right: 1px solid var(--border);
+      padding: 20px 12px;
+      flex-shrink: 0;
+    }
+    .sidebar-item {
+      padding: 8px 12px; border-radius: 6px;
+      font-size: .8rem; cursor: pointer; margin-bottom: 2px;
+      transition: background .15s;
+    }
+    .sidebar-item:hover { background: var(--blue-pale); }
+    .sidebar-item.active { background: var(--blue); color: #fff; font-weight: 600; }
+    .sidebar-item.done { color: var(--green); }
+
+    .content { flex: 1; padding: 28px; overflow-y: auto; max-width: 760px; }
+
+    /* ── Card / Form ─────────── */
+    .card {
+      background: var(--white); border-radius: 10px;
+      box-shadow: var(--shadow); padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 700; color: var(--blue);
+      border-bottom: 2px solid var(--blue-pale);
+      padding-bottom: 10px; margin-bottom: 20px;
+    }
+
+    .form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: .78rem; font-weight: 600; color: var(--gray); }
+    .form-group input, .form-group select, .form-group textarea {
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 10px; font-size: .85rem; font-family: inherit;
+      transition: border-color .2s;
+      background: var(--white);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--blue-light);
+      box-shadow: 0 0 0 3px rgba(43,108,176,.15);
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-group .hint { font-size: .72rem; color: #718096; }
+    .full-width { grid-column: 1/-1; }
+
+    /* ── Tipo cards ─────────── */
+    .tipo-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px; margin-top: 8px;
+    }
+    .tipo-card {
+      border: 2px solid var(--border); border-radius: 8px;
+      padding: 16px; cursor: pointer; transition: all .2s;
+      text-align: center;
+    }
+    .tipo-card:hover { border-color: var(--blue-light); background: var(--blue-pale); }
+    .tipo-card.selected { border-color: var(--blue); background: var(--blue-pale); }
+    .tipo-card.selected .tipo-icon { color: var(--blue); }
+    .tipo-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .tipo-name { font-size: .82rem; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+    .tipo-desc { font-size: .72rem; color: var(--gray); }
+
+    /* ── Toggle ─────────── */
+    .toggle-group { display: flex; align-items: center; gap: 10px; }
+    .toggle-label { font-size: .82rem; font-weight: 600; color: var(--gray); }
+    input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--blue); }
+
+    /* ── Alert ─────────── */
+    .alert {
+      padding: 10px 14px; border-radius: 6px;
+      font-size: .8rem; margin-bottom: 16px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .alert-info { background: var(--blue-pale); border-left: 4px solid var(--blue); color: var(--blue); }
+    .alert-warn { background: #fffaf0; border-left: 4px solid #d69e2e; color: #744210; }
+    .alert-hidden { display: none; }
+
+    /* ── Section review ─────────── */
+    .review-section { margin-bottom: 20px; }
+    .review-section h3 { font-size: .85rem; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+    .review-grid { display: grid; grid-template-columns: 200px 1fr; gap: 6px 12px; font-size: .8rem; }
+    .review-key { color: var(--gray); font-weight: 600; }
+    .review-val { color: #2d3748; }
+
+    /* ── Buttons ─────────── */
+    .btn-row { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
+    .btn {
+      padding: 10px 22px; border-radius: 6px; border: none;
+      font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue-light); }
+    .btn-primary:disabled { background: #a0aec0; cursor: not-allowed; }
+    .btn-secondary { background: var(--gray-light); color: var(--gray); }
+    .btn-secondary:hover { background: #cbd5e0; }
+    .btn-generate {
+      background: var(--green); color: #fff;
+      padding: 12px 28px; font-size: .95rem;
+    }
+    .btn-generate:hover { background: #2f855a; }
+    .btn-generate:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* ── Messages ─────────── */
+    .msg-success { color: var(--green); font-size: .85rem; font-weight: 600; padding: 10px; }
+    .msg-error { color: var(--red); font-size: .85rem; font-weight: 600; padding: 10px; }
+
+    /* ── Conditional show/hide ─────────── */
+    .cond-hidden { display: none !important; }
+
+    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
+    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
+      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
+    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
+    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
+  </style>
+</head>
+<body>
+
+<nav class="uniflor-anexo-nav">
+  <a href="../edital/index.html" class="uniflor-anexo-tab">📄 Edital</a>
+  <a href="../ata/index.html" class="uniflor-anexo-tab">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
+  <a href="../contrato/index.html" class="uniflor-anexo-tab active">📝 Anexo III – Minuta de Contrato</a>
+</nav>
+
+<div class="header">
+  <div>
+    <div class="header-title">Gerador de Minutas de Contrato</div>
+    <div class="header-sub">Município de Uniflor/PR · Lei nº 14.133/2021</div>
+  </div>
+</div>
+
+<div id="card-importar-edital" class="alert alert-info" style="display:none; margin:14px 28px 0;">
+  <div>
+    🔗 <strong>Dados do Edital <span id="importar-edital-label"></span> encontrados.</strong> Importar nº do processo/licitação, modalidade, objeto e departamento para este Contrato?
+    <div style="margin-top:8px; display:flex; gap:10px;">
+      <button id="btn-importar-edital" class="btn btn-primary">Importar dados do Edital</button>
+      <button id="btn-ignorar-edital" class="btn btn-secondary">Ignorar</button>
+    </div>
+  </div>
+</div>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

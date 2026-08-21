@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador de Minutas de Credenciamento – Uniflor/PR</title>
+  <link rel="stylesheet" href="../edital/app.css" />
+  <style>
+    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
+    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
+      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
+    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
+    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
+    .uniflor-doctype-nav { display:flex; background:#e8eef6; border-bottom:1px solid #c7d4e6; }
+    .uniflor-doctype-tab { flex:1; text-align:center; padding:8px 6px; font-size:.75rem; font-weight:600;
+      color:#3a5a86; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
+    .uniflor-doctype-tab:hover { background:#d7e2f2; }
+    .uniflor-doctype-tab.active { color:#0f2a4a; border-bottom-color:#0f2a4a; background:#fff; }
+  </style>
+</head>
+<body>
+
+<nav class="uniflor-anexo-nav">
+  <a href="../edital/index.html" class="uniflor-anexo-tab active">📄 Edital</a>
+  <a href="../ata/index.html" class="uniflor-anexo-tab">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
+  <a href="../contrato/index.html" class="uniflor-anexo-tab">📝 Anexo III – Minuta de Contrato</a>
+</nav>
+<nav class="uniflor-doctype-nav">
+  <a href="../edital/index.html" class="uniflor-doctype-tab">🏷️ Pregão / Concorrência</a>
+  <a href="../credenciamento/index.html" class="uniflor-doctype-tab active">🤝 Credenciamento</a>
+  <a href="../aviso-contratacao-direta/index.html" class="uniflor-doctype-tab">⚡ Aviso de Contratação Direta</a>
+</nav>
+
+<header class="app-header">
+  <div class="header-logo">
+    <img src="../../LOGO_UNIFLOR.png" class="brasao-img" alt="Brasão Uniflor" />
+    <div>
+      <div class="header-title">Município de Uniflor/PR</div>
+      <div class="header-sub">Procuradoria Jurídica · Gerador de Minutas de Credenciamento · Art. 79, Lei 14.133/2021</div>
+    </div>
+  </div>
+  <div class="header-badge">GERA-UNIFLOR v3.0</div>
+</header>
+
+<nav class="progress-bar" id="progress-bar">
+  <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Objeto</div></div>
+  <div class="step-line"></div>
+  <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Participação</div></div>
+  <div class="step-line"></div>
+  <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Manifestação</div></div>
+  <div class="step-line"></div>
+  <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Vigência</div></div>
+  <div class="step-line"></div>
+  <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Responsáveis</div></div>
+  <div class="step-line"></div>
+  <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">Sanções</div></div>
+  <div class="step-line"></div>
+  <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Revisão</div></div>
+</nav>
+
+<div id="alert-bar" class="alert-bar hidden"></div>
+
+<main class="wizard-body">
+
+  <!-- STEP 1: Objeto e Base Legal -->
+  <section class="step-content" id="step-1">
+    <h2 class="section-title">Objeto e Base Legal</h2>
+    <p class="section-hint">Uniflor não possui decreto municipal próprio de credenciamento — o modelo se fundamenta diretamente no art. 79 da Lei nº 14.133/2021.</p>
+    <div id="error-1"></div>
+    <div class="card"><div class="clause-section-title">Hipótese do Art. 79 <span class="req">*</span></div><div class="clause-grid" id="cg-art79_inciso"></div><div class="info-panel hidden" id="ip-art79_inciso"></div></div>
+    <div class="card">
+      <h3 class="card-title">Identificação do Credenciamento</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Número <span class="req">*</span></label><input type="text" data-field="numero_credenciamento" placeholder="0001" maxlength="4" /></div>
+        <div class="form-group"><label>Ano</label><input type="text" data-field="ano_credenciamento" maxlength="4" /></div>
+        <div class="form-group wide"><label>Processo Administrativo <span class="req">*</span></label><input type="text" data-field="numero_processo" placeholder="123/2026" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Natureza do Credenciamento <span class="req">*</span></label>
+          <select data-field="objeto_natureza"><option value="fornecer">Fornecer bens</option><option value="prestar_servicos">Prestar serviços</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label>Objeto do Credenciamento <span class="req">*</span></label>
+          <textarea data-field="objeto" rows="3" placeholder="Descreva o bem a ser fornecido ou o serviço a ser prestado pelo credenciado, conforme o Termo de Referência."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: Participação e Habilitação -->
+  <section class="step-content hidden" id="step-2">
+    <h2 class="section-title">Participação e Habilitação</h2>
+    <div id="error-2"></div>
+    <div class="card"><div class="clause-section-title">Participação em Consórcio</div><div class="clause-grid" id="cg-consorcio"></div><div class="info-panel hidden" id="ip-consorcio"></div>
+      <div id="consorcio_pct_row" class="hidden form-row" style="margin-top:10px">
+        <div class="form-group"><label>% Acréscimo Hab. Econômico-Financeira (10–30%) <span class="req">*</span></label><input type="number" data-field="consorcio_pct" value="10" min="10" max="30" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Prazo de Análise da Habilitação</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Prazo para análise da documentação (dias úteis) <span class="req">*</span></label><input type="number" data-field="prazo_habilitacao_dias" value="10" min="1" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3: Manifestação de Interesse -->
+  <section class="step-content hidden" id="step-3">
+    <h2 class="section-title">Manifestação de Interesse</h2>
+    <p class="section-hint">Uniflor não utiliza Sicaf/Compras.gov.br — a manifestação e a documentação são recebidas diretamente pelo Município.</p>
+    <div id="error-3"></div>
+    <div class="card">
+      <h3 class="card-title">Meio de Recebimento</h3>
+      <div class="form-row">
+        <div class="form-group full-width"><label>Meio de recebimento das manifestações de interesse e documentos <span class="req">*</span></label><input type="text" data-field="meio_manifestacao" placeholder="ex: e-mail institucional da Secretaria responsável e Protocolo Geral da Prefeitura de Uniflor" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4: Vigência e Contratação -->
+  <section class="step-content hidden" id="step-4">
+    <h2 class="section-title">Vigência e Contratação</h2>
+    <div id="error-4"></div>
+    <div class="card">
+      <h3 class="card-title">Vigência do Edital</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Prazo <span class="req">*</span></label><input type="number" data-field="prazo_vigencia_edital" value="12" min="1" /></div>
+        <div class="form-group"><label>Unidade</label><select data-field="unidade_vigencia_edital"><option value="dias">Dias</option><option value="meses" selected>Meses</option><option value="anos">Anos</option></select></div>
+        <div class="form-group"><label>Data de início <span class="req">*</span></label><input type="date" data-field="data_inicio_vigencia" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Vigência dos Contratos Decorrentes</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Prazo</label><input type="number" data-field="prazo_vigencia_contratos" value="12" min="1" /></div>
+        <div class="form-group"><label>Unidade</label><select data-field="unidade_vigencia_contratos"><option value="dias">Dias</option><option value="meses" selected>Meses</option><option value="anos">Anos</option></select></div>
+        <div class="form-group"><label>Prazo para assinar o contrato (dias úteis) <span class="req">*</span></label><input type="number" data-field="prazo_assinar_contrato" value="5" min="1" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Critérios para Definição da Ordem de Contratação dos Credenciados <span class="nota-agu">Modelo AGU — item deixado em aberto para preenchimento pelo órgão</span></h3>
+      <div class="form-row">
+        <div class="form-group full-width"><label>Um critério por linha (ex: ordem cronológica de credenciamento; rodízio por região)</label><textarea data-field="criterios_ordem_contratacao" rows="3" placeholder="Deixe em branco para usar a regra padrão (ordem cronológica / rodízio)."></textarea></div>
+      </div>
+    </div>
+    <div class="card"><div class="clause-section-title">Garantia de Execução Contratual</div><div class="clause-grid" id="cg-garantia"></div><div class="info-panel hidden" id="ip-garantia"></div>
+      <div id="perc_garantia_row" class="hidden form-row" style="margin-top:10px">
+        <div class="form-group"><label>Percentual de Garantia (%)</label><select data-field="percentual_garantia"><option value="2">2%</option><option value="3">3%</option><option value="5" selected>5%</option><option value="10">10%</option></select></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5: Responsáveis e Dotação -->
+  <section class="step-content hidden" id="step-5">
+    <h2 class="section-title">Responsáveis e Dotação</h2>
+    <div id="error-5"></div>
+    <div class="card">
+      <h3 class="card-title">Órgão Solicitante (Secretarias)</h3>
+      <div class="form-row">
+        <div class="form-group wide">
+          <label>Secretaria / Departamento <span class="req">*</span></label>
+          <select data-field="orgao_solicitante" id="sel-orgao">
+            <option value="">Selecione a Secretaria...</option>
+            <option value="Chefe de Gabinete" data-resp="JOSÉ CARLOS PAGLIACI JUNIOR" data-email="gabinete@uniflor.pr.gov.br">Chefe de Gabinete</option>
+            <option value="Dep. de Assistência Social" data-resp="CLEUZILENE CÂNDIDO ROSA" data-email="assistenciasocial@uniflor.pr.gov.br">Dep. de Assistência Social</option>
+            <option value="Dep. Recursos Humanos" data-resp="LORINALDO BISPO DE OLIVEIRA" data-email="rh@uniflor.pr.gov.br">Dep. Recursos Humanos</option>
+            <option value="Departamento Administrativo" data-resp="LUCAS MIGUEL PETTENAZZI" data-email="diretoradmininstrativo@uniflor.pr.gov.br">Departamento Administrativo</option>
+            <option value="Departamento de Agricultura" data-resp="LAIRTON DOMINGOS RISSO" data-email="agricultura@uniflor.pr.gov.br">Departamento de Agricultura</option>
+            <option value="Departamento de Compras" data-resp="MARIANA LOURENÇO MERENDA" data-email="compras@uniflor.pr.gov.br">Departamento de Compras</option>
+            <option value="Departamento de Cultura" data-resp="REGI ALEXANDRE ARAÚJO" data-email="cultura@uniflor.pr.gov.br">Departamento de Cultura</option>
+            <option value="Departamento de Educação e Esportes" data-resp="SÔNIA APARECIDA MERENDA GRANDIZOLI" data-email="educação@uniflor.pr.gov.br">Departamento de Educação e Esportes</option>
+            <option value="Departamento de Licitação" data-resp="GABRIELA MERENDA GRANDIZOLI" data-email="oficiallicitacao@uniflor.pr.gov.br">Departamento de Licitação</option>
+            <option value="Departamento de Meio Ambiente" data-resp="JORGE APARECIDO PORTES" data-email="meioambiente@uniflor.pr.gov.br">Departamento de Meio Ambiente</option>
+            <option value="Departamento de Obras" data-resp="SANDRO APARECIDO GUARNIERI" data-email="obras@uniflor.pr.gov.br">Departamento de Obras</option>
+            <option value="Departamento de Saúde" data-resp="MAYCON VINICIUS FERRARI" data-email="saude@uniflor.pr.gov.br">Departamento de Saúde</option>
+            <option value="Departamento Financeiro" data-resp="LILIAN APARECIDA RIZZO ESTERCIO ZANONI" data-email="financeiro@uniflor.pr.gov.br">Departamento Financeiro</option>
+            <option value="Departamento Tributário" data-resp="REGIANI DA SILVA BOCARITE" data-email="tributos@uniflor.pr.gov.br">Departamento Tributário</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group wide"><label>Responsável</label><input type="text" data-field="orgao_responsavel" id="orgao-responsavel" placeholder="Diretor/Secretário" /></div>
+        <div class="form-group wide"><label>E-mail</label><input type="email" data-field="orgao_email" id="orgao-email" placeholder="email@uniflor.pr.gov.br" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Agente de Contratação / Comissão de Contratação <span class="nota-agu">Decretos Municipais nº 58/2023 e nº 113/2023</span></h3>
+      <div class="form-row">
+        <div class="form-group wide"><label>Nome completo <span class="req">*</span></label><input type="text" data-field="responsavel_condutor" placeholder="Nome do Agente / Presidente da Comissão" /></div>
+        <div class="form-group"><label>Decreto de Designação</label><input type="text" data-field="decreto_designacao" placeholder="058/2023" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group wide"><label>Gestor do Contrato</label><input type="text" data-field="gestor_contrato" placeholder="Nome e cargo" /></div>
+        <div class="form-group wide"><label>Fiscal do Contrato</label><input type="text" data-field="fiscal_contrato" placeholder="Nome e cargo" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Autoridade Competente (pré-preenchido)</h3>
+      <div class="form-row">
+        <div class="form-group wide"><label>Prefeito Municipal</label><input type="text" data-field="prefeito" value="Maycon Rodrigo Rodrigues de Souza" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Dotação Orçamentária</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Unidade Orçamentária</label><input type="text" data-field="dotacao_unidade" placeholder="04.10" /></div>
+        <div class="form-group wide"><label>Funcional Programática</label><input type="text" data-field="dotacao_funcional" placeholder="04.122.0001.2.001" /></div>
+        <div class="form-group wide"><label>Natureza da Despesa</label><input type="text" data-field="dotacao_natureza" placeholder="3.3.90.30.00" /></div>
+        <div class="form-group wide"><label>Fonte de Recursos</label><input type="text" data-field="dotacao_fonte" placeholder="1.500.0000000" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 6: Sanções, Recursos e Disposições -->
+  <section class="step-content hidden" id="step-6">
+    <h2 class="section-title">Sanções, Recursos e Disposições</h2>
+    <div id="error-6"></div>
+    <div class="card">
+      <h3 class="card-title">Sanções — Prazo de Recolhimento da Multa</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Prazo de recolhimento da multa (dias úteis) <span class="req">*</span></label><input type="number" data-field="prazo_multa" value="15" min="1" /></div>
+        <div class="form-group"><label>Multa infrações leves</label><input type="text" data-field="multa_leve_pct" value="0,5% a 15%" /></div>
+        <div class="form-group"><label>Multa infrações graves</label><input type="text" data-field="multa_grave_pct" value="15% a 30%" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Impugnação e Esclarecimentos</h3>
+      <div class="form-row">
+        <div class="form-group wide"><label>E-mail para impugnações e esclarecimentos <span class="req">*</span></label><input type="email" data-field="email_impugnacao" value="procuradoriajuridica@uniflor.pr.gov.br" /></div>
+        <div class="form-group wide"><label>URL do processo no PNCP / site do Município</label><input type="text" data-field="url_edital" placeholder="ex: www.uniflor.pr.gov.br/licitacoes" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Descredenciamento</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Prazo para pedido de descredenciamento (dias) <span class="req">*</span></label><input type="number" data-field="prazo_descredenciamento_pedido" value="10" min="1" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 7: Revisão -->
+  <section class="step-content hidden" id="step-7">
+    <h2 class="section-title">Revisão e Geração</h2>
+    <p class="section-hint">Confira as escolhas abaixo antes de gerar o Edital de Credenciamento.</p>
+    <div id="review-content" class="review-grid"></div>
+    <div class="generate-zone">
+      <button id="btn-gerar" class="btn-generate"><span>📄</span> Gerar Minuta de Credenciamento (.docx)</button>
+      <p class="generate-note">O arquivo será aberto automaticamente no Microsoft Word após salvo.</p>
+    </div>
+    <div id="result-msg" class="hidden result-box"></div>
+  </section>
+
+</main>
+
+<footer class="wizard-nav">
+  <button id="btn-prev" class="btn btn-secondary" disabled>← Anterior</button>
+  <span id="step-indicator" class="nav-info">Etapa 1 de 7</span>
+  <button id="btn-next" class="btn btn-primary">Avançar →</button>
+</footer>
+
+<script src="clauses.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
