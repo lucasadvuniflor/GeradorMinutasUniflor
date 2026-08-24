@@ -1029,6 +1029,10 @@ function renderStep5() {
             <input type="checkbox" id="tem_garantia_objeto" data-field="tem_garantia_objeto" ${state.data.tem_garantia_objeto?'checked':''}>
             <label class="toggle-label" for="tem_garantia_objeto">Incluir cláusula de garantia do objeto / assistência técnica</label>
           </div>
+          ${(state.data.tipo === 'compras' && !state.data.tem_garantia_objeto) ? `
+          <div style="margin-top:8px;padding:8px 12px;background:#fff3cd;border:1px solid #ffeeba;border-radius:6px;font-size:.78rem;color:#856404">
+            ⚠️ Contratos de aquisição de bens normalmente exigem garantia mínima do produto (art. 92, XIII, da Lei nº 14.133/2021). Confira o Termo de Referência antes de deixar esta cláusula de fora.
+          </div>` : ''}
         </div>
         <div class="form-group" id="row_prazo_garantia_objeto" ${!state.data.tem_garantia_objeto?'style="display:none"':''}>
           <label>Prazo Mínimo de Garantia do Objeto</label>
@@ -1412,6 +1416,9 @@ document.getElementById('btn-importar-edital').addEventListener('click', () => {
   if (p.anoLicitacao) state.data.ano_contrato = p.anoLicitacao;
   if (p.departamento) state.data.departamento = p.departamento;
   if (p.objeto) state.data.objeto_descricao = p.objeto;
+  if (p.indiceReajuste) state.data.indice_reajuste = p.indiceReajuste;
+  if (p.temGarantiaObjeto) state.data.tem_garantia_objeto = p.temGarantiaObjeto;
+  if (p.prazoGarantiaObjeto) state.data.prazo_garantia_objeto = p.prazoGarantiaObjeto;
   const modalidadeMapeada = MODALIDADE_EDITAL_PARA_CONTRATO[p.modalidade];
   if (modalidadeMapeada) state.data.modalidade = modalidadeMapeada;
 

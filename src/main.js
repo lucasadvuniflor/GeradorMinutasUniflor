@@ -10,7 +10,10 @@ const { generateCredenciamento } = require('./credenciamento-generator');
 const { generateAvisoContratacaoDireta } = require('./aviso-contratacao-direta-generator');
 const { generateAta } = require('./ata-generator');
 const { generateContract } = require('./contract-generator');
+const { generateResumoEdital, generateResumoCredenciamento, generateResumoAviso } = require('./resumo-generator');
 const { parseRelatorioVencedores } = require('./pdf-parser');
+const { parseTermoReferencia } = require('./tr-parser');
+const { parseOrcamentoPdf } = require('./orcamento-parser');
 const { buscarCnpj: buscarCnpjAta } = require('./cnpj-lookup');
 const { loadConfig, saveConfig } = require('./config-store');
 const { salvarProcessoAtivo, carregarProcessoAtivo } = require('./processo-store');
@@ -47,6 +50,46 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 // ════════════════════════════════════════════════════════════════════════
 // EDITAL
 // ════════════════════════════════════════════════════════════════════════
+
+ipcMain.handle('selecionar-tr', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+    title: 'Selecionar Termo de Referência (TR)',
+    filters: [{ name: 'Documento Word', extensions: ['docx'] }],
+    properties: ['openFile'],
+  });
+  if (canceled || !filePaths.length) return { success: false, cancelled: true };
+
+  try {
+    const buffer = fs.readFileSync(filePaths[0]);
+    const resultado = parseTermoReferencia(buffer);
+
+    // Se o próprio TR não trouxe uma tabela de itens legível, procura, na mesma pasta, um PDF de
+    // orçamento/cotação e tenta extrair de lá — best-effort: nem todo PDF tem camada de texto.
+    if (!resultado.itens.length) {
+      try {
+        const pasta = path.dirname(filePaths[0]);
+        const candidatos = fs.readdirSync(pasta).filter(f => /or[çc]amento|cota[çc][ãa]o/i.test(f) && /\.pdf$/i.test(f));
+        for (const nome of candidatos) {
+          const bufPdf = fs.readFileSync(path.join(pasta, nome));
+          const rOrc = await parseOrcamentoPdf(bufPdf);
+          if (rOrc.itens.length) {
+            resultado.itens = rOrc.itens;
+            resultado.itensOrigem = `orcamento_pdf:${nome}`;
+            resultado.avisos.push(...rOrc.avisos.map(a => `[${nome}] ${a}`));
+            break;
+          }
+        }
+      } catch (e) {
+        console.warn('Aviso: falha ao procurar/ler PDF de orçamento na pasta do TR:', e.message);
+      }
+    }
+
+    return { success: true, filePath: filePaths[0], ...resultado };
+  } catch (err) {
+    console.error('Erro ao interpretar Termo de Referência:', err);
+    return { success: false, error: 'Falha ao ler o TR: ' + err.message };
+  }
+});
 
 ipcMain.handle('gerar-edital', async (_event, formData) => {
   try {
@@ -99,6 +142,9 @@ ipcMain.handle('gerar-edital', async (_event, formData) => {
         correcaoMonetariaRenovacao: formData.correcao_monetaria_renovacao,
         indiceCorrecaoMonetaria: formData.indice_correcao_monetaria,
         valorEstimado: formData.valor_estimado,
+        indiceReajuste: formData.indice_reajuste,
+        temGarantiaObjeto: formData.tem_garantia_objeto,
+        prazoGarantiaObjeto: formData.prazo_garantia_objeto,
       });
     } catch (e) {
       console.warn('Aviso: não foi possível salvar o processo ativo para importação:', e.message);
@@ -200,6 +246,57 @@ ipcMain.handle('gerar-aviso-contratacao-direta', async (_event, formData) => {
     return { success: true, path: filePath };
   } catch (err) {
     console.error('Erro ao gerar aviso de contratação direta:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// ─── IPC: Guia Rápido do Licitante (resumo em linguagem simples) ────────────
+async function gerarResumo(buffer, defaultName, tituloDialogo, mainWindowRef) {
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindowRef, {
+    title: tituloDialogo,
+    defaultPath: path.join(app.getPath('documents'), defaultName),
+    filters: [
+      { name: 'Documento Word', extensions: ['docx'] },
+      { name: 'Todos os Arquivos', extensions: ['*'] }
+    ]
+  });
+  if (canceled || !filePath) return { success: false, cancelled: true };
+  fs.writeFileSync(filePath, buffer);
+  const openResult = await shell.openPath(filePath);
+  if (openResult) console.warn('Aviso ao abrir arquivo:', openResult);
+  return { success: true, path: filePath };
+}
+
+ipcMain.handle('gerar-resumo-edital', async (_event, formData) => {
+  try {
+    const buffer = await generateResumoEdital(formData);
+    const modalidadeAbrev = formData.modalidade === 'PREGÃO ELETRÔNICO' ? 'PE' : 'CE';
+    const defaultName = `Guia_do_Licitante_${modalidadeAbrev}_${formData.numero_licitacao || 'XX'}_${formData.ano_licitacao || new Date().getFullYear()}.docx`;
+    return await gerarResumo(buffer, defaultName, 'Salvar Guia Rápido do Licitante', mainWindow);
+  } catch (err) {
+    console.error('Erro ao gerar resumo do edital:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gerar-resumo-credenciamento', async (_event, formData) => {
+  try {
+    const buffer = await generateResumoCredenciamento(formData);
+    const defaultName = `Guia_do_Licitante_Credenciamento_${formData.numero_credenciamento || 'XX'}_${formData.ano_credenciamento || new Date().getFullYear()}.docx`;
+    return await gerarResumo(buffer, defaultName, 'Salvar Guia Rápido do Licitante', mainWindow);
+  } catch (err) {
+    console.error('Erro ao gerar resumo do credenciamento:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gerar-resumo-aviso', async (_event, formData) => {
+  try {
+    const buffer = await generateResumoAviso(formData);
+    const defaultName = `Guia_do_Licitante_Aviso_${formData.numero_aviso || 'XX'}_${formData.ano_aviso || new Date().getFullYear()}.docx`;
+    return await gerarResumo(buffer, defaultName, 'Salvar Guia Rápido do Licitante', mainWindow);
+  } catch (err) {
+    console.error('Erro ao gerar resumo do aviso de contratação direta:', err);
     return { success: false, error: err.message };
   }
 });

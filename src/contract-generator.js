@@ -15,7 +15,7 @@ const MUNICIPIO = 'Município de Uniflor';
 const PREFEITURA = 'Prefeitura Municipal de Uniflor';
 const CNPJ_MUNICIPIO = '76.279.975/0001-62';
 const ENDERECO_MUNICIPIO = 'Avenida das Flores nº 118, Centro, CEP 86.920-000, Uniflor/PR';
-const COMARCA = 'Comarca de Astorga';
+const COMARCA = 'Comarca de Nova Esperança';
 
 // ─── Cabeçalho timbrado ──────────────────────────────────────────────────────
 const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
@@ -414,10 +414,14 @@ function secVigencia(d, num) {
       bold(prazoStr),
       run(` contados ${termoStr}, na forma do art. 105 da Lei nº 14.133, de 2021.`)
     ]));
-    ps.push(item(0, [
-      bold(`${num}.2. `),
-      run(`O prazo de vigência será automaticamente prorrogado, independentemente de termo aditivo, quando o objeto não for concluído no período firmado acima, ressalvadas as providências cabíveis no caso de culpa do CONTRATADO.`)
-    ]));
+    // A prorrogação automática por não conclusão do objeto pressupõe uma execução que se
+    // estende no tempo — não se aplica a fornecimento de bens em entrega única e imediata.
+    if (d.tipo !== 'compras') {
+      ps.push(item(0, [
+        bold(`${num}.2. `),
+        run(`O prazo de vigência será automaticamente prorrogado, independentemente de termo aditivo, quando o objeto não for concluído no período firmado acima, ressalvadas as providências cabíveis no caso de culpa do CONTRATADO.`)
+      ]));
+    }
   }
   return ps;
 }

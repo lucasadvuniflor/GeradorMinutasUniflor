@@ -10,6 +10,95 @@ const GARANTIA_OPCOES = [
   { id:'true',  label:'Com Garantia de Execução',   icon:'🛡️', desc:'Exige 2–10% do valor como garantia (caução, fiança ou seguro)', info:{ quando_usar:'Use em contratos de maior valor, obras, serviços continuados ou fornecedores com risco de inadimplência.', quando_nao:'Para fornecimentos simples e curtos, a garantia pode afastar ME/EPP.', fundamento:'Art. 96 da Lei nº 14.133/2021', impacto:'Adiciona cláusula exigindo apresentação de garantia em 10 dias úteis após assinatura do contrato.' } }
 ];
 
+const GARANTIA_PROPOSTA_OPCOES = [
+  { id:'false', label:'Sem Garantia de Proposta', icon:'📝', desc:'Não exige garantia na apresentação da proposta', info:{ quando_usar:'Regra geral — use na maioria das licitações.', quando_nao:null, fundamento:'Art. 58 da Lei nº 14.133/2021 — facultativa', impacto:'Nenhuma cláusula de garantia de proposta inserida no edital.' } },
+  { id:'true',  label:'Com Garantia de Proposta',  icon:'🔒', desc:'Exige até 1% do valor estimado como garantia, junto com a proposta', info:{ quando_usar:'Use apenas em razão do vulto e complexidade do objeto, a critério da autoridade competente — não é praxe.', quando_nao:'Evite em licitações comuns: pode afastar concorrentes menores sem necessidade real.', fundamento:'Art. 58, §1º, da Lei nº 14.133/2021 — teto de 1% do valor estimado', impacto:'Adiciona cláusula exigindo garantia (caução em dinheiro/títulos, seguro-garantia ou fiança bancária, à escolha do licitante) até a data de entrega da proposta, devolvida em 10 dias úteis após a assinatura do contrato ou a licitação fracassada; a recusa em assinar o contrato implica execução integral da garantia.' } }
+];
+
+// Art. 55, Lei nº 14.133/2021 — prazos mínimos (em dias úteis) entre a divulgação do edital e a
+// apresentação de propostas/lances, conforme a natureza do objeto e o critério de julgamento.
+function prazoMinimoArt55(tipoObjeto, criterio) {
+  const desconto = criterio === 'menor_preco' || criterio === 'maior_desconto';
+  if (tipoObjeto === 'bens' || tipoObjeto === 'tic') {
+    return desconto
+      ? { dias: 8, fundamento: 'art. 55, I, "a"' }
+      : { dias: 15, fundamento: 'art. 55, I, "b"' };
+  }
+  const especial = tipoObjeto === 'obras_engenharia';
+  if (desconto) {
+    return especial
+      ? { dias: 25, fundamento: 'art. 55, II, "b" (obra/serviço especial de engenharia)' }
+      : { dias: 10, fundamento: 'art. 55, II, "a" (serviço comum / obra ou serviço comum de engenharia)' };
+  }
+  return { dias: 35, fundamento: 'art. 55, II, "d" (critério distinto de menor preço/maior desconto) ou IV (técnica e preço)' };
+}
+
+// Conta dias úteis (seg-sex) estritamente entre duas datas ISO (exclui a própria data-base, inclui a data-fim).
+// Não desconta feriados nacionais/municipais — a Procuradoria deve confirmar a ausência de feriados no intervalo.
+function diasUteisEntre(inicioISO, fimISO) {
+  if (!inicioISO || !fimISO) return null;
+  const inicio = new Date(inicioISO + 'T00:00:00');
+  const fim = new Date(fimISO + 'T00:00:00');
+  if (isNaN(inicio) || isNaN(fim) || fim <= inicio) return 0;
+  let count = 0;
+  const cur = new Date(inicio);
+  cur.setDate(cur.getDate() + 1);
+  while (cur <= fim) {
+    const dow = cur.getDay();
+    if (dow !== 0 && dow !== 6) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
+
+function hojeISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function atualizarPrazoArt55Banner() {
+  const banner = document.getElementById('prazo-art55-banner');
+  const row = document.getElementById('justificativa_prazo_row');
+  if (!banner) return;
+  const d = state.data;
+  const { dias: minimo, fundamento } = prazoMinimoArt55(d.tipo_objeto, d.criterio);
+  const disponivel = diasUteisEntre(hojeISO(), d.data_sessao);
+  const insuficiente = disponivel !== null && disponivel < minimo;
+  if (disponivel === null) {
+    banner.innerHTML = `ℹ️ Prazo mínimo legal para este objeto/critério: <strong>${minimo} dias úteis</strong> (${fundamento}), contados de hoje até a sessão pública.`;
+    banner.style.background = '';
+  } else if (insuficiente) {
+    banner.innerHTML = `⚠️ Prazo mínimo legal: <strong>${minimo} dias úteis</strong> (${fundamento}). Há apenas <strong>${disponivel} dia(s) útil(eis)</strong> entre hoje e a sessão pública — abaixo do mínimo. A redução só é admissível em caráter excepcional, mediante justificativa.`;
+    banner.style.cssText += ';color:#856404;background-color:#fff3cd;border-color:#ffeeba';
+  } else {
+    banner.innerHTML = `✅ Prazo mínimo legal: <strong>${minimo} dias úteis</strong> (${fundamento}). Há ${disponivel} dias úteis entre hoje e a sessão pública — prazo atendido.`;
+    banner.style.cssText += ';color:#2a7d4f;background-color:#e8f5ec;border-color:#c3e6cb';
+  }
+  if (row) row.classList.toggle('hidden', !insuficiente);
+  const inp = document.getElementById('input-justificativa-prazo');
+  if (inp) inp.value = d.justificativa_prazo_reduzido || '';
+}
+
+function abrirModalJustificativaPrazo() {
+  const ov = document.getElementById('modal-prazo-overlay');
+  const txt = document.getElementById('modal-prazo-texto');
+  const { dias: minimo, fundamento } = prazoMinimoArt55(state.data.tipo_objeto, state.data.criterio);
+  const disponivel = diasUteisEntre(hojeISO(), state.data.data_sessao);
+  txt.textContent = `O prazo mínimo legal para este objeto/critério é de ${minimo} dias úteis (${fundamento}). Considerando a data da sessão informada, há apenas ${disponivel} dia(s) útil(eis) a partir de hoje.`;
+  document.getElementById('modal-prazo-justificativa').value = state.data.justificativa_prazo_reduzido || '';
+  ov.classList.remove('hidden');
+}
+function fecharModalJustificativaPrazo() {
+  document.getElementById('modal-prazo-overlay').classList.add('hidden');
+}
+function confirmarJustificativaPrazo() {
+  const val = document.getElementById('modal-prazo-justificativa').value.trim();
+  if (!val) { alert('Informe a justificativa da excepcionalidade para prosseguir.'); return; }
+  state.data.justificativa_prazo_reduzido = val;
+  fecharModalJustificativaPrazo();
+  atualizarPrazoArt55Banner();
+}
+
 const state = {
   currentStep:1, totalSteps:7,
   data:{
@@ -19,7 +108,7 @@ const state = {
     // Step 1
     modalidade:'PREGÃO ELETRÔNICO', tipo_objeto:'bens', srp:'false', divisao_objeto:'itens',
     num_itens:'', numero_licitacao:'', ano_licitacao:new Date().getFullYear().toString(),
-    numero_processo:'', objeto:'',
+    numero_processo:'', objeto:'', itens:[],
     // Step 2
     criterio:'menor_preco', modo_disputa:'ABERTO', inversao_fases:'pos_julgamento',
     intervalo_lances:'',
@@ -29,12 +118,14 @@ const state = {
     // Step 4
     data_limite_proposta:'', hora_limite_proposta:'09:00',
     data_sessao:'', hora_sessao:'09:01',
+    justificativa_prazo_reduzido:'',
     prazo_validade_proposta:'60', prazo_vigencia_contrato:'12', prazo_arp:'12',
     plataforma:'BLL COMPRAS', url_plataforma:'www.bllcompras.com',
     // Step 5
     pregoeiro:'', decreto_pregoeiro:'', gestor_contrato:'', fiscal_contrato:'',
     dotacao_unidade:'', dotacao_funcional:'', dotacao_natureza:'', dotacao_fonte:'',
     garantia:'false', percentual_garantia:'5',
+    garantia_proposta:'false', percentual_garantia_proposta:'1',
     // Step 6
     prazo_assinar_contrato:'5', prazo_assinar_arp:'5',
     prazo_docs_habilitacao:'2', prazo_complementacao_hab:'2',
@@ -122,6 +213,7 @@ function toggleInfoPanel(clauseKey,optionId,opcoes){
     panel.querySelector('.info-panel-close').addEventListener('click',()=>toggleInfoPanel(clauseKey,optionId,opcoes));
   }
   const opts2=clauseKey==='garantia'?GARANTIA_OPCOES.map(o=>({...o,_disponivel:true})):
+              clauseKey==='garantia_proposta'?GARANTIA_PROPOSTA_OPCOES.map(o=>({...o,_disponivel:true})):
               clauseKey==='renovar_arp'?RENOVAR_ARP_OPCOES.map(o=>({...o,_disponivel:true})):
               getOpcoes(clauseKey,state.data);
   renderClauseGrid(`cg-${clauseKey}`,clauseKey,opts2,state.data[clauseKey]);
@@ -166,8 +258,123 @@ function renderCurrentStep(){
   if(s===5){
     const go=GARANTIA_OPCOES.map(o=>({...o,_disponivel:true}));
     renderClauseGrid('cg-garantia','garantia',go,d.garantia);
+    const gpo=GARANTIA_PROPOSTA_OPCOES.map(o=>({...o,_disponivel:true}));
+    renderClauseGrid('cg-garantia_proposta','garantia_proposta',gpo,d.garantia_proposta);
   }
   if(s===7) renderReview();
+}
+
+// ─── Itens e Quantidades ──────────────────────────────────────────────────────
+function escHtml(s){ return (s??'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderItensTable(){
+  const tbody=document.getElementById('itens-tbody');
+  if(!tbody) return;
+  const itens=state.data.itens||[];
+  if(!itens.length){
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:#a0aec0;padding:12px;font-size:.8rem">Nenhum item adicionado — o valor estimado poderá ser digitado manualmente na etapa de Critérios.</td></tr>`;
+  } else {
+    tbody.innerHTML=itens.map(it=>{
+      const total=(parseFloat(it.qtd)||0)*(parseFloat(it.valor_unitario)||0);
+      return `<tr>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="text" value="${escHtml(it.descricao)}" placeholder="Descrição do item" style="width:100%;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'descricao',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="text" value="${escHtml(it.unidade)}" placeholder="un" style="width:100%;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'unidade',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="number" min="0" step="any" value="${escHtml(it.qtd)}" style="width:100%;text-align:right;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'qtd',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="number" min="0" step="0.01" value="${escHtml(it.valor_unitario)}" style="width:100%;text-align:right;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'valor_unitario',this.value)"></td>
+        <td style="padding:4px 8px;text-align:right;border:1px solid #e2e8f0;font-weight:600">${total?total.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</td>
+        <td style="text-align:center;border:1px solid #e2e8f0"><button type="button" onclick="removeItem(${it.id})" style="background:none;border:none;color:#e53e3e;cursor:pointer;font-size:1rem" title="Remover item">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+  atualizarValorEstimadoAutomatico();
+}
+
+window.addItem=function(){
+  state.data.itens=state.data.itens||[];
+  state.data.itens.push({id:Date.now(),descricao:'',unidade:'un',qtd:'',valor_unitario:''});
+  renderItensTable();
+};
+window.removeItem=function(id){
+  state.data.itens=(state.data.itens||[]).filter(i=>i.id!==id);
+  renderItensTable();
+};
+window.updateItem=function(id,field,value){
+  const it=(state.data.itens||[]).find(i=>i.id===id);
+  if(!it) return;
+  it[field]=value;
+  renderItensTable();
+};
+
+function atualizarValorEstimadoAutomatico(){
+  const itens=state.data.itens||[];
+  const totalLabel=document.getElementById('itens-total-label');
+  const valorInput=document.getElementById('input-valor-estimado');
+  if(itens.length){
+    const total=itens.reduce((s,it)=>s+(parseFloat(it.qtd)||0)*(parseFloat(it.valor_unitario)||0),0);
+    state.data.valor_estimado=total.toFixed(2);
+    if(valorInput){ valorInput.value=state.data.valor_estimado; valorInput.readOnly=true; valorInput.style.background='#f1f5f9'; }
+    if(totalLabel) totalLabel.textContent=`Valor Total Estimado (calculado a partir dos itens): R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  } else {
+    if(valorInput){ valorInput.readOnly=false; valorInput.style.background=''; }
+    if(totalLabel) totalLabel.textContent='';
+  }
+}
+
+const TR_CAMPO_LABEL = {
+  objeto: 'Objeto', valor_estimado: 'Valor Estimado', tipo_objeto: 'Natureza do Objeto',
+  orgao_solicitante: 'Órgão Solicitante', srp: 'Sistema de Registro de Preços',
+  restricao_geografica: 'Restrição Geográfica', me_epp: 'Tratamento ME/EPP', consorcio: 'Consórcios',
+  garantia_proposta: 'Garantia da Proposta', garantia: 'Garantia de Execução',
+  percentual_garantia: '% da Garantia de Execução', prazo_vigencia_contrato: 'Vigência do Contrato',
+};
+
+async function importarTR(){
+  const btn=document.getElementById('btn-importar-tr');
+  const statusEl=document.getElementById('tr-import-status');
+  btn.disabled=true; const label=btn.innerHTML; btn.innerHTML='<span class="spinner"></span> Lendo TR…';
+  statusEl.classList.remove('hidden'); statusEl.style.cssText=''; statusEl.textContent='Lendo o Termo de Referência…';
+
+  try{
+    const r=await window.uniflorAPI.selecionarTR();
+    if(r.cancelled){ statusEl.classList.add('hidden'); return; }
+    if(!r.success){
+      statusEl.textContent=`❌ ${r.error||'Não foi possível ler o arquivo.'}`;
+      statusEl.style.cssText='color:#856404;background-color:#fff3cd;border-color:#ffeeba';
+      return;
+    }
+
+    const preenchidos=[];
+    for(const [campo,valor] of Object.entries(r.campos||{})){
+      if(valor===undefined||valor===null||valor==='') continue;
+      state.data[campo]=typeof valor==='boolean'?valor:valor;
+      preenchidos.push(TR_CAMPO_LABEL[campo]||campo);
+    }
+    const updates=aplicarCascata(state.data);
+    if(updates&&Object.keys(updates).length) Object.assign(state.data,updates);
+
+    let itensMsg='';
+    if((r.itens||[]).length){
+      state.data.itens=r.itens.map((it,i)=>({ id:Date.now()+i, descricao:it.descricao||'', unidade:it.unidade||'un', qtd:it.quantidade||'', valor_unitario:it.valorUnitario||'' }));
+      itensMsg=` ${r.itens.length} item(ns) importado(s) (fonte: ${r.itensOrigem==='tr'?'tabela do TR':'orçamento em PDF'}).`;
+    }
+
+    renderCurrentStep();
+    updateConditionals();
+    renderItensTable();
+    atualizarValorEstimadoAutomatico();
+
+    const partes=[];
+    partes.push(`✅ ${preenchidos.length} campo(s) preenchido(s) a partir do TR: ${preenchidos.join(', ')||'nenhum'}.${itensMsg}`);
+    if((r.avisos||[]).length) partes.push(...r.avisos.map(a=>`⚠️ ${a}`));
+    partes.push('Revise todas as etapas antes de gerar a minuta — nada foi gerado automaticamente.');
+    statusEl.innerHTML=partes.join('<br>');
+    statusEl.style.cssText='color:#1a4b8c;background-color:#e8effc;border-color:#c7d4e6';
+  }catch(e){
+    statusEl.textContent=`❌ Erro ao importar: ${e.message}`;
+    statusEl.style.cssText='color:#856404;background-color:#fff3cd;border-color:#ffeeba';
+  }finally{
+    btn.disabled=false; btn.innerHTML=label;
+  }
 }
 
 function init(){
@@ -180,6 +387,8 @@ function init(){
   });
   const chkCorrecao=document.getElementById('chk-correcao-monetaria');
   if(chkCorrecao)chkCorrecao.addEventListener('change',updateConditionals);
+  const chkMeEppExclusivo=document.getElementById('chk-me-epp-exclusivo');
+  if(chkMeEppExclusivo)chkMeEppExclusivo.addEventListener('change',updateConditionals);
 
   const sp=document.getElementById('sel-plataforma');
   if(sp)sp.addEventListener('change',()=>{const u=sp.options[sp.selectedIndex].dataset.url||'';const inp=document.getElementById('url-plataforma');if(inp){inp.value=u;state.data.url_plataforma=u;}});
@@ -195,9 +404,19 @@ function init(){
     if(inpEmail){inpEmail.value=email;state.data.orgao_email=email;}
   });
 
+  document.getElementById('btn-add-item')?.addEventListener('click',()=>window.addItem());
+  renderItensTable();
+
+  document.getElementById('btn-importar-tr')?.addEventListener('click',importarTR);
+
+  document.getElementById('btn-justificar-prazo')?.addEventListener('click',abrirModalJustificativaPrazo);
+  document.getElementById('btn-modal-prazo-cancelar')?.addEventListener('click',fecharModalJustificativaPrazo);
+  document.getElementById('btn-modal-prazo-confirmar')?.addEventListener('click',confirmarJustificativaPrazo);
+
   document.getElementById('btn-prev').addEventListener('click',()=>navigate(-1));
   document.getElementById('btn-next').addEventListener('click',()=>navigate(1));
   document.getElementById('btn-gerar').addEventListener('click',gerarEdital);
+  document.getElementById('btn-gerar-resumo').addEventListener('click',gerarResumoEdital);
   renderStep(1);
 }
 
@@ -210,6 +429,8 @@ function updateConditionals(){
   document.getElementById('valor_input_row')?.classList.toggle('hidden',state.data.valor_sigiloso==='true');
   document.getElementById('consorcio_pct_row')?.classList.toggle('hidden',state.data.consorcio!=='true');
   document.getElementById('perc_garantia_row')?.classList.toggle('hidden',state.data.garantia!=='true');
+  document.getElementById('perc_garantia_proposta_row')?.classList.toggle('hidden',state.data.garantia_proposta!=='true');
+  document.getElementById('me_epp_exclusivo_row')?.classList.toggle('hidden',state.data.me_epp!=='true');
   document.getElementById('num_itens_row')?.classList.toggle('hidden',state.data.divisao_objeto!=='grupo_unico');
   document.getElementById('card_cct')?.classList.toggle('hidden',!mo);
   document.getElementById('card_arp_renovacao')?.classList.toggle('hidden',!srp);
@@ -217,6 +438,14 @@ function updateConditionals(){
   document.getElementById('indice_correcao_row')?.classList.toggle('hidden',!document.getElementById('chk-correcao-monetaria')?.checked);
   document.getElementById('card_criterio_unit')?.classList.toggle('hidden',!(srp&&grp));
   document.getElementById('prazo_arp_assinar_group')?.classList.toggle('hidden',!srp);
+
+  // Vedações ao SRP (TCE-PR) — força srp='false' se a configuração atual for vedada
+  document.getElementById('srp_manutencao_materiais_row')?.classList.toggle('hidden', state.data.srp_manutencao_hora !== 'sim');
+  if (srp && srpVedado(state.data).vedado) {
+    state.data.srp = 'false';
+    renderClauseGrid('cg-srp', 'srp', getOpcoes('srp', state.data), state.data.srp);
+    return updateConditionals();
+  }
 
   // Lógica SRP Cascata
   document.getElementById('srp_cascade_group')?.classList.toggle('hidden', !srp);
@@ -255,6 +484,11 @@ function updateConditionals(){
   document.getElementById('urgencia_group')?.classList.toggle('hidden', cat !== 'emergencial');
 
   document.getElementById('alerta-transporta-contratada')?.classList.toggle('hidden', state.data.restricao_quem_transporta !== 'contratada');
+
+  const alertasSrp = getAlertasCascata(state.data);
+  if (alertasSrp.length) showAlertBar(alertasSrp); else hideAlertBar();
+
+  atualizarPrazoArt55Banner();
 }
 
 function updateResponsavelLabel(){
@@ -340,6 +574,13 @@ function validateStep(step){
     if(!d.data_limite_proposta)e.push('Informe a data limite para propostas.');
     if(!d.data_sessao)e.push('Informe a data da sessão pública.');
     if(d.data_sessao&&d.data_limite_proposta&&d.data_sessao<d.data_limite_proposta)e.push('A data da sessão não pode ser anterior ao limite de propostas.');
+    if(d.data_sessao){
+      const {dias:minimo,fundamento}=prazoMinimoArt55(d.tipo_objeto,d.criterio);
+      const disponivel=diasUteisEntre(hojeISO(),d.data_sessao);
+      if(disponivel!==null&&disponivel<minimo&&!d.justificativa_prazo_reduzido){
+        e.push(`O prazo entre hoje e a sessão pública (${disponivel} dia(s) útil(eis)) é inferior ao mínimo legal de ${minimo} dias úteis (${fundamento}). Ajuste a data da sessão ou registre a justificativa de excepcionalidade (botão "Justificar Exceção").`);
+      }
+    }
   }
   if(step===5){
     if(!d.pregoeiro)e.push(`Informe o nome do ${d.modalidade==='PREGÃO ELETRÔNICO'?'Pregoeiro':'Agente de Contratação'}.`);
@@ -379,8 +620,11 @@ function renderReview(){
     {k:'Margem de Preferência',v:bL(d.margem_preferencia)},{k:'Consórcio',v:bL(d.consorcio)},
     {k:'Restrição Geográfica',v:cL('restricao_geografica',d.restricao_geografica)},
     {k:'Orçamento',v:d.valor_sigiloso==='true'?'🔒 Sigiloso':(d.valor_estimado?`R$ ${parseFloat(d.valor_estimado).toLocaleString('pt-BR',{minimumFractionDigits:2})}`:'Divulgado')},
-    {k:'Garantia',v:bL(d.garantia)},{k:'Pregoeiro/Agente',v:d.pregoeiro||'—'},
+    {k:'Garantia de Execução',v:bL(d.garantia)},{k:'Garantia da Proposta',v:bL(d.garantia_proposta)},
+    {k:'Itens Cadastrados',v:(d.itens||[]).length?`${d.itens.length} item(ns)`:'Nenhum (valor manual)'},
+    {k:'Pregoeiro/Agente',v:d.pregoeiro||'—'},
     {k:'Data Sessão',v:`${fD(d.data_sessao)} às ${d.hora_sessao}`},
+    ...(d.justificativa_prazo_reduzido?[{k:'⚠️ Justificativa (Prazo Reduzido, Art. 55)',v:d.justificativa_prazo_reduzido}]:[]),
     {k:'Plataforma',v:`${d.plataforma} — ${d.url_plataforma}`},
     {k:'Prazo Assinar Contrato',v:`${d.prazo_assinar_contrato||'—'} dias úteis`},
     {k:'Prazo Docs Habilitação',v:`${d.prazo_docs_habilitacao||'—'} horas`},
@@ -394,27 +638,46 @@ function renderReview(){
   document.getElementById('result-msg').className='hidden result-box';
 }
 
+function buildPayload(){
+  return {...state.data,
+    srp:state.data.srp==='true',me_epp:state.data.me_epp==='true',
+    margem_preferencia:state.data.margem_preferencia==='true',
+    consorcio:state.data.consorcio==='true',
+    valor_sigiloso:state.data.valor_sigiloso==='true',
+    garantia:state.data.garantia==='true',
+    renovar_arp:state.data.renovar_arp==='true',
+    correcao_monetaria_renovacao:document.getElementById('chk-correcao-monetaria')?.checked||false,
+    me_epp_exclusivo:document.getElementById('chk-me-epp-exclusivo')?.checked||false,
+  };
+}
+
 async function gerarEdital(){
   const btn=document.getElementById('btn-gerar');
   const res=document.getElementById('result-msg');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Gerando…';res.className='hidden result-box';
   try{
-    const payload={...state.data,
-      srp:state.data.srp==='true',me_epp:state.data.me_epp==='true',
-      margem_preferencia:state.data.margem_preferencia==='true',
-      consorcio:state.data.consorcio==='true',
-      valor_sigiloso:state.data.valor_sigiloso==='true',
-      garantia:state.data.garantia==='true',
-      renovar_arp:state.data.renovar_arp==='true',
-      correcao_monetaria_renovacao:document.getElementById('chk-correcao-monetaria')?.checked||false,
-    };
-    const result=await window.uniflorAPI.gerarEdital(payload);
+    const result=await window.uniflorAPI.gerarEdital(buildPayload());
     if(result.cancelled){btn.disabled=false;btn.innerHTML='<span>📄</span> Gerar Minuta (.docx)';return;}
     if(result.success){res.className='result-box success';res.textContent=`✅ Salvo: ${result.path}`;}
     else throw new Error(result.error||'Erro desconhecido');
   }catch(e){res.className='result-box error';res.textContent=`❌ ${e.message}`;}
   res.classList.remove('hidden');
   btn.disabled=false;btn.innerHTML='<span>📄</span> Gerar Minuta (.docx)';
+}
+
+async function gerarResumoEdital(){
+  const btn=document.getElementById('btn-gerar-resumo');
+  const res=document.getElementById('result-msg');
+  const label='<span>📋</span> Gerar Guia Rápido do Licitante (.docx)';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Gerando…';res.className='hidden result-box';
+  try{
+    const result=await window.uniflorAPI.gerarResumoEdital(buildPayload());
+    if(result.cancelled){btn.disabled=false;btn.innerHTML=label;return;}
+    if(result.success){res.className='result-box success';res.textContent=`✅ Salvo: ${result.path}`;}
+    else throw new Error(result.error||'Erro desconhecido');
+  }catch(e){res.className='result-box error';res.textContent=`❌ ${e.message}`;}
+  res.classList.remove('hidden');
+  btn.disabled=false;btn.innerHTML=label;
 }
 
 document.addEventListener('DOMContentLoaded',init);

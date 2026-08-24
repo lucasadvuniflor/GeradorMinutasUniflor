@@ -224,7 +224,8 @@ const CLAUSES = {
       {
         id: 'true', label: 'Sim — Registro de Preços (ARP)', icon: '📋',
         desc: 'Registra preços para contratações futuras e fracionadas',
-        disponivel: () => true,
+        disponivel: (state) => !srpVedado(state).vedado,
+        indisponivel_msg: 'Vedado pelo TCE-PR nesta configuração — veja o motivo específico no alerta no topo da página.',
         info: {
           quando_usar: 'Use quando: (1) há demanda frequente ao longo do exercício; (2) a quantidade necessária não pode ser precisamente estimada; (3) outros órgãos municipais podem precisar do mesmo objeto; (4) convém entregar por demanda (evitando estoque). Nota AGU (COM 10): "Adotar esse item somente se a licitação for para registro de preços."',
           quando_nao: 'Não use quando a necessidade é pontual e bem determinada em quantidade.',
@@ -512,6 +513,27 @@ const CLAUSES = {
   }
 };
 
+// ─── Vedações ao SRP (jurisprudência TCE-PR) ─────────────────────────────────
+// O SRP é procedimento excepcional (art. 82, Lei 14.133/2021) — o TCE-PR veda
+// seu uso fora das hipóteses de eventualidade/parcelamento. Cada motivo abaixo
+// corresponde a uma das 5 hipóteses de vedação identificadas na jurisprudência
+// da Corte (obras; serviço técnico especializado; demanda certa/imediata;
+// coordenação técnica indivisível; manutenção por hora sem planilha de materiais).
+function srpVedado(state) {
+  const motivos = [];
+  if (state.tipo_objeto === 'obras_engenharia')
+    motivos.push('🚫 TCE-PR: SRP é vedado para obras de engenharia — objeto indivisível e de execução imediata (Acórdão nº 3.065/2014-TCU-Plenário, adotado como parâmetro pelo TCE-PR).');
+  if (state.srp_tecnico_especializado === 'sim')
+    motivos.push('🚫 TCE-PR: SRP é incompatível com serviço técnico especializado de alta complexidade (projeto, cálculo estrutural, BIM) — exige julgamento por melhor técnica/técnica e preço (Acórdão nº 3301/2025-Pleno TCE-PR, caso COMESP).');
+  if (state.srp_demanda_eventual === 'nao')
+    motivos.push('🚫 TCE-PR: SRP pressupõe eventualidade e parcelamento da demanda — para demanda certa e execução integral imediata, use licitação comum de escopo predeterminado (art. 82, Lei nº 14.133/2021; caso SETI/TCE-PR).');
+  if (state.srp_coordenacao_unificada === 'sim')
+    motivos.push('🚫 TCE-PR: SRP é inviável quando a execução exige coordenação técnica unificada e indivisível, em que a falha de uma etapa compromete o conjunto (Acórdão nº 113/2012-TCU-Plenário).');
+  if (state.srp_manutencao_hora === 'sim' && state.srp_materiais_especificados === 'nao')
+    motivos.push('🚫 TCE-PR: SRP é vedado para manutenção cobrada por hora sem especificação, quantificação e preço unitário prévios dos materiais/peças na planilha (Pregão Presencial nº 58/2018, TCE-PR).');
+  return { vedado: motivos.length > 0, motivos };
+}
+
 // ─── Regras de cascata ────────────────────────────────────────────────────────
 function aplicarCascata(state) {
   const updates = {};
@@ -520,6 +542,7 @@ function aplicarCascata(state) {
     updates.criterio = 'menor_preco';
     updates.modo_disputa = 'ABERTO';
   }
+  if (state.srp === 'true' && srpVedado(state).vedado) updates.srp = 'false';
   return updates;
 }
 
@@ -543,5 +566,6 @@ function getAlertasCascata(state) {
     alertas.push({ nivel:'erro', msg:'⚠️ TCE-PR: inversão de fases é EXCEPCIONAL. Exige ato motivado prévio no ETP/TR. Clique ℹ para ver os requisitos.' });
   if (state.consorcio === 'false')
     alertas.push({ nivel:'info', msg:'ℹ️ AGU (COM 27): vedar consórcio é exceção — inclua justificativa nos autos do processo.' });
+  srpVedado(state).motivos.forEach(msg => alertas.push({ nivel:'erro', msg }));
   return alertas;
 }

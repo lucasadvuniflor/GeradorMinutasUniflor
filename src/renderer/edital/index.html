@@ -66,8 +66,35 @@
     <h2 class="section-title">Modalidade, Tipo e Objeto</h2>
     <p class="section-hint">As escolhas desta etapa determinam quais critérios e modos de disputa estarão disponíveis nas etapas seguintes. Clique em ℹ para ver as notas explicativas da AGU.</p>
     <div id="error-1"></div>
+    <div class="card">
+      <h3 class="card-title">Importar do Termo de Referência</h3>
+      <p class="section-hint" style="margin-top:0">Selecione o arquivo .docx do TR do processo para pré-preencher automaticamente os campos abaixo. Os campos identificados ficam marcados para revisão — nada é gerado sem você conferir todas as etapas.</p>
+      <button type="button" id="btn-importar-tr" class="btn btn-secondary">📎 Importar Termo de Referência (.docx)</button>
+      <div id="tr-import-status" class="nota-explicativa hidden" style="margin-top:10px"></div>
+    </div>
     <div class="card"><div class="clause-section-title">Modalidade de Licitação <span class="req">*</span></div><div class="clause-grid" id="cg-modalidade"></div><div class="info-panel hidden" id="ip-modalidade"></div></div>
     <div class="card"><div class="clause-section-title">Natureza do Objeto <span class="req">*</span></div><div class="clause-grid" id="cg-tipo_objeto"></div><div class="info-panel hidden" id="ip-tipo_objeto"></div></div>
+    <div class="card">
+      <div class="clause-section-title">Elegibilidade para SRP <span class="req">*</span> <span class="nota-agu" title="O TCE-PR trata o SRP como procedimento excepcional. Responda para verificar se o objeto se enquadra.">ℹ Jurisprudência TCE-PR</span></div>
+      <p class="nota-explicativa" style="margin-bottom:10px;">Responda antes de escolher o SRP abaixo — se alguma resposta indicar vedação, a opção "Sim — Registro de Preços" ficará bloqueada.</p>
+      <div class="form-row" style="display:flex; flex-wrap:wrap; gap:10px;">
+        <div class="form-group wide"><label>Objeto é serviço técnico especializado de alta complexidade (projeto executivo, cálculo estrutural, BIM, estudo de viabilidade)? <span class="req">*</span></label>
+          <select data-field="srp_tecnico_especializado"><option value="nao">Não</option><option value="sim">Sim</option></select>
+        </div>
+        <div class="form-group wide"><label>Há necessidade de contratações futuras, sucessivas e parceladas, sem quantitativo total definido com exatidão? <span class="req">*</span></label>
+          <select data-field="srp_demanda_eventual"><option value="sim">Sim (demanda eventual/parcelada)</option><option value="nao">Não (demanda certa, execução única e imediata)</option></select>
+        </div>
+        <div class="form-group wide"><label>A execução exige coordenação técnica unificada e indivisível, em que a falha de uma etapa compromete o resultado do conjunto (ex: evento único)? <span class="req">*</span></label>
+          <select data-field="srp_coordenacao_unificada"><option value="nao">Não</option><option value="sim">Sim</option></select>
+        </div>
+        <div class="form-group wide"><label>O objeto é manutenção sob demanda cobrada por hora trabalhada, com fornecimento de materiais/peças pela contratada? <span class="req">*</span></label>
+          <select data-field="srp_manutencao_hora"><option value="nao">Não</option><option value="sim">Sim</option></select>
+        </div>
+        <div id="srp_manutencao_materiais_row" class="hidden form-group wide"><label>Os materiais/peças estão previamente especificados, quantificados e com preço unitário registrado na planilha? <span class="req">*</span></label>
+          <select data-field="srp_materiais_especificados"><option value="sim">Sim</option><option value="nao">Não (só a mão de obra está precificada)</option></select>
+        </div>
+      </div>
+    </div>
     <div class="card"><div class="clause-section-title">Sistema de Registro de Preços <span class="req">*</span></div><div class="clause-grid" id="cg-srp"></div><div class="info-panel hidden" id="ip-srp"></div>
       <div id="srp_cascade_group" class="hidden form-row" style="margin-top:15px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; display: flex; flex-direction: column; gap: 10px;">
         
@@ -134,6 +161,24 @@
         </div>
       </div>
     </div>
+    <div class="card">
+      <h3 class="card-title">Itens e Quantidades <span class="nota-agu">Opcional — se preenchida, calcula o valor estimado automaticamente</span></h3>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+          <thead><tr>
+            <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #dee2e6">Descrição</th>
+            <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #dee2e6;width:70px">Unid.</th>
+            <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #dee2e6;width:90px">Qtd.</th>
+            <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #dee2e6;width:130px">Valor Unit. (R$)</th>
+            <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #dee2e6;width:130px">Total (R$)</th>
+            <th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="itens-tbody"></tbody>
+        </table>
+      </div>
+      <button type="button" id="btn-add-item" class="btn btn-secondary" style="margin-top:10px">+ Adicionar Item</button>
+      <div id="itens-total-label" style="margin-top:10px;text-align:right;font-weight:700"></div>
+    </div>
   </section>
 
   <!-- STEP 2: Critérios -->
@@ -163,7 +208,14 @@
     <h2 class="section-title">Condições de Participação</h2>
     <p class="section-hint">Cada escolha gera cláusulas específicas no edital. Notas explicativas da AGU integradas nos painéis ℹ.</p>
     <div id="error-3"></div>
-    <div class="card"><div class="clause-section-title">Tratamento Favorecido — ME/EPP <span class="req">*</span></div><div class="clause-grid" id="cg-me_epp"></div><div class="info-panel hidden" id="ip-me_epp"></div></div>
+    <div class="card"><div class="clause-section-title">Tratamento Favorecido — ME/EPP <span class="req">*</span></div><div class="clause-grid" id="cg-me_epp"></div><div class="info-panel hidden" id="ip-me_epp"></div>
+      <div id="me_epp_exclusivo_row" class="hidden form-row" style="margin-top:10px">
+        <div class="form-group full-width" style="display:flex; align-items:center; gap:5px;">
+          <input type="checkbox" id="chk-me-epp-exclusivo" />
+          <label for="chk-me-epp-exclusivo" style="margin-bottom:0;">Licitação INTEGRALMENTE exclusiva para ME/EPP (art. 48, I, LC 123/2006 — itens/lotes até R$ 80.000,00), sem restrição geográfica <span class="nota-agu" title="Marque quando TODO o objeto (não apenas uma cota) for reservado a ME/EPP, sem exigência de sede local/regional. Isso desativa automaticamente as cláusulas de empate ficto, que ficam sem sentido quando todos os concorrentes já são ME/EPP.">ℹ Por quê?</span></label>
+        </div>
+      </div>
+    </div>
     <div class="card"><div class="clause-section-title">Margem de Preferência</div><div class="clause-grid" id="cg-margem_preferencia"></div><div class="info-panel hidden" id="ip-margem_preferencia"></div></div>
     <div class="card"><div class="clause-section-title">Participação em Consórcio</div><div class="clause-grid" id="cg-consorcio"></div><div class="info-panel hidden" id="ip-consorcio"></div>
       <div id="consorcio_pct_row" class="hidden form-row" style="margin-top:10px">
@@ -258,8 +310,9 @@
   <!-- STEP 4: Datas -->
   <section class="step-content hidden" id="step-4">
     <h2 class="section-title">Datas, Prazos e Plataforma</h2>
-    <p class="section-hint">Nota AGU (COM 1): Prazos mínimos — 8 dias úteis para bens; 10 dias úteis para serviços, contados da publicação no PNCP (art. 55, I, a, e II, a, da Lei 14.133/2021).</p>
+    <p class="section-hint">O sistema calcula automaticamente o prazo mínimo legal (art. 55 da Lei 14.133/2021) a partir do tipo de objeto e do critério de julgamento escolhidos, e verifica se a data da sessão respeita esse prazo, contado em dias úteis a partir de hoje.</p>
     <div id="error-4"></div>
+    <div id="prazo-art55-banner" class="nota-explicativa" style="margin-bottom:12px"></div>
     <div class="card">
       <h3 class="card-title">Datas da Sessão</h3>
       <div class="form-row">
@@ -267,6 +320,15 @@
         <div class="form-group"><label>Horário Limite (Brasília)</label><input type="time" data-field="hora_limite_proposta" value="09:00" /></div>
         <div class="form-group"><label>Data da Sessão Pública <span class="req">*</span></label><input type="date" data-field="data_sessao" /></div>
         <div class="form-group"><label>Horário da Sessão (Brasília)</label><input type="time" data-field="hora_sessao" value="09:01" /></div>
+      </div>
+      <div id="justificativa_prazo_row" class="form-row hidden" style="margin-top:10px">
+        <div class="form-group full-width">
+          <label>Justificativa da Excepcionalidade (prazo abaixo do mínimo legal)</label>
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <input type="text" data-field="justificativa_prazo_reduzido" id="input-justificativa-prazo" readonly placeholder="Nenhuma justificativa registrada" style="flex:1" />
+            <button type="button" id="btn-justificar-prazo" class="btn btn-secondary" style="white-space:nowrap">✏️ Justificar Exceção</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -364,6 +426,11 @@
         <div class="form-group"><label>Percentual de Garantia (%)</label><select data-field="percentual_garantia"><option value="2">2%</option><option value="3">3%</option><option value="5" selected>5%</option><option value="10">10%</option></select></div>
       </div>
     </div>
+    <div class="card"><div class="clause-section-title">Garantia da Proposta <span class="nota-agu" title="Diferente da garantia de execução — é exigida na apresentação da proposta, não do contrato. Teto de 1% do valor estimado (art. 58, §1º, Lei 14.133/2021).">ℹ Art. 58, Lei 14.133/2021</span></div><div class="clause-grid" id="cg-garantia_proposta"></div><div class="info-panel hidden" id="ip-garantia_proposta"></div>
+      <div id="perc_garantia_proposta_row" class="hidden form-row" style="margin-top:10px">
+        <div class="form-group"><label>Percentual sobre o valor estimado (máx. 1%) <span class="req">*</span></label><input type="number" data-field="percentual_garantia_proposta" value="1" min="0.1" max="1" step="0.1" /></div>
+      </div>
+    </div>
   </section>
 
   <!-- STEP 6: Campos Obrigatórios do Edital -->
@@ -396,6 +463,21 @@
         <div class="form-group"><label>Prazo de recolhimento da multa (dias úteis) <span class="req">*</span></label><input type="number" data-field="prazo_multa" value="15" min="1" placeholder="ex: 15" /></div>
         <div class="form-group"><label>Multa infrações leves (0,5%–15%)</label><input type="text" data-field="multa_leve_pct" value="0,5% a 15%" placeholder="ex: 0,5% a 15%" /></div>
         <div class="form-group"><label>Multa infrações graves (15%–30%)</label><input type="text" data-field="multa_grave_pct" value="15% a 30%" placeholder="ex: 15% a 30%" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Índice de Reajuste <span class="nota-agu">Art. 25, §7º, Lei 14.133/2021</span></h3>
+      <div class="nota-explicativa">⚠️ A previsão do índice de reajustamento no Edital é obrigatória independentemente do prazo de duração da contratação (art. 25, §7º) — este mesmo índice deve ser usado depois na minuta de Contrato, para não gerar contradição entre os dois documentos.</div>
+      <div class="form-row">
+        <div class="form-group wide"><label>Índice de reajuste <span class="req">*</span></label>
+          <select data-field="indice_reajuste">
+            <option value="IPCA" selected>IPCA (IBGE)</option>
+            <option value="IPCA-E">IPCA-E (IBGE)</option>
+            <option value="INPC">INPC (IBGE)</option>
+            <option value="IGP-M">IGP-M (FGV)</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -462,6 +544,8 @@
     <div class="generate-zone">
       <button id="btn-gerar" class="btn-generate"><span>📄</span> Gerar Minuta de Edital (.docx)</button>
       <p class="generate-note">O arquivo será aberto automaticamente no Microsoft Word após salvo.</p>
+      <button id="btn-gerar-resumo" class="btn btn-secondary" style="margin-top:12px"><span>📋</span> Gerar Guia Rápido do Licitante (.docx)</button>
+      <p class="generate-note">Resumo em linguagem simples dos pontos essenciais, para quem participa de uma licitação pela primeira vez.</p>
     </div>
     <div id="result-msg" class="hidden result-box"></div>
   </section>
@@ -473,6 +557,21 @@
   <span id="step-indicator" class="nav-info">Etapa 1 de 7</span>
   <button id="btn-next" class="btn btn-primary">Avançar →</button>
 </footer>
+
+<div id="modal-prazo-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(15,42,74,.55);display:flex;align-items:center;justify-content:center;z-index:1000">
+  <div class="card" style="max-width:520px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.35)">
+    <h3 class="card-title" style="color:var(--danger)">⚠️ Prazo Abaixo do Mínimo Legal (Art. 55)</h3>
+    <p id="modal-prazo-texto" style="font-size:13px;color:#444;line-height:1.5;margin:6px 0 12px"></p>
+    <p style="font-size:12px;color:#666;margin-bottom:10px">A redução do prazo mínimo só é admissível em caráter excepcional e sob responsabilidade da autoridade competente. Registre abaixo a justificativa que fundamentará o processo administrativo — ela não integra o texto do edital.</p>
+    <div class="form-group full-width">
+      <textarea id="modal-prazo-justificativa" rows="4" placeholder="Ex.: situação emergencial caracterizada nos autos, com risco de dano ao interesse público em caso de observância do prazo ordinário..."></textarea>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+      <button type="button" id="btn-modal-prazo-cancelar" class="btn btn-secondary">Cancelar</button>
+      <button type="button" id="btn-modal-prazo-confirmar" class="btn btn-primary">Confirmar Justificativa</button>
+    </div>
+  </div>
+</div>
 
 <script src="clauses.js"></script>
 <script src="app.js"></script>

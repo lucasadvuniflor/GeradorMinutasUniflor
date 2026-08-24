@@ -4,8 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const {
   Document, Paragraph, TextRun, AlignmentType,
-  Packer, BorderStyle, Header, Footer, SimpleField,
-  convertMillimetersToTwip, LevelFormat, ImageRun,
+  Packer, BorderStyle, Header, Footer, SimpleField, PageBreak,
+  convertMillimetersToTwip, LevelFormat, ImageRun, ShadingType,
   Table, TableRow, TableCell, WidthType, VerticalAlign
 } = require('docx');
 
@@ -44,8 +44,12 @@ function subtitle(text) {
 }
 
 function secTitle(text) {
-  return para([new TextRun({ text: text.toUpperCase(), size: FS(12), bold: true, font: 'Arial' })],
-    { spacing: { before: SP(12), after: SP(6) }, alignment: AlignmentType.LEFT });
+  return para([new TextRun({ text: text.toUpperCase(), size: FS(12), bold: true, font: 'Arial', color: '1a4b8c' })],
+    {
+      spacing: { before: SP(16), after: SP(10), line: 240, lineRule: 'auto' },
+      alignment: AlignmentType.LEFT,
+      shading: { type: ShadingType.CLEAR, fill: 'e4ecf6' },
+    });
 }
 
 function body(text) {
@@ -124,6 +128,106 @@ function n2w(n, feminine = false) {
   return map[m] !== undefined ? map[m] : m.toString();
 }
 
+// Tabela de itens e quantidades (opcional — só aparece quando o usuário preenche a etapa "Itens e Quantidades")
+function itensTable(itens) {
+  const headerCell = (text, width) => new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    shading: { type: ShadingType.CLEAR, fill: 'e4ecf6' },
+    margins: { top: 60, bottom: 60, left: 80, right: 80 },
+    children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: FS(9.5), font: 'Arial' })] })]
+  });
+  const bodyCell = (text, width, alignRight) => new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    margins: { top: 50, bottom: 50, left: 80, right: 80 },
+    children: [new Paragraph({ alignment: alignRight ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [new TextRun({ text, size: FS(10), font: 'Arial' })] })]
+  });
+  const widths = [4200, 900, 1200, 1400, 1371];
+  const header = new TableRow({ children: [
+    headerCell('Descrição', widths[0]), headerCell('Unid.', widths[1]), headerCell('Qtd.', widths[2]),
+    headerCell('Valor Unit. (R$)', widths[3]), headerCell('Valor Total (R$)', widths[4]),
+  ] });
+  const rows = itens.map(it => {
+    const qtd = parseFloat(it.qtd) || 0;
+    const unit = parseFloat(it.valor_unitario) || 0;
+    const total = qtd * unit;
+    return new TableRow({ children: [
+      bodyCell(it.descricao || '—', widths[0]),
+      bodyCell(it.unidade || '—', widths[1]),
+      bodyCell(qtd.toLocaleString('pt-BR'), widths[2], true),
+      bodyCell(unit.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), widths[3], true),
+      bodyCell(total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), widths[4], true),
+    ] });
+  });
+  return new Table({
+    width: { size: 9071, type: WidthType.DXA },
+    columnWidths: widths,
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+      left: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, right: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+      insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, insideVertical: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+    },
+    rows: [header, ...rows]
+  });
+}
+
+// Capa com a ficha-resumo do certame (padrão inspirado no modelo da AGU/União)
+function capaFactSheet(rows) {
+  const trs = rows.filter(r => r[1] !== null && r[1] !== undefined && r[1] !== '').map(([label, value]) => new TableRow({
+    children: [
+      new TableCell({
+        width: { size: 3200, type: WidthType.DXA },
+        shading: { type: ShadingType.CLEAR, fill: 'e4ecf6' },
+        verticalAlign: VerticalAlign.CENTER,
+        margins: { top: 100, bottom: 100, left: 140, right: 100 },
+        children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: FS(10.5), font: 'Arial', color: '1a4b8c' })] })]
+      }),
+      new TableCell({
+        width: { size: 5871, type: WidthType.DXA },
+        verticalAlign: VerticalAlign.CENTER,
+        margins: { top: 100, bottom: 100, left: 140, right: 100 },
+        children: [new Paragraph({ children: [new TextRun({ text: String(value), size: FS(11), font: 'Arial' })] })]
+      })
+    ]
+  }));
+  return new Table({
+    width: { size: 9071, type: WidthType.DXA },
+    columnWidths: [3200, 5871],
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' },
+      left: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' }, right: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' },
+      insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, insideVertical: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+    },
+    rows: trs
+  });
+}
+
+function capaPage(d) {
+  const num = `${d.numero_licitacao || 'XXXX'}/${d.ano_licitacao || '20XX'}`;
+  const criterioTxt = { menor_preco: 'Menor Preço', maior_desconto: 'Maior Desconto', tecnica_preco: 'Técnica e Preço' }[d.criterio] || d.criterio;
+  const valorTxt = d.valor_sigiloso ? 'Sigiloso até o fim do julgamento' : moeda(d.valor_estimado);
+  const rows = [
+    ['CONTRATANTE', 'MUNICÍPIO DE UNIFLOR/PR'],
+    ['OBJETO', d.objeto || '[OBJETO]'],
+    ['DATA DA SESSÃO PÚBLICA', d.data_sessao ? `${fmtDate(d.data_sessao)} às ${d.hora_sessao || '__:__'} (horário de Brasília)` : null],
+    ['PLATAFORMA', `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}`],
+    ['VALOR TOTAL ESTIMADO', valorTxt],
+    ['CRITÉRIO DE JULGAMENTO', criterioTxt],
+    ['MODO DE DISPUTA', d.modo_disputa || 'ABERTO'],
+    ['SISTEMA DE REGISTRO DE PREÇOS', d.srp ? 'SIM' : 'NÃO'],
+    ['TRATAMENTO FAVORECIDO ME/EPP/EQUIPARADAS', d.me_epp ? 'SIM' : 'NÃO'],
+    ['EXCLUSIVA ME/EPP/EQUIPARADAS', d.me_epp && (d.me_epp_exclusivo || (d.restricao_geografica === 'B' && d.restricao_mecanismo_b === 'exclusividade_total')) ? 'SIM' : 'NÃO'],
+    ['MARGEM DE PREFERÊNCIA', d.margem_preferencia ? 'SIM' : 'NÃO'],
+  ];
+  return [
+    blank(),
+    title(`${d.modalidade || 'LICITAÇÃO'} Nº ${num}`),
+    paraCenter([run(`Processo Administrativo nº ${d.numero_processo || 'XXXX/XXXX'}`)]),
+    blank(), blank(),
+    capaFactSheet(rows),
+    new Paragraph({ children: [new PageBreak()] }),
+  ];
+}
+
 // ─── SEÇÕES ───────────────────────────────────────────────────────────────────
 
 function secPreamble(d) {
@@ -194,6 +298,12 @@ function secObjeto(d) {
       ? `O critério de aceitabilidade de preços unitários máximos é: ${d.criterio_preco_unit}.`
       : 'O critério de aceitabilidade de preços unitários máximos será o constante da tabela de preços máximos unitários definida no Termo de Referência, nos termos do art. 13, inciso I, do Decreto nº 11.462, de 2023.';
     ps.push(item('1.3.', criterioUnit));
+  }
+
+  if (Array.isArray(d.itens) && d.itens.length) {
+    ps.push(blank());
+    ps.push(itensTable(d.itens));
+    ps.push(blank());
   }
 
   return ps;
@@ -273,6 +383,10 @@ function secParticipacao(d, numSec) {
     n++;
     ps.push(item(`${numSec}.${n}.`, 'A obtenção do benefício a que se refere o item anterior fica limitada às microempresas e às empresas de pequeno porte que, no ano-calendário de realização da licitação, ainda não tenham celebrado contratos com a Administração Pública cujos valores somados extrapolem a receita bruta máxima admitida para fins de enquadramento como empresa de pequeno porte.'));
     n++;
+    if (d.me_epp_exclusivo) {
+      ps.push(item(`${numSec}.${n}.`, 'A presente licitação é EXCLUSIVA para a participação de microempresas, empresas de pequeno porte e microempreendedores individuais, nos termos do art. 48, inciso I, da Lei Complementar nº 123, de 2006, por se referir a item(ns)/lote(s) de valor estimado de até R$ 80.000,00 (oitenta mil reais).'));
+      n++;
+    }
   } else {
     ps.push(item(`${numSec}.${n}.`, 'Não será concedido nesta licitação tratamento favorecido para microempresas, empresas de pequeno porte e figuras equiparadas, nos termos da Lei Complementar nº 123, de 2006, em razão da incidência, no caso, do art. 4º, § 1º da Lei nº 14.133, de 2021, conforme justificativa nos autos do processo administrativo.'));
     n++;
@@ -357,20 +471,28 @@ function secParticipacao(d, numSec) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function secOrcamento(d, numSec) {
   const ps = [secTitle(`${numSec}. Do Orçamento Estimado`)];
+  let n = 1;
   if (!d.valor_sigiloso) {
-    ps.push(item(`${numSec}.1.`, 'O orçamento estimado da presente contratação não será de caráter sigiloso.'));
+    ps.push(item(`${numSec}.${n}.`, 'O orçamento estimado da presente contratação não será de caráter sigiloso.'));
+    n++;
     if (d.valor_estimado) {
-      ps.push(item(`${numSec}.2.`, `O custo estimado total da contratação é de ${moeda(d.valor_estimado)}, conforme pesquisa de preços encartada nos autos do processo administrativo.`));
+      ps.push(item(`${numSec}.${n}.`, `O custo estimado total da contratação é de ${moeda(d.valor_estimado)}, conforme pesquisa de preços encartada nos autos do processo administrativo.`));
+      n++;
     }
   } else {
-    ps.push(item(`${numSec}.1.`, 'O orçamento estimado da presente contratação será de caráter sigiloso.'));
-    ps.push(item(`${numSec}.2.`, 'Para fins do disposto no item anterior, o orçamento estimado para a contratação não será tornado público antes de definido o resultado do julgamento das propostas.'));
-    ps.push(item(`${numSec}.3.`, 'O caráter sigiloso do orçamento estimado para a contratação não prevalecerá para os órgãos de controle interno e externo.'));
+    ps.push(item(`${numSec}.${n}.`, 'O orçamento estimado da presente contratação será de caráter sigiloso.'));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'Para fins do disposto no item anterior, o orçamento estimado para a contratação não será tornado público antes de definido o resultado do julgamento das propostas.'));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'O caráter sigiloso do orçamento estimado para a contratação não prevalecerá para os órgãos de controle interno e externo.'));
+    n++;
   }
   if (d.dotacao_funcional) {
-    const dotN = d.valor_sigiloso ? 4 : (d.valor_estimado ? 3 : 2);
-    ps.push(item(`${numSec}.${dotN}.`, `As despesas decorrentes desta licitação correrão à conta dos recursos consignados na Lei Orçamentária Anual, Unidade Orçamentária: ${d.dotacao_unidade || '____'}, Funcional Programática: ${d.dotacao_funcional}, Natureza da Despesa: ${d.dotacao_natureza || '____'}, Fonte de Recursos: ${d.dotacao_fonte || '____'}.`));
+    ps.push(item(`${numSec}.${n}.`, `As despesas decorrentes desta licitação correrão à conta dos recursos consignados na Lei Orçamentária Anual, Unidade Orçamentária: ${d.dotacao_unidade || '____'}, Funcional Programática: ${d.dotacao_funcional}, Natureza da Despesa: ${d.dotacao_natureza || '____'}, Fonte de Recursos: ${d.dotacao_fonte || '____'}.`));
+    n++;
   }
+  const indiceReajuste = d.indice_reajuste || 'IPCA';
+  ps.push(item(`${numSec}.${n}.`, `Os preços contratados poderão ser reajustados após o interregno mínimo de 1 (um) ano, contado da data-base da proposta ou do orçamento estimado a que essa se referir, mediante a aplicação do índice ${indiceReajuste}, apurado pelo IBGE, ou índice setorial específico que vier a substituí-lo, nos termos do art. 25, §7º, da Lei nº 14.133, de 2021 — previsão obrigatória independentemente do prazo de vigência da contratação, cuja disciplina detalhada consta da minuta de Contrato, Anexo III deste Edital.`));
   return ps;
 }
 
@@ -469,6 +591,16 @@ function secApresentacao(d, numSec) {
   n++;
 
   ps.push(item(`${numSec}.${n}.`, 'O licitante deverá comunicar imediatamente ao provedor do sistema qualquer acontecimento que possa comprometer o sigilo ou a segurança, para imediato bloqueio de acesso.'));
+  n++;
+
+  if (d.garantia_proposta) {
+    const pctProp = d.percentual_garantia_proposta || '1';
+    ps.push(item(`${numSec}.${n}.`, `Será exigida, como requisito de pré-habilitação, garantia de proposta correspondente a ${pctProp}% (${pctProp.toString().replace('.', ',')} por cento) do valor estimado da contratação, podendo o licitante optar por caução em dinheiro ou em títulos da dívida pública, seguro-garantia ou fiança bancária, nos termos do art. 58 da Lei nº 14.133, de 2021.`));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'A garantia de proposta deverá ser comprovada até a data definida para entrega das propostas e será devolvida no prazo de 10 (dez) dias úteis, contado da assinatura do contrato ou da data em que a licitação for declarada fracassada.'));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'Implicará a execução integral da garantia de proposta a recusa do licitante em assinar o contrato ou a não apresentação dos documentos exigidos para a contratação, ressalvados os casos de força maior reconhecidos pela Administração.'));
+  }
 
   return ps;
 }
@@ -687,8 +819,9 @@ function secAbertura(d, numSec) {
     n++;
   }
 
-  // Empate ficto ME/EPP
-  if (d.me_epp) {
+  // Empate ficto ME/EPP — inaplicável quando a licitação já é integralmente exclusiva para ME/EPP
+  const isExclusivoMeEpp = !!d.me_epp_exclusivo || (d.restricao_geografica === 'B' && d.restricao_mecanismo_b === 'exclusividade_total');
+  if (d.me_epp && !isExclusivoMeEpp) {
     const pctEmpate = d.modalidade === 'PREGÃO ELETRÔNICO' ? '5%' : '10%';
     const pctEmpateExtenso = d.modalidade === 'PREGÃO ELETRÔNICO' ? 'cinco' : 'dez';
     ps.push(item(`${numSec}.${n}.`, `Em relação a itens não exclusivos para participação de microempresas e empresas de pequeno porte, uma vez encerrada a etapa de lances, será efetivada a verificação automática, junto à Receita Federal, do porte da entidade empresarial. O sistema identificará em coluna própria as microempresas e empresas de pequeno porte participantes, procedendo à comparação com os valores da primeira colocada, se esta for empresa de maior porte, assim como das demais classificadas, para o fim de aplicar-se o disposto nos arts. 44 e 45 da Lei Complementar nº 123, de 2006.`));
@@ -1307,7 +1440,7 @@ function secDisposicoes(d, numSec) {
     ps.push(subitem(`${numSec}.11.4.`, 'Anexo IV — Minuta de Ata de Registro de Preços.'));
   }
 
-  ps.push(item(`${numSec}.12.`, 'O Foro para dirimir qualquer questão oriunda da presente licitação é o da Comarca de Astorga/PR.'));
+  ps.push(item(`${numSec}.12.`, 'O Foro para dirimir qualquer questão oriunda da presente licitação é o da Comarca de Nova Esperança/PR.'));
 
   return ps;
 }
@@ -1316,15 +1449,26 @@ function secDisposicoes(d, numSec) {
 // ASSINATURAS
 // ═══════════════════════════════════════════════════════════════════════════════
 function secAssinaturas(d) {
-  return [
+  const ps = [
     blank(), blank(), divider(),
     para([run(`Uniflor/PR, ${fmtDateExt(d.data_sessao || null)}`)],
       { alignment: AlignmentType.LEFT, spacing: { after: SP(30) } }),
     blank(), blank(),
+  ];
+  if (d.orgao_responsavel) {
+    ps.push(
+      sig('______________________________________________'),
+      sig(d.orgao_responsavel),
+      sig(`${d.orgao_solicitante || 'Setor Demandante'} — Setor Demandante`),
+      blank(), blank(),
+    );
+  }
+  ps.push(
     sig('______________________________________________'),
     sig(d.prefeito || 'Maycon Rodrigo Rodrigues de Souza'),
     sig('Prefeito Municipal de Uniflor/PR'),
-  ];
+  );
+  return ps;
 }
 
 // ─── Header e Footer ─────────────────────────────────────────────────────────
@@ -1424,6 +1568,7 @@ async function generateEdital(d) {
   const disSec  = next(); // Das Disposições
 
   const children = [
+    ...capaPage(d),
     ...secPreamble(d),
     ...secObjeto(d),
     ...(d.srp ? secSRP(d) : []),

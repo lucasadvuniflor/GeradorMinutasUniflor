@@ -6,10 +6,15 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('uniflorAPI', {
   // Edital
   gerarEdital: (formData) => ipcRenderer.invoke('gerar-edital', formData),
+  selecionarTR: () => ipcRenderer.invoke('selecionar-tr'),
   buscarCep: (cep) => ipcRenderer.invoke('buscar-cep', cep),
   // Edital — Credenciamento (art. 79) e Aviso de Contratação Direta (art. 75)
   gerarCredenciamento: (formData) => ipcRenderer.invoke('gerar-credenciamento', formData),
   gerarAvisoContratacaoDireta: (formData) => ipcRenderer.invoke('gerar-aviso-contratacao-direta', formData),
+  // Guia Rápido do Licitante (resumo em linguagem simples)
+  gerarResumoEdital: (formData) => ipcRenderer.invoke('gerar-resumo-edital', formData),
+  gerarResumoCredenciamento: (formData) => ipcRenderer.invoke('gerar-resumo-credenciamento', formData),
+  gerarResumoAviso: (formData) => ipcRenderer.invoke('gerar-resumo-aviso', formData),
   // Anexo III – Contrato
   gerarContrato: (formData) => ipcRenderer.invoke('gerar-contrato', formData),
   buscarCnpj: (cnpj) => ipcRenderer.invoke('buscar-cnpj', cnpj),
