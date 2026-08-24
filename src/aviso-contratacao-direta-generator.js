@@ -4,8 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const {
   Document, Paragraph, TextRun, AlignmentType,
-  Packer, BorderStyle, Header, Footer, SimpleField,
-  convertMillimetersToTwip, ImageRun,
+  Packer, BorderStyle, Header, Footer, SimpleField, PageBreak,
+  convertMillimetersToTwip, ImageRun, ShadingType,
   Table, TableRow, TableCell, WidthType, VerticalAlign
 } = require('docx');
 
@@ -44,8 +44,12 @@ function subtitle(text) {
 }
 
 function secTitle(text) {
-  return para([new TextRun({ text: text.toUpperCase(), size: FS(12), bold: true, font: 'Arial' })],
-    { spacing: { before: SP(12), after: SP(6) }, alignment: AlignmentType.LEFT });
+  return para([new TextRun({ text: text.toUpperCase(), size: FS(12), bold: true, font: 'Arial', color: '1a4b8c' })],
+    {
+      spacing: { before: SP(16), after: SP(10), line: 240, lineRule: 'auto' },
+      alignment: AlignmentType.LEFT,
+      shading: { type: ShadingType.CLEAR, fill: 'e4ecf6' },
+    });
 }
 
 function body(text) {
@@ -113,6 +117,103 @@ function agente(d) {
   return d.agente_contratacao || '___________________';
 }
 
+// Tabela de itens e quantidades (opcional — só aparece quando o usuário preenche a etapa "Itens e Quantidades")
+function itensTable(itens) {
+  const headerCell = (text, width) => new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    shading: { type: ShadingType.CLEAR, fill: 'e4ecf6' },
+    margins: { top: 60, bottom: 60, left: 80, right: 80 },
+    children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: FS(9.5), font: 'Arial' })] })]
+  });
+  const bodyCell = (text, width, alignRight) => new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    margins: { top: 50, bottom: 50, left: 80, right: 80 },
+    children: [new Paragraph({ alignment: alignRight ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [new TextRun({ text, size: FS(10), font: 'Arial' })] })]
+  });
+  const widths = [4200, 900, 1200, 1400, 1371];
+  const header = new TableRow({ children: [
+    headerCell('Descrição', widths[0]), headerCell('Unid.', widths[1]), headerCell('Qtd.', widths[2]),
+    headerCell('Valor Unit. (R$)', widths[3]), headerCell('Valor Total (R$)', widths[4]),
+  ] });
+  const rows = itens.map(it => {
+    const qtd = parseFloat(it.qtd) || 0;
+    const unit = parseFloat(it.valor_unitario) || 0;
+    const total = qtd * unit;
+    return new TableRow({ children: [
+      bodyCell(it.descricao || '—', widths[0]),
+      bodyCell(it.unidade || '—', widths[1]),
+      bodyCell(qtd.toLocaleString('pt-BR'), widths[2], true),
+      bodyCell(unit.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), widths[3], true),
+      bodyCell(total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), widths[4], true),
+    ] });
+  });
+  return new Table({
+    width: { size: 9071, type: WidthType.DXA },
+    columnWidths: widths,
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+      left: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, right: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+      insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, insideVertical: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+    },
+    rows: [header, ...rows]
+  });
+}
+
+// Capa com a ficha-resumo do aviso (padrão inspirado no modelo da AGU/União)
+function capaFactSheet(rows) {
+  const trs = rows.filter(r => r[1] !== null && r[1] !== undefined && r[1] !== '').map(([label, value]) => new TableRow({
+    children: [
+      new TableCell({
+        width: { size: 3200, type: WidthType.DXA },
+        shading: { type: ShadingType.CLEAR, fill: 'e4ecf6' },
+        verticalAlign: VerticalAlign.CENTER,
+        margins: { top: 100, bottom: 100, left: 140, right: 100 },
+        children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: FS(10.5), font: 'Arial', color: '1a4b8c' })] })]
+      }),
+      new TableCell({
+        width: { size: 5871, type: WidthType.DXA },
+        verticalAlign: VerticalAlign.CENTER,
+        margins: { top: 100, bottom: 100, left: 140, right: 100 },
+        children: [new Paragraph({ children: [new TextRun({ text: String(value), size: FS(11), font: 'Arial' })] })]
+      })
+    ]
+  }));
+  return new Table({
+    width: { size: 9071, type: WidthType.DXA },
+    columnWidths: [3200, 5871],
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' },
+      left: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' }, right: { style: BorderStyle.SINGLE, size: 4, color: '1a4b8c' },
+      insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' }, insideVertical: { style: BorderStyle.SINGLE, size: 4, color: 'c7d4e6' },
+    },
+    rows: trs
+  });
+}
+
+function capaPage(d) {
+  const num = `${d.numero_aviso || 'XXXX'}/${d.ano_aviso || '20XX'}`;
+  const comLances = d.modo_disputa_dispensa !== 'sem_lances';
+  const criterioTxt = d.criterio === 'maior_desconto' ? 'Maior Desconto' : 'Menor Preço';
+  const rows = [
+    ['CONTRATANTE', 'MUNICÍPIO DE UNIFLOR/PR'],
+    ['OBJETO', d.objeto || '[OBJETO]'],
+    ['DATA LIMITE PARA MANIFESTAÇÃO/PROPOSTA', d.data_limite_manifestacao ? `${fmtDate(d.data_limite_manifestacao)} às ${d.hora_limite_manifestacao || '__:__'}` : null],
+    [comLances ? 'PLATAFORMA' : 'MEIO DE RECEBIMENTO', comLances ? `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}` : (d.meio_recebimento_propostas || null)],
+    ['VALOR TOTAL ESTIMADO', moeda(d.valor_estimado)],
+    ['CRITÉRIO DE JULGAMENTO', criterioTxt],
+    ['SISTEMA DE REGISTRO DE PREÇOS', d.srp ? 'SIM' : 'NÃO'],
+    ['TRATAMENTO FAVORECIDO ME/EPP/EQUIPARADAS', d.me_epp ? 'SIM' : 'NÃO'],
+  ];
+  return [
+    blank(),
+    title(`AVISO DE CONTRATAÇÃO DIRETA Nº ${num}`),
+    paraCenter([run(`Processo Administrativo nº ${d.numero_processo || 'XXXX/XXXX'}`)]),
+    blank(), blank(),
+    capaFactSheet(rows),
+    new Paragraph({ children: [new PageBreak()] }),
+  ];
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PREÂMBULO
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -173,6 +274,12 @@ function secObjeto(d) {
   }
 
   ps.push(item(isSRP ? '1.3.' : (d.divisao_objeto ? '1.3.' : '1.2.'), `O critério de julgamento adotado será o ${d.criterio === 'maior_desconto' ? 'Maior Desconto' : 'Menor Preço'}, observadas as exigências contidas neste Aviso de Contratação Direta e seus Anexos quanto às especificações do objeto.`));
+
+  if (Array.isArray(d.itens) && d.itens.length) {
+    ps.push(blank());
+    ps.push(itensTable(d.itens));
+    ps.push(blank());
+  }
 
   return ps;
 }
@@ -330,6 +437,16 @@ function secProposta(d, numSec) {
   ps.push(item(`${numSec}.${n}.`, 'A proposta deverá conter declaração de que compreende a integralidade dos custos para atendimento dos direitos trabalhistas assegurados na Constituição Federal, nas leis trabalhistas, nas normas infralegais, nas convenções coletivas de trabalho e nos termos de ajustamento de conduta vigentes na data de entrega da proposta.'));
   n++;
   ps.push(item(`${numSec}.${n}.`, `O prazo de validade da proposta não será inferior a ${d.prazo_validade_proposta || '60'} (${n2w(d.prazo_validade_proposta || '60')}) dias, a contar da data de sua apresentação.`));
+  n++;
+
+  if (d.garantia_proposta) {
+    const pctProp = d.percentual_garantia_proposta || '1';
+    ps.push(item(`${numSec}.${n}.`, `Será exigida, como requisito de pré-habilitação, garantia de proposta correspondente a ${pctProp}% (${pctProp.toString().replace('.', ',')} por cento) do valor estimado da contratação, podendo o interessado optar por caução em dinheiro ou em títulos da dívida pública, seguro-garantia ou fiança bancária, nos termos do art. 58 da Lei nº 14.133, de 2021.`));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'A garantia de proposta deverá ser comprovada até a data definida para entrega das propostas e será devolvida no prazo de 10 (dez) dias úteis, contado da assinatura do contrato ou da data em que o procedimento for declarado fracassado.'));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'Implicará a execução integral da garantia de proposta a recusa do interessado em assinar o contrato ou a não apresentação dos documentos exigidos para a contratação, ressalvados os casos de força maior reconhecidos pela Administração.'));
+  }
 
   return ps;
 }
@@ -531,13 +648,23 @@ function secDisposicoes(d, numSec) {
 }
 
 function secAssinaturas(d) {
-  return [
+  const ps = [
     blank(), blank(),
     paraCenter([run(`Uniflor/PR, ${fmtDateExt(d.data_edital)}.`)]),
     blank(), blank(),
+  ];
+  if (d.orgao_responsavel) {
+    ps.push(
+      sig(d.orgao_responsavel),
+      paraCenter([run(`${d.orgao_solicitante || 'Setor Demandante'} — Setor Demandante`)]),
+      blank(), blank(),
+    );
+  }
+  ps.push(
     sig(d.prefeito || 'Maycon Rodrigo Rodrigues de Souza'),
     paraCenter([run('Prefeito Municipal')]),
-  ];
+  );
+  return ps;
 }
 
 // ─── Header e Footer ───────────────────────────────────────────────────────────
@@ -617,6 +744,7 @@ async function generateAvisoContratacaoDireta(d) {
   const disSec = next();                  // Disposições Gerais
 
   const children = [
+    ...capaPage(d),
     ...secPreamble(d),
     ...secObjeto(d),
     ...(d.srp ? secSRP(d) : []),

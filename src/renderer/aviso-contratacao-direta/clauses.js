@@ -79,7 +79,7 @@ const CLAUSES = {
     descricao: 'Define se a dispensa é para registro de preços ou contratação direta imediata.',
     opcoes: [
       { id: 'false', label: 'Não — Contratação Direta', icon: '📝', desc: 'A dispensa resulta em contrato imediato', disponivel: () => true, info: { quando_usar: 'Use para necessidade pontual, sem previsão de contratações futuras do mesmo objeto.', quando_nao: null, fundamento: 'Art. 75 da Lei nº 14.133/2021', impacto: 'Gera diretamente Termo de Contrato/instrumento equivalente.' } },
-      { id: 'true', label: 'Sim — Registro de Preços (ARP)', icon: '📑', desc: 'A dispensa resulta em Ata de Registro de Preços', disponivel: () => true, info: { quando_usar: 'Use quando houver previsão de contratações futuras recorrentes do mesmo objeto.', quando_nao: null, fundamento: 'Arts. 82 a 86 da Lei nº 14.133/2021', impacto: 'Habilita a seção "Do Registro de Preços" e a Ata de Registro de Preços como anexo.' } }
+      { id: 'true', label: 'Sim — Registro de Preços (ARP)', icon: '📑', desc: 'A dispensa resulta em Ata de Registro de Preços', disponivel: (state) => !srpVedado(state).vedado, indisponivel_msg: 'Vedado pelo TCE-PR nesta configuração — veja o motivo específico no alerta no topo da página.', info: { quando_usar: 'Use quando houver previsão de contratações futuras recorrentes do mesmo objeto.', quando_nao: null, fundamento: 'Arts. 82 a 86 da Lei nº 14.133/2021', impacto: 'Habilita a seção "Do Registro de Preços" e a Ata de Registro de Preços como anexo.' } }
     ]
   },
 
@@ -100,9 +100,28 @@ const GARANTIA_OPCOES = [
   { id: 'true', label: 'Com Garantia de Execução', icon: '🛡️', desc: 'Exige 2–10% do valor do contrato como garantia', info: { quando_usar: 'Use em contratos de maior valor ou risco.', quando_nao: null, fundamento: 'Art. 96 da Lei nº 14.133/2021', impacto: 'Adiciona cláusula exigindo garantia em até 10 dias úteis após a assinatura.' } }
 ];
 
+// ─── Vedações ao SRP (jurisprudência TCE-PR) ─────────────────────────────────
+// Mesmas 5 hipóteses do wizard de Edital — o SRP é excepcional (art. 82, Lei
+// 14.133/2021) e a dispensa/aviso não escapa dessas vedações quando opta pela ARP.
+function srpVedado(state) {
+  const motivos = [];
+  if (state.tipo_objeto === 'obras')
+    motivos.push('🚫 TCE-PR: SRP é vedado para obras de engenharia — objeto indivisível e de execução imediata (Acórdão nº 3.065/2014-TCU-Plenário, adotado como parâmetro pelo TCE-PR).');
+  if (state.srp_tecnico_especializado === 'sim')
+    motivos.push('🚫 TCE-PR: SRP é incompatível com serviço técnico especializado de alta complexidade (projeto, cálculo estrutural, BIM) — exige julgamento por melhor técnica/técnica e preço (Acórdão nº 3301/2025-Pleno TCE-PR, caso COMESP).');
+  if (state.srp_demanda_eventual === 'nao')
+    motivos.push('🚫 TCE-PR: SRP pressupõe eventualidade e parcelamento da demanda — para demanda certa e execução integral imediata, use contratação direta comum (art. 82, Lei nº 14.133/2021; caso SETI/TCE-PR).');
+  if (state.srp_coordenacao_unificada === 'sim')
+    motivos.push('🚫 TCE-PR: SRP é inviável quando a execução exige coordenação técnica unificada e indivisível, em que a falha de uma etapa compromete o conjunto (Acórdão nº 113/2012-TCU-Plenário).');
+  if (state.srp_manutencao_hora === 'sim' && state.srp_materiais_especificados === 'nao')
+    motivos.push('🚫 TCE-PR: SRP é vedado para manutenção cobrada por hora sem especificação, quantificação e preço unitário prévios dos materiais/peças na planilha (Pregão Presencial nº 58/2018, TCE-PR).');
+  return { vedado: motivos.length > 0, motivos };
+}
+
 function aplicarCascata(state) {
   const updates = {};
   if (state.tipo_objeto === 'obras' && state.art75_inciso !== 'I') updates.art75_inciso = 'I';
+  if (state.srp === 'true' && srpVedado(state).vedado) updates.srp = 'false';
   return updates;
 }
 
@@ -121,5 +140,6 @@ function getAlertasCascata(state) {
   if (state.srp === 'true' && state.tipo_objeto === 'obras')
     alertas.push({ nivel: 'aviso', msg: 'ℹ️ SRP para obras e serviços de engenharia exige condições específicas — padronização e necessidade permanente/frequente (art. 85, Lei nº 14.133/2021).' });
   alertas.push({ nivel: 'info', msg: 'ℹ️ Fundamentado no Decreto Municipal nº 17/2023, que regulamenta o art. 75, I e II, da Lei nº 14.133/2021 em Uniflor — sem citação de normas exclusivas do Executivo Federal (IN SEGES/ME nº 67/2021, Decreto nº 11.462/2023).' });
+  srpVedado(state).motivos.forEach(msg => alertas.push({ nivel: 'erro', msg }));
   return alertas;
 }

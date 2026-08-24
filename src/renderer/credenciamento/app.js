@@ -5,7 +5,7 @@ const state = {
   data: {
     // Step 1
     art79_inciso: 'I', numero_credenciamento: '', ano_credenciamento: new Date().getFullYear().toString(),
-    numero_processo: '', objeto_natureza: 'fornecer', objeto: '',
+    numero_processo: '', objeto_natureza: 'fornecer', objeto: '', itens: [],
     // Step 2
     consorcio: 'false', consorcio_pct: '10', prazo_habilitacao_dias: '10',
     // Step 3
@@ -13,7 +13,7 @@ const state = {
     // Step 4
     prazo_vigencia_edital: '12', unidade_vigencia_edital: 'meses', data_inicio_vigencia: '',
     prazo_vigencia_contratos: '12', unidade_vigencia_contratos: 'meses', prazo_assinar_contrato: '5',
-    criterios_ordem_contratacao: '', garantia: 'false', percentual_garantia: '5',
+    criterios_ordem_contratacao: '', garantia: 'false', percentual_garantia: '5', valor_estimado: '',
     // Step 5
     orgao_solicitante: '', orgao_responsavel: '', orgao_email: '',
     responsavel_condutor: '', decreto_designacao: '', gestor_contrato: '', fiscal_contrato: '',
@@ -114,6 +114,62 @@ function renderCurrentStep() {
   if (s === 7) renderReview();
 }
 
+// ─── Itens e Quantidades ──────────────────────────────────────────────────────
+function escHtml(s) { return (s ?? '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function renderItensTable() {
+  const tbody = document.getElementById('itens-tbody');
+  if (!tbody) return;
+  const itens = state.data.itens || [];
+  if (!itens.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#a0aec0;padding:12px;font-size:.8rem">Nenhum item adicionado — o valor estimado poderá ser digitado manualmente na etapa de Vigência.</td></tr>`;
+  } else {
+    tbody.innerHTML = itens.map(it => {
+      const total = (parseFloat(it.qtd) || 0) * (parseFloat(it.valor_unitario) || 0);
+      return `<tr>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="text" value="${escHtml(it.descricao)}" placeholder="Descrição do item" style="width:100%;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'descricao',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="text" value="${escHtml(it.unidade)}" placeholder="un" style="width:100%;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'unidade',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="number" min="0" step="any" value="${escHtml(it.qtd)}" style="width:100%;text-align:right;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'qtd',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="number" min="0" step="0.01" value="${escHtml(it.valor_unitario)}" style="width:100%;text-align:right;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'valor_unitario',this.value)"></td>
+        <td style="padding:4px 8px;text-align:right;border:1px solid #e2e8f0;font-weight:600">${total ? total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '—'}</td>
+        <td style="text-align:center;border:1px solid #e2e8f0"><button type="button" onclick="removeItem(${it.id})" style="background:none;border:none;color:#e53e3e;cursor:pointer;font-size:1rem" title="Remover item">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+  atualizarValorEstimadoAutomatico();
+}
+
+window.addItem = function () {
+  state.data.itens = state.data.itens || [];
+  state.data.itens.push({ id: Date.now(), descricao: '', unidade: 'un', qtd: '', valor_unitario: '' });
+  renderItensTable();
+};
+window.removeItem = function (id) {
+  state.data.itens = (state.data.itens || []).filter(i => i.id !== id);
+  renderItensTable();
+};
+window.updateItem = function (id, field, value) {
+  const it = (state.data.itens || []).find(i => i.id === id);
+  if (!it) return;
+  it[field] = value;
+  renderItensTable();
+};
+
+function atualizarValorEstimadoAutomatico() {
+  const itens = state.data.itens || [];
+  const totalLabel = document.getElementById('itens-total-label');
+  const valorInput = document.getElementById('input-valor-estimado');
+  if (itens.length) {
+    const total = itens.reduce((s, it) => s + (parseFloat(it.qtd) || 0) * (parseFloat(it.valor_unitario) || 0), 0);
+    state.data.valor_estimado = total.toFixed(2);
+    if (valorInput) { valorInput.value = state.data.valor_estimado; valorInput.readOnly = true; valorInput.style.background = '#f1f5f9'; }
+    if (totalLabel) totalLabel.textContent = `Valor Total Estimado (calculado a partir dos itens): R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  } else {
+    if (valorInput) { valorInput.readOnly = false; valorInput.style.background = ''; }
+    if (totalLabel) totalLabel.textContent = '';
+  }
+}
+
 function init() {
   document.querySelectorAll('[data-field]').forEach(el => {
     const f = el.dataset.field;
@@ -132,9 +188,13 @@ function init() {
     if (inpEmail) { inpEmail.value = email; state.data.orgao_email = email; }
   });
 
+  document.getElementById('btn-add-item')?.addEventListener('click', () => window.addItem());
+  renderItensTable();
+
   document.getElementById('btn-prev').addEventListener('click', () => navigate(-1));
   document.getElementById('btn-next').addEventListener('click', () => navigate(1));
   document.getElementById('btn-gerar').addEventListener('click', gerarCredenciamento);
+  document.getElementById('btn-gerar-resumo').addEventListener('click', gerarResumoCredenciamento);
   renderStep(1);
 }
 
@@ -209,6 +269,8 @@ function renderReview() {
     { k: 'Meio de Manifestação', v: d.meio_manifestacao || '—' },
     { k: 'Vigência do Edital', v: `${d.prazo_vigencia_edital || '—'} ${d.unidade_vigencia_edital} a partir de ${fD(d.data_inicio_vigencia)}` },
     { k: 'Vigência dos Contratos', v: `${d.prazo_vigencia_contratos || '—'} ${d.unidade_vigencia_contratos}` },
+    { k: 'Itens Cadastrados', v: (d.itens || []).length ? `${d.itens.length} item(ns)` : 'Nenhum (valor manual)' },
+    { k: 'Valor Estimado', v: d.valor_estimado ? `R$ ${parseFloat(d.valor_estimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—' },
     { k: 'Garantia', v: bL(d.garantia) },
     { k: 'Órgão Solicitante', v: d.orgao_solicitante || '—' },
     { k: 'Agente/Comissão', v: d.responsavel_condutor || '—' },
@@ -222,19 +284,37 @@ function renderReview() {
   document.getElementById('result-msg').className = 'hidden result-box';
 }
 
+function buildPayload() {
+  return { ...state.data, consorcio: state.data.consorcio === 'true', garantia: state.data.garantia === 'true' };
+}
+
 async function gerarCredenciamento() {
   const btn = document.getElementById('btn-gerar');
   const res = document.getElementById('result-msg');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Gerando…'; res.className = 'hidden result-box';
   try {
-    const payload = { ...state.data, consorcio: state.data.consorcio === 'true', garantia: state.data.garantia === 'true' };
-    const result = await window.uniflorAPI.gerarCredenciamento(payload);
+    const result = await window.uniflorAPI.gerarCredenciamento(buildPayload());
     if (result.cancelled) { btn.disabled = false; btn.innerHTML = '<span>📄</span> Gerar Minuta de Credenciamento (.docx)'; return; }
     if (result.success) { res.className = 'result-box success'; res.textContent = `✅ Salvo: ${result.path}`; }
     else throw new Error(result.error || 'Erro desconhecido');
   } catch (e) { res.className = 'result-box error'; res.textContent = `❌ ${e.message}`; }
   res.classList.remove('hidden');
   btn.disabled = false; btn.innerHTML = '<span>📄</span> Gerar Minuta de Credenciamento (.docx)';
+}
+
+async function gerarResumoCredenciamento() {
+  const btn = document.getElementById('btn-gerar-resumo');
+  const res = document.getElementById('result-msg');
+  const label = '<span>📋</span> Gerar Guia Rápido do Interessado (.docx)';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Gerando…'; res.className = 'hidden result-box';
+  try {
+    const result = await window.uniflorAPI.gerarResumoCredenciamento(buildPayload());
+    if (result.cancelled) { btn.disabled = false; btn.innerHTML = label; return; }
+    if (result.success) { res.className = 'result-box success'; res.textContent = `✅ Salvo: ${result.path}`; }
+    else throw new Error(result.error || 'Erro desconhecido');
+  } catch (e) { res.className = 'result-box error'; res.textContent = `❌ ${e.message}`; }
+  res.classList.remove('hidden');
+  btn.disabled = false; btn.innerHTML = label;
 }
 
 document.addEventListener('DOMContentLoaded', init);

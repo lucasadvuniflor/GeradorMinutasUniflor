@@ -1,10 +1,15 @@
 'use strict';
 
+const GARANTIA_PROPOSTA_OPCOES = [
+  { id: 'false', label: 'Sem Garantia de Proposta', icon: '📝', desc: 'Não exige garantia na apresentação da proposta', info: { quando_usar: 'Regra geral — use na maioria dos processos.', quando_nao: null, fundamento: 'Art. 58 da Lei nº 14.133/2021 — facultativa', impacto: 'Nenhuma cláusula de garantia de proposta inserida no Aviso.' } },
+  { id: 'true', label: 'Com Garantia de Proposta', icon: '🔒', desc: 'Exige até 1% do valor estimado como garantia, junto com a proposta', info: { quando_usar: 'Use apenas em razão do vulto e complexidade do objeto, a critério da autoridade competente — não é praxe em dispensa de licitação.', quando_nao: 'Evite em processos de menor valor: pode afastar concorrentes menores sem necessidade real.', fundamento: 'Art. 58, §1º, da Lei nº 14.133/2021 — teto de 1% do valor estimado', impacto: 'Adiciona cláusula exigindo garantia (caução em dinheiro/títulos, seguro-garantia ou fiança bancária, à escolha do interessado) até a data de entrega da proposta, devolvida em 10 dias úteis após a assinatura do contrato; a recusa em assinar implica execução integral da garantia.' } }
+];
+
 const state = {
   currentStep: 1, totalSteps: 7,
   data: {
     // Step 1
-    art75_inciso: 'II', tipo_objeto: 'bens', divisao_objeto: 'itens', num_itens: '',
+    art75_inciso: 'II', tipo_objeto: 'bens', divisao_objeto: 'itens', num_itens: '', itens: [],
     numero_aviso: '', ano_aviso: new Date().getFullYear().toString(), numero_processo: '', objeto: '',
     srp: 'false', srp_indicacao_limitada: 'nao', srp_justificativa_limitacao: '', srp_irp: 'nao',
     srp_adesao: 'sim', srp_cadastro_reserva: 'sim', prazo_arp: '12',
@@ -19,6 +24,7 @@ const state = {
     prazo_validade_proposta: '60',
     // Step 4
     prazo_docs_habilitacao: '2', garantia: 'false', percentual_garantia: '5',
+    garantia_proposta: 'false', percentual_garantia_proposta: '1',
     prazo_assinar_contrato: '5', prazo_assinar_arp: '5', valor_estimado: '',
     // Step 5
     orgao_solicitante: '', orgao_responsavel: '', orgao_email: '',
@@ -104,7 +110,9 @@ function toggleInfoPanel(clauseKey, optionId, opcoes) {
     panel.classList.remove('hidden');
     panel.querySelector('.info-panel-close').addEventListener('click', () => toggleInfoPanel(clauseKey, optionId, opcoes));
   }
-  const opts2 = clauseKey === 'garantia' ? GARANTIA_OPCOES.map(o => ({ ...o, _disponivel: true })) : getOpcoes(clauseKey, state.data);
+  const opts2 = clauseKey === 'garantia' ? GARANTIA_OPCOES.map(o => ({ ...o, _disponivel: true }))
+    : clauseKey === 'garantia_proposta' ? GARANTIA_PROPOSTA_OPCOES.map(o => ({ ...o, _disponivel: true }))
+    : getOpcoes(clauseKey, state.data);
   renderClauseGrid(`cg-${clauseKey}`, clauseKey, opts2, state.data[clauseKey]);
 }
 
@@ -119,8 +127,66 @@ function renderCurrentStep() {
   if (s === 4) {
     const go = GARANTIA_OPCOES.map(o => ({ ...o, _disponivel: true }));
     renderClauseGrid('cg-garantia', 'garantia', go, d.garantia);
+    const gpo = GARANTIA_PROPOSTA_OPCOES.map(o => ({ ...o, _disponivel: true }));
+    renderClauseGrid('cg-garantia_proposta', 'garantia_proposta', gpo, d.garantia_proposta);
   }
   if (s === 7) renderReview();
+}
+
+// ─── Itens e Quantidades ──────────────────────────────────────────────────────
+function escHtml(s) { return (s ?? '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function renderItensTable() {
+  const tbody = document.getElementById('itens-tbody');
+  if (!tbody) return;
+  const itens = state.data.itens || [];
+  if (!itens.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#a0aec0;padding:12px;font-size:.8rem">Nenhum item adicionado — o valor estimado poderá ser digitado manualmente na etapa de Habilitação.</td></tr>`;
+  } else {
+    tbody.innerHTML = itens.map(it => {
+      const total = (parseFloat(it.qtd) || 0) * (parseFloat(it.valor_unitario) || 0);
+      return `<tr>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="text" value="${escHtml(it.descricao)}" placeholder="Descrição do item" style="width:100%;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'descricao',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="text" value="${escHtml(it.unidade)}" placeholder="un" style="width:100%;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'unidade',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="number" min="0" step="any" value="${escHtml(it.qtd)}" style="width:100%;text-align:right;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'qtd',this.value)"></td>
+        <td style="padding:3px 4px;border:1px solid #e2e8f0"><input type="number" min="0" step="0.01" value="${escHtml(it.valor_unitario)}" style="width:100%;text-align:right;border:1px solid #cbd5e0;border-radius:3px;padding:3px 5px" oninput="updateItem(${it.id},'valor_unitario',this.value)"></td>
+        <td style="padding:4px 8px;text-align:right;border:1px solid #e2e8f0;font-weight:600">${total ? total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '—'}</td>
+        <td style="text-align:center;border:1px solid #e2e8f0"><button type="button" onclick="removeItem(${it.id})" style="background:none;border:none;color:#e53e3e;cursor:pointer;font-size:1rem" title="Remover item">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+  atualizarValorEstimadoAutomatico();
+}
+
+window.addItem = function () {
+  state.data.itens = state.data.itens || [];
+  state.data.itens.push({ id: Date.now(), descricao: '', unidade: 'un', qtd: '', valor_unitario: '' });
+  renderItensTable();
+};
+window.removeItem = function (id) {
+  state.data.itens = (state.data.itens || []).filter(i => i.id !== id);
+  renderItensTable();
+};
+window.updateItem = function (id, field, value) {
+  const it = (state.data.itens || []).find(i => i.id === id);
+  if (!it) return;
+  it[field] = value;
+  renderItensTable();
+};
+
+function atualizarValorEstimadoAutomatico() {
+  const itens = state.data.itens || [];
+  const totalLabel = document.getElementById('itens-total-label');
+  const valorInput = document.getElementById('input-valor-estimado');
+  if (itens.length) {
+    const total = itens.reduce((s, it) => s + (parseFloat(it.qtd) || 0) * (parseFloat(it.valor_unitario) || 0), 0);
+    state.data.valor_estimado = total.toFixed(2);
+    if (valorInput) { valorInput.value = state.data.valor_estimado; valorInput.readOnly = true; valorInput.style.background = '#f1f5f9'; }
+    if (totalLabel) totalLabel.textContent = `Valor Total Estimado (calculado a partir dos itens): R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  } else {
+    if (valorInput) { valorInput.readOnly = false; valorInput.style.background = ''; }
+    if (totalLabel) totalLabel.textContent = '';
+  }
 }
 
 function init() {
@@ -144,9 +210,13 @@ function init() {
     if (inpEmail) { inpEmail.value = email; state.data.orgao_email = email; }
   });
 
+  document.getElementById('btn-add-item')?.addEventListener('click', () => window.addItem());
+  renderItensTable();
+
   document.getElementById('btn-prev').addEventListener('click', () => navigate(-1));
   document.getElementById('btn-next').addEventListener('click', () => navigate(1));
   document.getElementById('btn-gerar').addEventListener('click', gerarAviso);
+  document.getElementById('btn-gerar-resumo').addEventListener('click', gerarResumoAviso);
   renderStep(1);
 }
 
@@ -155,6 +225,15 @@ function updateConditionals() {
   const comLances = state.data.modo_disputa_dispensa !== 'sem_lances';
 
   document.getElementById('num_itens_row')?.classList.toggle('hidden', state.data.divisao_objeto !== 'grupo_unico');
+
+  // Vedações ao SRP (TCE-PR) — força srp='false' se a configuração atual for vedada
+  document.getElementById('srp_manutencao_materiais_row')?.classList.toggle('hidden', state.data.srp_manutencao_hora !== 'sim');
+  if (srp && srpVedado(state.data).vedado) {
+    state.data.srp = 'false';
+    renderClauseGrid('cg-srp', 'srp', getOpcoes('srp', state.data), state.data.srp);
+    return updateConditionals();
+  }
+
   document.getElementById('srp_cascade_group')?.classList.toggle('hidden', !srp);
   const indLim = state.data.srp_indicacao_limitada === 'sim';
   document.getElementById('srp_justificativa_group')?.classList.toggle('hidden', !indLim);
@@ -172,7 +251,11 @@ function updateConditionals() {
   document.getElementById('sem_lances_group')?.classList.toggle('hidden', comLances);
 
   document.getElementById('perc_garantia_row')?.classList.toggle('hidden', state.data.garantia !== 'true');
+  document.getElementById('perc_garantia_proposta_row')?.classList.toggle('hidden', state.data.garantia_proposta !== 'true');
   document.getElementById('prazo_arp_assinar_group')?.classList.toggle('hidden', !srp);
+
+  const alertasSrp = getAlertasCascata(state.data);
+  if (alertasSrp.length) showAlertBar(alertasSrp); else hideAlertBar();
 }
 
 function navigate(dir) {
@@ -263,7 +346,9 @@ function renderReview() {
     ] : [
       { k: 'Meio de Recebimento', v: d.meio_recebimento_propostas || '—' },
     ]),
-    { k: 'Garantia', v: bL(d.garantia) },
+    { k: 'Itens Cadastrados', v: (d.itens || []).length ? `${d.itens.length} item(ns)` : 'Nenhum (valor manual)' },
+    { k: 'Garantia de Execução', v: bL(d.garantia) },
+    { k: 'Garantia da Proposta', v: bL(d.garantia_proposta) },
     { k: 'Valor Estimado', v: d.valor_estimado ? `R$ ${parseFloat(d.valor_estimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—' },
     { k: 'Órgão Solicitante', v: d.orgao_solicitante || '—' },
     { k: 'Agente de Contratação', v: d.agente_contratacao || '—' },
@@ -277,25 +362,44 @@ function renderReview() {
   document.getElementById('result-msg').className = 'hidden result-box';
 }
 
+function buildPayload() {
+  return {
+    ...state.data,
+    srp: state.data.srp === 'true', me_epp: state.data.me_epp === 'true',
+    margem_preferencia: state.data.margem_preferencia === 'true',
+    consorcio: state.data.consorcio === 'true',
+    garantia: state.data.garantia === 'true',
+    garantia_proposta: state.data.garantia_proposta === 'true',
+  };
+}
+
 async function gerarAviso() {
   const btn = document.getElementById('btn-gerar');
   const res = document.getElementById('result-msg');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Gerando…'; res.className = 'hidden result-box';
   try {
-    const payload = {
-      ...state.data,
-      srp: state.data.srp === 'true', me_epp: state.data.me_epp === 'true',
-      margem_preferencia: state.data.margem_preferencia === 'true',
-      consorcio: state.data.consorcio === 'true',
-      garantia: state.data.garantia === 'true',
-    };
-    const result = await window.uniflorAPI.gerarAvisoContratacaoDireta(payload);
+    const result = await window.uniflorAPI.gerarAvisoContratacaoDireta(buildPayload());
     if (result.cancelled) { btn.disabled = false; btn.innerHTML = '<span>📄</span> Gerar Aviso de Contratação Direta (.docx)'; return; }
     if (result.success) { res.className = 'result-box success'; res.textContent = `✅ Salvo: ${result.path}`; }
     else throw new Error(result.error || 'Erro desconhecido');
   } catch (e) { res.className = 'result-box error'; res.textContent = `❌ ${e.message}`; }
   res.classList.remove('hidden');
   btn.disabled = false; btn.innerHTML = '<span>📄</span> Gerar Aviso de Contratação Direta (.docx)';
+}
+
+async function gerarResumoAviso() {
+  const btn = document.getElementById('btn-gerar-resumo');
+  const res = document.getElementById('result-msg');
+  const label = '<span>📋</span> Gerar Guia Rápido do Interessado (.docx)';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Gerando…'; res.className = 'hidden result-box';
+  try {
+    const result = await window.uniflorAPI.gerarResumoAviso(buildPayload());
+    if (result.cancelled) { btn.disabled = false; btn.innerHTML = label; return; }
+    if (result.success) { res.className = 'result-box success'; res.textContent = `✅ Salvo: ${result.path}`; }
+    else throw new Error(result.error || 'Erro desconhecido');
+  } catch (e) { res.className = 'result-box error'; res.textContent = `❌ ${e.message}`; }
+  res.classList.remove('hidden');
+  btn.disabled = false; btn.innerHTML = label;
 }
 
 document.addEventListener('DOMContentLoaded', init);
