@@ -1,6 +1,70 @@
 'use strict';
 
 const AdmZip = require('adm-zip');
+const pdf = require('pdf-parse');
+const { parseOrcamentoPdf } = require('./orcamento-parser');
+
+// ─── Extração de parágrafos a partir de um TR em PDF ──────────────────────────
+// Nem todo processo tem o TR em .docx: alguns só têm o PDF assinado. Ler o PDF exige dois
+// tratamentos que o .docx não precisa.
+//
+// 1) Remoção do carimbo do Equiplano. O PDF assinado repete, em TODA página, o bloco
+//    "Inserido por FULANO em: .../Documento assinado nos termos do Decreto Municipal.../
+//    endereço: http://uniflorprscp.equiplano.com.br.../<uuid>/Página N de M", além do papel
+//    timbrado. Sem filtrar isso, o carimbo domina o texto e polui todas as buscas.
+//
+// 2) Reflow de linhas em parágrafos. No .docx um <w:p> é uma unidade semântica; no PDF cada
+//    LINHA VISUAL é separada, então o objeto vem picotado ("Contratação de empresa para
+//    aquisição de notebooks destinados ao" / "atendimento das demandas..."). As funções de
+//    interpretação abaixo assumem parágrafos semânticos, então as linhas são reagrupadas.
+const PDF_BOILERPLATE = [
+  /^Inserido por .+ em:\s*\d/i,
+  /Documento assinado nos termos do Decreto Municipal/i,
+  /Assinatura\(s\)\s+Avan[çc]ada\(s\)/i,
+  /consulta-anexo|equiplano\.com\.br|^endere[çc]o:\s*https?:/i,
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  /^P[áa]gina\s+\d+\s+de\s+\d+$/i,
+  /^Autenticidade:/i,
+  /^Fls\.?$/i,
+  /^CNPJ\s+[\d./-]+$/i,
+  /^(RUA|AV\.?|AVENIDA)\s+.*CEP\s/i,
+];
+
+function ehBoilerplatePdf(linha) {
+  return PDF_BOILERPLATE.some(re => re.test(linha));
+}
+
+// Um trecho inicia parágrafo novo quando parece um título numerado ("3.", "1.1. Objeto") ou
+// quando o parágrafo em curso já fechou uma frase (terminou em ".", ":" ou ";").
+function ehTituloNumerado(linha) {
+  return /^\d+(\.\d+)*\.?\s+\S/.test(linha) || /^\d+(\.\d+)*\.?$/.test(linha);
+}
+
+function reflowLinhas(linhas) {
+  const paragraphs = [];
+  let atual = '';
+  const fechar = () => { const t = atual.replace(/\s+/g, ' ').trim(); if (t) paragraphs.push(t); atual = ''; };
+  for (const linha of linhas) {
+    if (ehTituloNumerado(linha) || /[.:;]$/.test(atual.trim())) fechar();
+    atual = atual ? `${atual} ${linha}` : linha;
+  }
+  fechar();
+  return paragraphs;
+}
+
+async function extractParagraphsFromPdf(buffer) {
+  const data = await pdf(buffer);
+  const brutas = data.text.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  // Remove carimbo/timbre e as repetições consecutivas idênticas do cabeçalho de página.
+  const limpas = [];
+  for (const l of brutas) {
+    if (ehBoilerplatePdf(l)) continue;
+    if (limpas.length && limpas[limpas.length - 1] === l) continue;
+    limpas.push(l);
+  }
+  return reflowLinhas(limpas);
+}
 
 // ─── Extração de parágrafos em ordem de leitura, a partir do XML bruto do .docx ───
 // Não usamos uma biblioteca de leitura de docx (ex: mammoth) para manter o app livre de
@@ -162,9 +226,15 @@ function parseMoeda(str) {
   return isNaN(v) ? null : v;
 }
 
+// Cuidado com a numeração de tópico: em TRs lidos de PDF o título costuma grudar no corpo
+// ("1.4. Prazo de Vigência O contrato terá vigência de 12 (doze) meses"), e um padrão frouxo
+// captura o "1" do "1.4." em vez do "12". Por isso a forma canônica dos TRs — número seguido do
+// extenso entre parênteses — tem prioridade, e o padrão simples só entra se aquela não casar.
 function parseMeses(str) {
-  const m = str.match(/(\d+)\s*\(?[^)]*\)?\s*mes/i);
-  return m ? parseInt(m[1], 10) : null;
+  const comExtenso = str.match(/(\d{1,3})\s*\([^)]{2,}\)\s*m[êe]s/i);
+  if (comExtenso) return parseInt(comExtenso[1], 10);
+  const simples = str.match(/(\d{1,3})\s*m[êe]s(?:es)?\b/i);
+  return simples ? parseInt(simples[1], 10) : null;
 }
 
 function parsePercentual(str) {
@@ -289,8 +359,14 @@ function parseModeloGenerico(paragraphs) {
   if (idxObjetoLabel >= 0) {
     set('objeto', paragraphs[idxObjetoLabel].replace(/^OBJETO\s*:\s*/i, ''), 'media');
   } else {
-    const idxDescricao = paragraphs.findIndex(p => /^(descri[çc][ãa]o sucinta)$/i.test(p));
-    if (idxDescricao >= 0 && paragraphs[idxDescricao + 1]) set('objeto', paragraphs[idxDescricao + 1], 'media');
+    // "Descrição Sucinta" pode vir sozinha (docx) ou prefixada por numeração (PDF: "1.1. Descrição
+    // Sucinta"), e o texto do objeto pode estar na mesma linha ou na seguinte.
+    const idxDescricao = paragraphs.findIndex(p => /^(\d+(\.\d+)*\.?\s*)?descri[çc][ãa]o sucinta\b/i.test(p));
+    if (idxDescricao >= 0) {
+      const mesmaLinha = paragraphs[idxDescricao].replace(/^(\d+(\.\d+)*\.?\s*)?descri[çc][ãa]o sucinta\s*:?\s*/i, '').trim();
+      const candidato = mesmaLinha.length > 25 ? mesmaLinha : (paragraphs[idxDescricao + 1] || '');
+      if (candidato) set('objeto', candidato, 'media');
+    }
   }
 
   const linhaValor = paragraphs.find(p => /valor\s+(global\s+)?estimado[^R]{0,40}R\$\s*[\d.,]+/i.test(p));
@@ -311,26 +387,54 @@ function parseModeloGenerico(paragraphs) {
   return { campos, confianca, avisos, templateDetectado: 'generico' };
 }
 
+const vazio = (avisos) => ({ campos: {}, confianca: {}, avisos, templateDetectado: 'nenhum', itens: [], itensOrigem: null });
+
 /**
- * Analisa um Termo de Referência (.docx) e extrai os campos institucionais reconhecíveis
- * para pré-preencher o wizard de Edital. Nunca é definitivo — todo campo extraído deve ser
- * revisado pelo usuário nas etapas normais do wizard.
+ * Analisa um Termo de Referência (.docx ou .pdf) e extrai os campos institucionais
+ * reconhecíveis para pré-preencher o wizard de Edital. Nunca é definitivo — todo campo
+ * extraído deve ser revisado pelo usuário nas etapas normais do wizard.
+ *
+ * `formato` é inferido da extensão do arquivo pelo chamador ('docx' | 'pdf').
  */
-function parseTermoReferencia(buffer) {
-  const paragraphs = extractParagraphs(buffer);
-  if (!paragraphs.length) {
-    return { campos: {}, confianca: {}, avisos: ['Não foi possível ler o conteúdo do arquivo — verifique se é um .docx válido.'], templateDetectado: 'nenhum', itens: [], itensOrigem: null };
+async function parseTermoReferencia(buffer, formato = 'docx') {
+  const ehPdf = formato === 'pdf';
+
+  let paragraphs;
+  try {
+    paragraphs = ehPdf ? await extractParagraphsFromPdf(buffer) : extractParagraphs(buffer);
+  } catch (err) {
+    return vazio([`Não foi possível ler o conteúdo do arquivo: ${err.message}`]);
   }
+
+  if (!paragraphs.length) {
+    return vazio([ehPdf
+      ? 'O PDF não tem texto extraível além do carimbo de assinatura — provavelmente é um documento digitalizado (imagem). Use a versão em .docx do TR, se houver, ou preencha manualmente.'
+      : 'Não foi possível ler o conteúdo do arquivo — verifique se é um .docx válido.']);
+  }
+
   const resultado = detectaModeloPadrao(paragraphs) ? parseModeloPadrao(paragraphs) : parseModeloGenerico(paragraphs);
 
-  const rows = extractTableRows(buffer);
-  const { itens, origem } = extrairItensDeTabela(rows);
-  resultado.itens = itens;
-  resultado.itensOrigem = origem;
-  if (!itens.length) {
+  // Itens/quantitativos: no .docx vêm da tabela nativa do Word; no PDF, da mesma varredura por
+  // coordenadas usada nas cotações de orçamento (o TR em PDF traz a tabela "ITEM/DESCRIÇÃO/QTD./
+  // UNID./VALOR UNIT." desenhada na página, não como estrutura).
+  if (ehPdf) {
+    const r = await parseOrcamentoPdf(buffer);
+    resultado.itens = r.itens;
+    resultado.itensOrigem = r.itens.length ? 'tr_pdf' : null;
+    resultado.avisos.push(...r.avisos);
+  } else {
+    const { itens, origem } = extrairItensDeTabela(extractTableRows(buffer));
+    resultado.itens = itens;
+    resultado.itensOrigem = origem;
+  }
+
+  if (!resultado.itens.length) {
     resultado.avisos.push('Não foi possível localizar uma tabela de itens/quantitativos no TR — preencha os itens manualmente ou importe de um orçamento em PDF.');
+  }
+  if (ehPdf) {
+    resultado.avisos.push('Origem: TR em PDF. A leitura de PDF é menos precisa que a de .docx (o texto é reconstruído a partir do layout da página) — confira cada campo com atenção redobrada.');
   }
   return resultado;
 }
 
-module.exports = { parseTermoReferencia, extractParagraphs, extractTableRows, extrairItensDeTabela };
+module.exports = { parseTermoReferencia, extractParagraphs, extractParagraphsFromPdf, extractTableRows, extrairItensDeTabela };

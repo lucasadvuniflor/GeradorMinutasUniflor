@@ -54,14 +54,37 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 ipcMain.handle('selecionar-tr', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
     title: 'Selecionar Termo de Referência (TR)',
-    filters: [{ name: 'Documento Word', extensions: ['docx'] }],
+    filters: [
+      { name: 'Termo de Referência (Word ou PDF)', extensions: ['docx', 'pdf'] },
+      { name: 'Documento Word', extensions: ['docx'] },
+      { name: 'PDF', extensions: ['pdf'] },
+    ],
     properties: ['openFile'],
   });
   if (canceled || !filePaths.length) return { success: false, cancelled: true };
 
   try {
     const buffer = fs.readFileSync(filePaths[0]);
-    const resultado = parseTermoReferencia(buffer);
+    const formato = path.extname(filePaths[0]).toLowerCase() === '.pdf' ? 'pdf' : 'docx';
+    const resultado = await parseTermoReferencia(buffer, formato);
+
+    // Quando existe o .docx do mesmo TR ao lado do PDF escolhido, avisa: além de a leitura do
+    // .docx ser mais precisa, foi constatado em processo real que o PDF assinado pode ser uma
+    // revisão ANTERIOR do TR (valor estimado divergente do .docx atual).
+    if (formato === 'pdf') {
+      try {
+        const pasta = path.dirname(filePaths[0]);
+        const baseNome = path.basename(filePaths[0], path.extname(filePaths[0])).toLowerCase();
+        const gemeo = fs.readdirSync(pasta).find(f =>
+          f.toLowerCase().endsWith('.docx') && !f.startsWith('~$') &&
+          path.basename(f, '.docx').toLowerCase() === baseNome);
+        if (gemeo) {
+          resultado.avisos.unshift(`Existe uma versão em Word do mesmo TR nesta pasta ("${gemeo}"). Prefira importar o .docx: a leitura é mais precisa e o PDF assinado pode ser uma revisão anterior, com valores divergentes.`);
+        }
+      } catch (e) {
+        console.warn('Aviso: falha ao procurar .docx equivalente ao TR em PDF:', e.message);
+      }
+    }
 
     // Se o próprio TR não trouxe uma tabela de itens legível, procura, na mesma pasta, um PDF de
     // orçamento/cotação e tenta extrair de lá — best-effort: nem todo PDF tem camada de texto.
