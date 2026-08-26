@@ -20,6 +20,14 @@ contextBridge.exposeInMainWorld('uniflorAPI', {
   buscarCnpj: (cnpj) => ipcRenderer.invoke('buscar-cnpj', cnpj),
   // Processo ativo (handoff Edital → Ata/Contrato)
   carregarProcessoAtivo: () => ipcRenderer.invoke('carregar-processo-ativo'),
+  // Dados institucionais centralizados (fonte única — ver config-store.js)
+  carregarConfig: () => ipcRenderer.invoke('carregar-config'),
+  salvarConfig: (data) => ipcRenderer.invoke('salvar-config', data),
+  // Histórico de minutas geradas
+  listarHistorico: () => ipcRenderer.invoke('listar-historico'),
+  carregarHistoricoItem: (id) => ipcRenderer.invoke('carregar-historico-item', id),
+  removerHistoricoItem: (id) => ipcRenderer.invoke('remover-historico-item', id),
+  abrirArquivoHistorico: (id) => ipcRenderer.invoke('abrir-arquivo-historico', id),
   appVersion: process.env.npm_package_version || '1.0.0'
 });
 

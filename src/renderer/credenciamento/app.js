@@ -170,10 +170,72 @@ function atualizarValorEstimadoAutomatico() {
   }
 }
 
-function init() {
+
+// Dados institucionais centralizados (tela de Configuracoes) e retomada de uma minuta do
+// historico. Aplicados antes de vincular os campos, para que a tela ja abra preenchida.
+const CONFIG_PARA_CAMPO = {
+  orgaoNome:'orgao', orgaoCNPJ:'cnpj', orgaoEndereco:'endereco', orgaoCidade:'cidade',
+  orgaoUF:'uf', orgaoCEP:'cep', representanteNome:'prefeito',
+  procuradorNome:'procurador_juridico', procuradorOAB:'oab_procurador',
+  emailImpugnacao:'email_impugnacao', plataformaNome:'plataforma', plataformaUrl:'url_plataforma',
+  comarca:'comarca',
+};
+
+async function aplicarConfigInstitucional() {
+  try {
+    const cfg = await window.uniflorAPI.carregarConfig();
+    if (!cfg) return;
+    for (const [chaveCfg, campo] of Object.entries(CONFIG_PARA_CAMPO)) {
+      if (cfg[chaveCfg]) state.data[campo] = cfg[chaveCfg];
+    }
+  } catch (e) {
+    console.warn('Nao foi possivel carregar os dados institucionais; usando os valores padrao.', e);
+  }
+}
+
+function aplicarRetomadaDoHistorico() {
+  let bruto;
+  try { bruto = localStorage.getItem('uniflor:retomar-minuta'); } catch (e) { return null; }
+  if (!bruto) return null;
+  try { localStorage.removeItem('uniflor:retomar-minuta'); } catch (e) { /* ignora */ }
+
+  let dados;
+  try { dados = JSON.parse(bruto); } catch (e) { return null; }
+  if (!dados || dados.tipo !== 'credenciamento' || !dados.payload) return null;
+
+  const p = { ...dados.payload };
+  ['me_epp','consorcio','garantia','srp'].forEach(k => { if (typeof p[k] === 'boolean') p[k] = String(p[k]); });
+  Object.assign(state.data, p);
+
+  if (dados.modo === 'duplicar') {
+    ['numero_credenciamento','numero_processo'].forEach(k => { state.data[k] = ''; });
+  }
+  return dados;
+}
+
+function mostrarAvisoRetomada(dados) {
+  if (!dados) return;
+  const alvo = document.querySelector('.wizard-body');
+  if (!alvo) return;
+  const aviso = document.createElement('div');
+  aviso.style.cssText = 'margin:0 0 12px;padding:10px 14px;background:#e8effc;border:1px solid #c7d4e6;border-radius:6px;font-size:.8rem;color:#1a4b8c';
+  aviso.innerHTML = dados.modo === 'duplicar'
+    ? '&#128209; <strong>Nova minuta duplicada de:</strong> ' + (dados.titulo || 'minuta anterior') + '. A numeracao e as datas foram limpas &mdash; informe os novos valores antes de gerar.'
+    : '&#9999;&#65039; <strong>Editando a minuta:</strong> ' + (dados.titulo || 'minuta anterior') + '. Gerar novamente cria um novo arquivo, sem sobrescrever o anterior.';
+  alvo.prepend(aviso);
+}
+
+async function init() {
+  await aplicarConfigInstitucional();
+  const retomada = aplicarRetomadaDoHistorico();
+
   document.querySelectorAll('[data-field]').forEach(el => {
     const f = el.dataset.field;
     if (state.data[f] !== undefined && el.tagName !== 'SELECT') el.value = state.data[f] || '';
+    else if (state.data[f] !== undefined && el.tagName === 'SELECT') {
+      if ([...el.options].some(o => o.value === String(state.data[f]))) el.value = String(state.data[f]);
+      else state.data[f] = el.value;
+    }
     else if (state.data[f] === undefined) state.data[f] = el.value;
     el.addEventListener('input', () => state.data[f] = el.value);
     el.addEventListener('change', () => { state.data[f] = el.value; updateConditionals(); });
@@ -196,6 +258,7 @@ function init() {
   document.getElementById('btn-gerar').addEventListener('click', gerarCredenciamento);
   document.getElementById('btn-gerar-resumo').addEventListener('click', gerarResumoCredenciamento);
   renderStep(1);
+  mostrarAvisoRetomada(retomada);
 }
 
 function updateConditionals() {

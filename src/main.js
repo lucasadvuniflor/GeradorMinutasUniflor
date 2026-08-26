@@ -17,6 +17,7 @@ const { parseOrcamentoPdf } = require('./orcamento-parser');
 const { buscarCnpj: buscarCnpjAta } = require('./cnpj-lookup');
 const { loadConfig, saveConfig } = require('./config-store');
 const { salvarProcessoAtivo, carregarProcessoAtivo } = require('./processo-store');
+const { registrarMinuta, listarMinutas, carregarMinuta, removerMinuta } = require('./historico-store');
 
 let mainWindow;
 
@@ -46,6 +47,17 @@ function createWindow() {
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+
+// Registra a geração no histórico. Nunca deixa uma falha aqui derrubar a geração em si: o
+// documento já foi salvo em disco com sucesso, e perder o registro é bem menos grave do que
+// devolver erro ao usuário por um problema de escrita no histórico.
+function registrarNoHistorico(tipo, meta, payload) {
+  try {
+    registrarMinuta(app.getPath('userData'), tipo, meta, payload);
+  } catch (e) {
+    console.warn('Aviso: não foi possível registrar a minuta no histórico:', e.message);
+  }
+}
 
 // ════════════════════════════════════════════════════════════════════════
 // EDITAL
@@ -173,6 +185,15 @@ ipcMain.handle('gerar-edital', async (_event, formData) => {
       console.warn('Aviso: não foi possível salvar o processo ativo para importação:', e.message);
     }
 
+    registrarNoHistorico('edital', {
+      titulo: `${formData.modalidade} nº ${formData.numero_licitacao}/${formData.ano_licitacao}`,
+      numero: formData.numero_licitacao,
+      ano: formData.ano_licitacao,
+      processo: formData.numero_processo,
+      objeto: formData.objeto,
+      arquivo: filePath,
+    }, formData);
+
     return { success: true, path: filePath };
   } catch (err) {
     console.error('Erro ao gerar edital:', err);
@@ -214,6 +235,15 @@ ipcMain.handle('gerar-credenciamento', async (_event, formData) => {
     } catch (e) {
       console.warn('Aviso: não foi possível salvar o processo ativo para importação:', e.message);
     }
+
+    registrarNoHistorico('credenciamento', {
+      titulo: `Credenciamento nº ${formData.numero_credenciamento || '—'}/${formData.ano_credenciamento || ''}`,
+      numero: formData.numero_credenciamento,
+      ano: formData.ano_credenciamento,
+      processo: formData.numero_processo,
+      objeto: formData.objeto,
+      arquivo: filePath,
+    }, formData);
 
     return { success: true, path: filePath };
   } catch (err) {
@@ -265,6 +295,15 @@ ipcMain.handle('gerar-aviso-contratacao-direta', async (_event, formData) => {
     } catch (e) {
       console.warn('Aviso: não foi possível salvar o processo ativo para importação:', e.message);
     }
+
+    registrarNoHistorico('aviso', {
+      titulo: `Aviso de Contratação Direta nº ${formData.numero_aviso || '—'}/${formData.ano_aviso || ''}`,
+      numero: formData.numero_aviso,
+      ano: formData.ano_aviso,
+      processo: formData.numero_processo,
+      objeto: formData.objeto,
+      arquivo: filePath,
+    }, formData);
 
     return { success: true, path: filePath };
   } catch (err) {
@@ -382,6 +421,33 @@ ipcMain.handle('salvar-config', async (_event, data) => {
   return { success: true };
 });
 
+// ════════════════════════════════════════════════════════════════════════
+// HISTÓRICO DE MINUTAS GERADAS
+// ════════════════════════════════════════════════════════════════════════
+
+ipcMain.handle('listar-historico', async () => listarMinutas(app.getPath('userData')));
+
+ipcMain.handle('carregar-historico-item', async (_event, id) => {
+  const registro = carregarMinuta(app.getPath('userData'), id);
+  return registro ? { success: true, registro } : { success: false, error: 'Registro não encontrado no histórico.' };
+});
+
+ipcMain.handle('remover-historico-item', async (_event, id) => ({
+  success: removerMinuta(app.getPath('userData'), id),
+}));
+
+ipcMain.handle('abrir-arquivo-historico', async (_event, id) => {
+  const registro = carregarMinuta(app.getPath('userData'), id);
+  if (!registro || !registro.arquivo) return { success: false, error: 'Este registro não tem arquivo associado.' };
+  // O .docx não é copiado para o histórico: o usuário pode tê-lo movido, renomeado ou excluído
+  // desde a geração, então a existência é verificada antes de tentar abrir.
+  if (!fs.existsSync(registro.arquivo)) {
+    return { success: false, error: `O arquivo não está mais em ${registro.arquivo}. Use "Reabrir no wizard" para gerá-lo novamente.` };
+  }
+  const erro = await shell.openPath(registro.arquivo);
+  return erro ? { success: false, error: erro } : { success: true };
+});
+
 ipcMain.handle('selecionar-pasta', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
     title: 'Selecionar Pasta para Salvar as Atas',
@@ -453,6 +519,15 @@ ipcMain.handle('gerar-ata-minuta', async (_event, payload) => {
     const openResult = await shell.openPath(filePath);
     if (openResult) console.warn('Aviso ao abrir arquivo:', openResult);
 
+    registrarNoHistorico('ata', {
+      titulo: `Minuta de Ata de Registro de Preços nº ${relatorio.numeroLicitacao || '—'}/${relatorio.anoLicitacao || ''}`,
+      numero: relatorio.numeroLicitacao,
+      ano: relatorio.anoLicitacao,
+      processo: relatorio.processo,
+      objeto,
+      arquivo: filePath,
+    }, payload);
+
     return { success: true, path: filePath };
   } catch (err) {
     console.error('Erro ao gerar minuta de ata:', err);
@@ -521,6 +596,17 @@ ipcMain.handle('gerar-contrato', async (_event, formData) => {
     fs.writeFileSync(filePath, buffer);
     const openResult = await shell.openPath(filePath);
     if (openResult) console.warn('Aviso ao abrir arquivo:', openResult);
+
+    registrarNoHistorico('contrato', {
+      titulo: formData.modo_minuta
+        ? `Minuta de Contrato (${tipoAbrev})`
+        : `Contrato nº ${formData.num_contrato || '—'}/${formData.ano_contrato || ''}`,
+      numero: formData.num_contrato,
+      ano: formData.ano_contrato,
+      processo: formData.num_processo,
+      objeto: formData.objeto_descricao,
+      arquivo: filePath,
+    }, formData);
 
     return { success: true, path: filePath };
   } catch (err) {

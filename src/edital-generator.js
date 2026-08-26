@@ -1440,7 +1440,10 @@ function secDisposicoes(d, numSec) {
     ps.push(subitem(`${numSec}.11.4.`, 'Anexo IV — Minuta de Ata de Registro de Preços.'));
   }
 
-  ps.push(item(`${numSec}.12.`, 'O Foro para dirimir qualquer questão oriunda da presente licitação é o da Comarca de Nova Esperança/PR.'));
+  // A comarca vem das Configurações institucionais; o valor fixo permanece como último recurso
+  // para que minutas antigas reabertas (sem o campo no payload) continuem gerando igual.
+  const comarca = d.comarca || 'Nova Esperança';
+  ps.push(item(`${numSec}.12.`, `O Foro para dirimir qualquer questão oriunda da presente licitação é o da Comarca de ${comarca}/PR.`));
 
   return ps;
 }

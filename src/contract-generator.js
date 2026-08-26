@@ -1182,7 +1182,7 @@ function secForo(d, num) {
   const ps = [clausula(num, 'FORO')];
   ps.push(item(0, [
     bold(`${num}.1. `),
-    run(`Fica eleito o Foro da ${COMARCA}, Estado do Paraná, para dirimir os litígios que decorrerem da execução deste Termo de Contrato que não puderem ser compostos pela conciliação, conforme art. 92, §1º, da Lei nº 14.133, de 2021.`)
+    run(`Fica eleito o Foro da ${d.comarca ? `Comarca de ${d.comarca}` : COMARCA}, Estado do Paraná, para dirimir os litígios que decorrerem da execução deste Termo de Contrato que não puderem ser compostos pela conciliação, conforme art. 92, §1º, da Lei nº 14.133, de 2021.`)
   ]));
   return ps;
 }

@@ -377,10 +377,87 @@ async function importarTR(){
   }
 }
 
-function init(){
+// Mapeia os dados institucionais centralizados (config-store) para os campos deste wizard.
+// Os valores em state.data deixam de ser a fonte da verdade e passam a ser apenas o que aparece
+// se a configuração ainda não tiver sido salva — trocar o Prefeito passa a ser feito na tela de
+// Configurações, e não editando código em cada aba.
+const CONFIG_PARA_CAMPO = {
+  orgaoNome:'orgao', orgaoCNPJ:'cnpj', orgaoEndereco:'endereco', orgaoCidade:'cidade',
+  orgaoUF:'uf', orgaoCEP:'cep', representanteNome:'prefeito',
+  procuradorNome:'procurador_juridico', procuradorOAB:'oab_procurador',
+  emailImpugnacao:'email_impugnacao', plataformaNome:'plataforma', plataformaUrl:'url_plataforma',
+  indiceReajustePadrao:'indice_reajuste', indiceCorrecaoMonetaria:'indice_correcao_monetaria',
+  comarca:'comarca',
+};
+
+async function aplicarConfigInstitucional(){
+  try{
+    const cfg=await window.uniflorAPI.carregarConfig();
+    if(!cfg) return;
+    for(const [chaveCfg,campo] of Object.entries(CONFIG_PARA_CAMPO)){
+      if(cfg[chaveCfg]) state.data[campo]=cfg[chaveCfg];
+    }
+  }catch(e){
+    console.warn('Não foi possível carregar os dados institucionais; usando os valores padrão.',e);
+  }
+}
+
+// Retomada de uma minuta do histórico (Reabrir/Duplicar). O payload gravado na geração é
+// reaplicado sobre state.data. Em "duplicar", a identificação numérica é limpa de propósito:
+// duas minutas com o mesmo número seriam um erro de instrução processual, então o usuário é
+// obrigado a informar o novo número.
+function aplicarRetomadaDoHistorico(){
+  let bruto;
+  try{ bruto=localStorage.getItem('uniflor:retomar-minuta'); }catch(e){ return null; }
+  if(!bruto) return null;
+  try{ localStorage.removeItem('uniflor:retomar-minuta'); }catch(e){/* ignora */}
+
+  let dados;
+  try{ dados=JSON.parse(bruto); }catch(e){ return null; }
+  if(!dados||dados.tipo!=='edital'||!dados.payload) return null;
+
+  // Os booleanos são gravados como boolean no payload, mas o wizard trabalha com 'true'/'false'
+  // em string (as clause-cards comparam por id textual).
+  const p={...dados.payload};
+  ['srp','me_epp','margem_preferencia','consorcio','valor_sigiloso','garantia','renovar_arp','garantia_proposta']
+    .forEach(k=>{ if(typeof p[k]==='boolean') p[k]=String(p[k]); });
+  Object.assign(state.data,p);
+
+  if(dados.modo==='duplicar'){
+    state.data.numero_licitacao='';
+    state.data.numero_processo='';
+    state.data.data_limite_proposta='';
+    state.data.data_sessao='';
+    state.data.justificativa_prazo_reduzido='';
+  }
+  return dados;
+}
+
+function mostrarAvisoRetomada(dados){
+  if(!dados) return;
+  const banner=document.getElementById('tr-import-status');
+  if(!banner) return;
+  banner.classList.remove('hidden');
+  banner.style.cssText='color:#1a4b8c;background-color:#e8effc;border-color:#c7d4e6';
+  banner.innerHTML=dados.modo==='duplicar'
+    ? `📑 <strong>Nova minuta duplicada de:</strong> ${dados.titulo||'minuta anterior'}.<br>O número da licitação, o processo e as datas foram limpos — informe os novos valores antes de gerar.`
+    : `✏️ <strong>Editando a minuta:</strong> ${dados.titulo||'minuta anterior'}.<br>Todos os campos foram restaurados. Gerar novamente cria um novo arquivo, sem sobrescrever o anterior.`;
+}
+
+async function init(){
+  await aplicarConfigInstitucional();
+  const retomada=aplicarRetomadaDoHistorico();
+
   document.querySelectorAll('[data-field]').forEach(el=>{
     const f=el.dataset.field;
     if(state.data[f]!==undefined&&el.tagName!=='SELECT') el.value=state.data[f]||'';
+    // Os <select> só recebem o valor de state.data quando a opção realmente existe na lista —
+    // necessário para restaurar uma minuta do histórico e para refletir os padrões vindos das
+    // Configurações, sem o risco de zerar o campo com um valor que não consta das opções.
+    else if(state.data[f]!==undefined&&el.tagName==='SELECT'){
+      if([...el.options].some(o=>o.value===String(state.data[f]))) el.value=String(state.data[f]);
+      else state.data[f]=el.value;
+    }
     else if(state.data[f]===undefined) state.data[f]=el.value;
     el.addEventListener('input',()=>state.data[f]=el.value);
     el.addEventListener('change',()=>{state.data[f]=el.value;updateConditionals();});
@@ -417,7 +494,9 @@ function init(){
   document.getElementById('btn-next').addEventListener('click',()=>navigate(1));
   document.getElementById('btn-gerar').addEventListener('click',gerarEdital);
   document.getElementById('btn-gerar-resumo').addEventListener('click',gerarResumoEdital);
+  renderItensTable();
   renderStep(1);
+  mostrarAvisoRetomada(retomada);
 }
 
 function updateConditionals(){

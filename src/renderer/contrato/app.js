@@ -1388,7 +1388,64 @@ function updateObrasSection() {}
 function updateModalidadeHint() {}
 
 // ─── Inicialização ────────────────────────────────────────────────────────────
-render();
+
+// Dados institucionais centralizados (tela de Configurações) e retomada de uma minuta do
+// histórico. Ambos são aplicados antes do primeiro render para que a tela já apareça preenchida.
+const CONFIG_PARA_CAMPO_CONTRATO = {
+  representanteNome: 'prefeitura_representante',
+  representanteCargo: 'prefeitura_cargo',
+  comarca: 'comarca',
+  indiceReajustePadrao: 'indice_reajuste',
+  indiceCorrecaoMonetaria: 'indice_atualizacao_monetaria',
+};
+
+function aplicarRetomadaContrato() {
+  let bruto;
+  try { bruto = localStorage.getItem('uniflor:retomar-minuta'); } catch (e) { return null; }
+  if (!bruto) return null;
+  try { localStorage.removeItem('uniflor:retomar-minuta'); } catch (e) { /* ignora */ }
+
+  let dados;
+  try { dados = JSON.parse(bruto); } catch (e) { return null; }
+  if (!dados || dados.tipo !== 'contrato' || !dados.payload) return null;
+
+  Object.assign(state.data, dados.payload);
+  if (dados.modo === 'duplicar') {
+    // Numeração e partes são específicas de cada contrato — duplicar serve para reaproveitar as
+    // cláusulas, não para repetir o contratado nem o número.
+    state.data.num_contrato = '';
+    state.data.num_processo = '';
+    state.data.contratado_nome = '';
+    state.data.contratado_cnpj = '';
+    state.data.data_assinatura = '';
+  }
+  return dados;
+}
+
+(async () => {
+  try {
+    const cfg = await window.uniflorAPI.carregarConfig();
+    if (cfg) {
+      for (const [chaveCfg, campo] of Object.entries(CONFIG_PARA_CAMPO_CONTRATO)) {
+        if (cfg[chaveCfg]) state.data[campo] = cfg[chaveCfg];
+      }
+    }
+  } catch (e) {
+    console.warn('Não foi possível carregar os dados institucionais; usando os valores padrão.', e);
+  }
+
+  const retomada = aplicarRetomadaContrato();
+  render();
+
+  if (retomada) {
+    const aviso = document.createElement('div');
+    aviso.style.cssText = 'margin:12px 0;padding:10px 14px;background:#e8effc;border:1px solid #c7d4e6;border-radius:6px;font-size:.8rem;color:#1a4b8c';
+    aviso.innerHTML = retomada.modo === 'duplicar'
+      ? `📑 <strong>Novo contrato duplicado de:</strong> ${retomada.titulo || 'contrato anterior'}. Número, processo, contratado e data foram limpos — informe os novos valores.`
+      : `✏️ <strong>Editando o contrato:</strong> ${retomada.titulo || 'contrato anterior'}. Gerar novamente cria um novo arquivo, sem sobrescrever o anterior.`;
+    document.querySelector('main')?.prepend(aviso);
+  }
+})();
 
 // ─── Importar dados do Edital (handoff) ───────────────────────────────────────
 let processoAtivo = null;

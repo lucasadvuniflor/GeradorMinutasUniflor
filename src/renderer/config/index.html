@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurações e Histórico – Uniflor/PR</title>
+  <link rel="stylesheet" href="../edital/app.css" />
+  <style>
+    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
+    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
+      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
+    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
+    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
+    .cfg-tabs { display:flex; gap:6px; padding:10px 16px 0; background:var(--gray-100); }
+    .cfg-tab { padding:8px 18px; font-size:.8rem; font-weight:700; border:none; background:transparent;
+      color:var(--primary); cursor:pointer; border-bottom:3px solid transparent; }
+    .cfg-tab.active { border-bottom-color:var(--primary); background:#fff; border-radius:6px 6px 0 0; }
+    .cfg-panel { padding:16px; }
+    .cfg-panel.hidden { display:none; }
+    .hist-row { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center;
+      background:#fff; border-radius:var(--radius); padding:12px 14px; margin-bottom:8px;
+      box-shadow:var(--shadow); border-left:3px solid var(--primary); }
+    .hist-meta { font-size:.72rem; color:#64748b; margin-top:3px; }
+    .hist-objeto { font-size:.75rem; color:#334155; margin-top:5px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .hist-acoes { display:flex; gap:6px; flex-shrink:0; }
+    .hist-acoes button { font-size:.7rem; padding:6px 10px; }
+    .tipo-badge { display:inline-block; font-size:.62rem; font-weight:700; text-transform:uppercase;
+      padding:2px 7px; border-radius:10px; background:var(--primary-light); color:var(--primary); margin-right:6px; }
+  </style>
+</head>
+<body>
+
+<nav class="uniflor-anexo-nav">
+  <a href="../edital/index.html" class="uniflor-anexo-tab">📄 Edital</a>
+  <a href="../ata/index.html" class="uniflor-anexo-tab">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
+  <a href="../contrato/index.html" class="uniflor-anexo-tab">📝 Anexo III – Minuta de Contrato</a>
+  <a href="../config/index.html" class="uniflor-anexo-tab active">⚙️ Configurações e Histórico</a>
+</nav>
+
+<header class="app-header">
+  <div class="header-logo">
+    <img src="../../LOGO_UNIFLOR.png" class="brasao-img" alt="Brasão Uniflor" />
+    <div>
+      <div class="header-title">Município de Uniflor/PR</div>
+      <div class="header-sub">Procuradoria Jurídica · Configurações Institucionais e Histórico de Minutas</div>
+    </div>
+  </div>
+  <div class="header-badge">GERA-UNIFLOR</div>
+</header>
+
+<div class="cfg-tabs">
+  <button class="cfg-tab active" data-panel="config">⚙️ Dados Institucionais</button>
+  <button class="cfg-tab" data-panel="historico">🗂️ Histórico de Minutas</button>
+</div>
+
+<main class="wizard-body">
+
+  <!-- PAINEL: DADOS INSTITUCIONAIS -->
+  <section class="cfg-panel" id="panel-config">
+    <h2 class="section-title">Dados Institucionais</h2>
+    <p class="section-hint">Estes dados alimentam automaticamente todos os wizards (Edital, Credenciamento, Aviso, Ata e Contrato). Alterar aqui — por exemplo, ao trocar o Prefeito ou o Procurador — passa a valer para as próximas minutas geradas, sem precisar mexer em cada aba.</p>
+
+    <div class="card">
+      <h3 class="card-title">Identificação do Órgão</h3>
+      <div class="form-row">
+        <div class="form-group full-width"><label>Nome do Órgão</label><input type="text" id="c-orgaoNome" /></div>
+        <div class="form-group"><label>CNPJ</label><input type="text" id="c-orgaoCNPJ" /></div>
+        <div class="form-group full-width"><label>Endereço</label><input type="text" id="c-orgaoEndereco" /></div>
+        <div class="form-group"><label>Cidade</label><input type="text" id="c-orgaoCidade" /></div>
+        <div class="form-group"><label>UF</label><input type="text" id="c-orgaoUF" maxlength="2" /></div>
+        <div class="form-group"><label>CEP</label><input type="text" id="c-orgaoCEP" /></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="c-orgaoTelefone" placeholder="(44) 3736-XXXX" /></div>
+        <div class="form-group"><label>Site</label><input type="text" id="c-orgaoSite" placeholder="www.uniflor.pr.gov.br" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Representante Legal (assina as minutas)</h3>
+      <div class="form-row">
+        <div class="form-group full-width"><label>Nome</label><input type="text" id="c-representanteNome" /></div>
+        <div class="form-group"><label>Cargo</label><input type="text" id="c-representanteCargo" /></div>
+        <div class="form-group"><label>Matrícula</label><input type="text" id="c-matricula" /></div>
+        <div class="form-group"><label>Portaria nº</label><input type="text" id="c-portariaNumero" /></div>
+        <div class="form-group"><label>Data da Portaria</label><input type="text" id="c-portariaData" /></div>
+        <div class="form-group"><label>Publicação da Portaria</label><input type="text" id="c-portariaPublicacao" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Procuradoria Jurídica</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Procurador(a)</label><input type="text" id="c-procuradorNome" /></div>
+        <div class="form-group"><label>OAB</label><input type="text" id="c-procuradorOAB" /></div>
+        <div class="form-group full-width"><label>E-mail para impugnações e esclarecimentos</label><input type="text" id="c-emailImpugnacao" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Foro e Parâmetros Jurídicos Padrão</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Comarca (foro)</label><input type="text" id="c-comarca" /></div>
+        <div class="form-group"><label>Índice de Reajuste Padrão</label>
+          <select id="c-indiceReajustePadrao"><option>IPCA</option><option>IPCA-E</option><option>INPC</option><option>IGP-M</option></select>
+        </div>
+        <div class="form-group"><label>Índice de Correção Monetária</label>
+          <select id="c-indiceCorrecaoMonetaria"><option>INPC</option><option>IPCA</option><option>IGP-M</option></select>
+        </div>
+      </div>
+      <div class="nota-explicativa" style="margin-top:10px">A Comarca alimenta a cláusula de foro do Edital e do Contrato. Confirme junto ao Judiciário antes de alterar.</div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Plataforma Eletrônica e Ata de Registro de Preços</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Plataforma padrão</label><input type="text" id="c-plataformaNome" /></div>
+        <div class="form-group"><label>URL da plataforma</label><input type="text" id="c-plataformaUrl" /></div>
+        <div class="form-group"><label>Vigência padrão da ARP (meses)</label><input type="number" id="c-vigenciaMeses" min="1" max="60" /></div>
+        <div class="form-group"><label>Permitir adesão (carona)</label>
+          <select id="c-permitirAdesao"><option value="true">Sim</option><option value="false">Não</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="generate-zone">
+      <button id="btn-salvar-config" class="btn-generate"><span>💾</span> Salvar Configurações</button>
+      <p class="generate-note">As alterações valem para as próximas minutas geradas. Minutas já emitidas não são alteradas.</p>
+    </div>
+    <div id="config-status" class="hidden result-box"></div>
+  </section>
+
+  <!-- PAINEL: HISTÓRICO -->
+  <section class="cfg-panel hidden" id="panel-historico">
+    <h2 class="section-title">Histórico de Minutas Geradas</h2>
+    <p class="section-hint">Cada minuta gerada fica registrada aqui com todos os dados do formulário. Use <strong>Reabrir</strong> para continuar editando a mesma minuta, ou <strong>Duplicar</strong> para começar uma nova a partir dela (útil em processos parecidos — muda-se só o número e o objeto).</p>
+
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group full-width"><label>Filtrar</label>
+        <input type="text" id="hist-filtro" placeholder="Buscar por número, processo ou objeto…" />
+      </div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="hist-tipo">
+          <option value="">Todos</option>
+          <option value="edital">Edital</option>
+          <option value="credenciamento">Credenciamento</option>
+          <option value="aviso">Aviso de Contratação Direta</option>
+          <option value="ata">Ata de Registro de Preços</option>
+          <option value="contrato">Contrato</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="hist-lista"></div>
+    <div id="hist-status" class="hidden result-box"></div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

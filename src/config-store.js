@@ -3,19 +3,45 @@
 const fs = require('fs');
 const path = require('path');
 
+// Fonte única dos dados institucionais do órgão. Antes desta centralização os mesmos valores
+// estavam repetidos nos defaults de cada wizard e em strings fixas dentro de cada gerador, de
+// modo que uma troca de Prefeito ou de endereço exigia editar código em vários arquivos.
+// Os valores abaixo são apenas o ponto de partida na primeira execução: o que vale é o que
+// estiver salvo em config-orgao.json, editável pela tela de Configurações.
 const DEFAULT_CONFIG = {
+  // Identificação do órgão
   orgaoNome: 'MUNICÍPIO DE UNIFLOR',
   orgaoEndereco: 'Avenida das Flores, nº 118, Centro',
   orgaoCidade: 'Uniflor',
   orgaoUF: 'PR',
   orgaoCEP: '86.920-000',
   orgaoCNPJ: '76.279.975/0001-62',
+  orgaoTelefone: '',
+  orgaoSite: '',
+
+  // Representante legal (assina as minutas)
   representanteCargo: 'Prefeito Municipal',
   representanteNome: 'Maycon Rodrigo Rodrigues de Souza',
   portariaNumero: '',
   portariaData: '',
   portariaPublicacao: '',
   matricula: '',
+
+  // Procuradoria Jurídica
+  procuradorNome: 'Lucas Mater',
+  procuradorOAB: 'OAB/PR 97.525',
+  emailImpugnacao: 'procuradoriajuridica@uniflor.pr.gov.br',
+
+  // Foro e parâmetros jurídicos padrão
+  comarca: 'Nova Esperança',
+  indiceReajustePadrao: 'IPCA',
+  indiceCorrecaoMonetaria: 'INPC',
+
+  // Plataforma eletrônica padrão
+  plataformaNome: 'BLL COMPRAS',
+  plataformaUrl: 'www.bllcompras.com',
+
+  // Padrões da Ata de Registro de Preços
   permitirAdesao: true,
   vigenciaMeses: 12,
 };
