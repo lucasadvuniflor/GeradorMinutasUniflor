@@ -10,6 +10,8 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+## [3.0.0] - 2026-09-02
+
 ### Adicionado
 - **Tipos de documento Credenciamento (art. 79) e Aviso de Contratação Direta (art. 75, I/II)**, com
   sub-wizards próprios na aba Edital, adaptados a Uniflor (sem Sicaf/Compras.gov.br; Decreto
