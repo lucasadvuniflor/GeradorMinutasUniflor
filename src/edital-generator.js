@@ -407,7 +407,10 @@ function secParticipacao(d, numSec) {
       cota_25: `fica reservada cota de até 25% (vinte e cinco por cento) do objeto, por se tratar de bem de natureza divisível, para contratação exclusiva de microempresas e empresas de pequeno porte sediadas local ou regionalmente, nos termos do art. 10 do Decreto Municipal nº 71/2026 c/c o art. 48, III, da Lei Complementar nº 123, de 2006`,
       preferencia_10: `será concedida margem de preferência de até 10% (dez por cento) do melhor preço válido às microempresas e empresas de pequeno porte sediadas local ou regionalmente, sem exclusão dos demais licitantes, nos termos do art. 11, III, do Decreto Municipal nº 71/2026 c/c o art. 48, §3º, da Lei Complementar nº 123, de 2006`,
     };
-    const mecanismoTexto = MECANISMO_B[d.restricao_mecanismo_b] || MECANISMO_B.exclusividade_total;
+    // Parecer 065/2026: a exclusividade regional só se sustenta com o decreto municipal nos autos e motivação
+    // específica (art. 48, §3º, LC 123 admite, por si, apenas a prioridade de até 10%). Sem escolha expressa,
+    // o padrão passa a ser o mecanismo de menor risco.
+    const mecanismoTexto = MECANISMO_B[d.restricao_mecanismo_b] || MECANISMO_B.preferencia_10;
 
     ps.push(item(`${numSec}.${n}.`, `Em atendimento ao disposto no Prejulgado nº 27 do Tribunal de Contas do Estado do Paraná (TCE-PR — Acórdão nº 2122/19, Tribunal Pleno), com o objetivo de implementar as finalidades do art. 47 da Lei Complementar nº 123, de 2006 (promoção do desenvolvimento econômico e social no âmbito municipal e regional), conforme regulamentado por ${d.restricao_lei || 'Decreto Municipal nº 71/2026'}, ${mecanismoTexto}.`));
     n++;
@@ -1336,7 +1339,7 @@ function secARP(d, numSec) {
 
   ps.push(item(`${numSec}.7.`, 'Na hipótese de o convocado não assinar a ata de registro de preços no prazo e nas condições estabelecidas, fica facultado à Administração convocar os licitantes remanescentes do cadastro de reserva, na ordem de classificação, para fazê-lo em igual prazo e nas condições propostas pelo primeiro classificado.'));
 
-  ps.push(item(`${numSec}.8.`, `O prazo de vigência da Ata de Registro de Preços será de ${prazo === '12' ? '1 (um) ano' : '2 (dois) anos'}, contado a partir da data da sua publicação no PNCP, podendo ser prorrogado por igual período, nos termos do art. 84 da Lei nº 14.133, de 2021, desde que comprovado o preço vantajoso.`));
+  ps.push(item(`${numSec}.8.`, `O prazo de vigência da Ata de Registro de Preços será de ${prazo === '12' ? '1 (um) ano' : '2 (dois) anos'}, contado a partir do primeiro dia útil subsequente à data de sua divulgação no PNCP — mesmo termo inicial fixado na minuta da Ata —, podendo ser prorrogado por igual período, nos termos do art. 84 da Lei nº 14.133, de 2021, desde que comprovado o preço vantajoso.`));
 
   if (d.renovar_arp) {
     ps.push(item(`${numSec}.9.`, 'Em caso de prorrogação da Ata, poderá ser renovado o quantitativo originalmente registrado em sua totalidade, desde que: (a) tal possibilidade esteja expressamente prevista neste Edital e na Ata; (b) seja exercida dentro do prazo de vigência original da Ata, antes de expirado o prazo ou esgotado o objeto, o que ocorrer primeiro; (c) seja comprovada a manutenção do preço vantajoso; (d) haja anuência do fornecedor; e (e) a possibilidade tenha sido previamente tratada pelo gestor responsável no Plano Anual de Contratações (PCA) da entidade, nos termos do art. 84 da Lei nº 14.133, de 2021, do Acórdão nº 392/26 — Tribunal Pleno do TCE-PR, e do Parecer nº 00075/2024/DECOR/CGU/AGU.'));
@@ -1457,6 +1460,11 @@ function secSancoes(d, numSec) {
   n++;
 
   ps.push(item(`${numSec}.${n}.`, `Para as infrações previstas nos subitens ${numSec}.1.4, ${numSec}.1.5, ${numSec}.1.6, ${numSec}.1.7, ${numSec}.1.8 e ${numSec}.1.9, a multa será de ${multaGrave} do valor do contrato licitado.`));
+  n++;
+
+  // Parecer 065/2026 e 068/2026: percentuais de multa divergentes entre edital, TR e contrato. As faixas acima
+  // valem para a fase de licitação; as multas da execução ficam no contrato, e o edital diz isso expressamente.
+  ps.push(item(`${numSec}.${n}.`, 'As multas moratória e compensatória pela inexecução parcial ou total do contrato são as fixadas na minuta de Contrato, Anexo III deste Edital, e no Termo de Referência, que guardam entre si os mesmos percentuais e bases de cálculo, observados os limites do art. 156, §3º, da Lei nº 14.133, de 2021.'));
   n++;
 
   ps.push(item(`${numSec}.${n}.`, 'As sanções de advertência, impedimento de licitar e contratar e declaração de inidoneidade para licitar ou contratar poderão ser aplicadas, cumulativamente ou não, à penalidade de multa.'));

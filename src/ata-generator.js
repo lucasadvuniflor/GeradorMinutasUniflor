@@ -318,10 +318,14 @@ function secAnexoCadastroReserva(ctx) {
   ];
 }
 
-function secAlteracaoPrecos() {
+function secAlteracaoPrecos(ctx) {
+  const indiceReajuste = (ctx && ctx.indiceReajuste) || 'IPCA';
   return [
     secTitle('7. Alteração ou Atualização dos Preços Registrados'),
     item('7.1.', 'Os preços registrados poderão ser alterados ou atualizados em decorrência de eventual redução dos preços praticados no mercado ou de fato que eleve o custo dos bens registrados, nos termos do art. 124 da Lei nº 14.133, de 2021.'),
+    // Parecer 065/2026: a Ata precisa trazer o índice de reajuste específico previsto no Edital/TR, não só a
+    // remissão genérica ao art. 124 — com a data-base do art. 25, §7º.
+    item('7.2.', `Os preços registrados poderão ser reajustados após o interregno mínimo de 1 (um) ano, contado da data do orçamento estimado que fundamentou o Edital, mediante a aplicação do índice ${indiceReajuste}, apurado pelo IBGE, ou índice setorial específico que vier a substituí-lo — o mesmo previsto no Edital e no Termo de Referência —, nos termos do art. 25, §7º, e do art. 92, §3º, da Lei nº 14.133, de 2021, sem prejuízo da atualização ou revisão do item anterior.`),
     blank(),
     secTitle('8. Negociação de Preços Registrados'),
     item('8.1.', 'Na hipótese de o preço registrado tornar-se superior ao preço praticado no mercado por motivo superveniente, o órgão gerenciador convocará o fornecedor para negociar a redução do preço registrado. Caso não aceite reduzir seu preço, o fornecedor será liberado do compromisso assumido quanto ao item registrado, sem aplicação de penalidades administrativas.'),
@@ -415,7 +419,7 @@ async function generateAta(ctx) {
     blank(),
     ...secValidade(ctx),
     blank(),
-    ...secAlteracaoPrecos(),
+    ...secAlteracaoPrecos(ctx),
     blank(),
     ...secCancelamento(),
     blank(),

@@ -42,6 +42,7 @@ document.getElementById('btn-importar-edital').addEventListener('click', () => {
     setVal('f-permitir-adesao', p.srpAdesao === 'sim' ? 'true' : p.srpAdesao === 'nao' ? 'false' : undefined);
     setVal('f-cadastro-reserva', p.srpCadastroReserva);
     if (p.prazoArp) setVal('f-vigencia-meses', p.prazoArp);
+    if (p.indiceReajuste) { setVal('f-indice-reajuste', p.indiceReajuste); const ir = document.getElementById('f-indice-reajuste'); if (ir) ir.dataset.importado = '1'; }
     setVal('f-renovar-arp', p.renovarArp ? 'sim' : 'nao');
     setChk('f-correcao-monetaria', p.correcaoMonetariaRenovacao);
     setVal('f-indice-correcao', p.indiceCorrecaoMonetaria);
@@ -294,6 +295,7 @@ document.getElementById('btn-gerar').addEventListener('click', async () => {
     permitirAdesao: document.getElementById('f-permitir-adesao').value === 'true',
     formacaoCadastroReserva: document.getElementById('f-cadastro-reserva').value,
     vigenciaMeses: parseInt(document.getElementById('f-vigencia-meses').value, 10) || 12,
+    indiceReajuste: (document.getElementById('f-indice-reajuste') || {}).value || '',
     renovarArp: document.getElementById('f-renovar-arp').value === 'sim',
     correcaoMonetariaRenovacao: document.getElementById('f-correcao-monetaria').checked,
     indiceCorrecaoMonetaria: document.getElementById('f-indice-correcao').value,
@@ -367,6 +369,7 @@ document.getElementById('btn-gerar-minuta').addEventListener('click', async () =
     permitirAdesao: document.getElementById('f-permitir-adesao').value === 'true',
     formacaoCadastroReserva: document.getElementById('f-cadastro-reserva').value,
     vigenciaMeses: parseInt(document.getElementById('f-vigencia-meses').value, 10) || 12,
+    indiceReajuste: (document.getElementById('f-indice-reajuste') || {}).value || '',
     renovarArp: document.getElementById('f-renovar-arp').value === 'sim',
     correcaoMonetariaRenovacao: document.getElementById('f-correcao-monetaria').checked,
     indiceCorrecaoMonetaria: document.getElementById('f-indice-correcao').value,
@@ -431,6 +434,9 @@ async function carregarConfigUI() {
     if (el) el.value = cfg[k] ?? '';
   });
   document.getElementById('c-permitirAdesao').value = String(!!cfg.permitirAdesao);
+  // Índice de reajuste dos preços registrados: parte do padrão institucional; o import do Edital sobrescreve.
+  const ir = document.getElementById('f-indice-reajuste');
+  if (ir && cfg.indiceReajustePadrao && !ir.dataset.importado) ir.value = cfg.indiceReajustePadrao;
 }
 
 document.getElementById('btn-salvar-config').addEventListener('click', async () => {

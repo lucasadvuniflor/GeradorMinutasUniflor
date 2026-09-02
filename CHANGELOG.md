@@ -10,6 +10,17 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+### Corrigido
+- **Apontamentos dos Pareceres nº 065/2026 e 068/2026 incorporados aos modelos**: a Ata de Registro de Preços ganha
+  cláusula com o índice de reajuste específico (o mesmo do Edital, importado automaticamente ou vindo das Configurações)
+  e data-base no orçamento estimado (art. 25, §7º); o Edital passa a fixar o termo inicial da vigência da Ata com a mesma
+  redação da Ata (primeiro dia útil após a divulgação no PNCP) e a remeter expressamente as multas da execução ao
+  Contrato e ao TR, com os mesmos percentuais; o Contrato deixa de contradizer o TR na cláusula de sanções e fundamenta
+  a prorrogação automática dos contratos por escopo no art. 111.
+- Restrição geográfica (Programa Compra Uniflor): a exclusividade ou cota regional passa a exigir justificativa
+  específica no wizard (planejamento com metas e o Decreto nº 71/2026 nos autos), e o padrão, quando nada é escolhido,
+  é a margem de preferência de 10% do art. 48, §3º, da LC 123/2006 — mecanismo sem risco perante o art. 9º, I, "b".
+
 ## [3.1.2] - 2026-09-02
 
 ### Corrigido

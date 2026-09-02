@@ -627,6 +627,10 @@ function validateStep(step){
     if(d.restricao_geografica==='B'){
       if(!d.restricao_lei)e.push('Informe a Lei ou Decreto Municipal para restrição regional.');
       if(!d.restricao_mecanismo_b)e.push('Selecione o mecanismo do art. 48, LC 123/2006 aplicado.');
+      // Parecer 065/2026: exclusividade ou cota regional sem decreto nos autos e motivação específica esbarra no
+      // art. 9º, I, "b", da Lei 14.133 — a justificativa genérica do modelo não basta.
+      if((d.restricao_mecanismo_b==='exclusividade_total'||d.restricao_mecanismo_b==='cota_25') && !(d.restricao_justificativa_b||'').trim())
+        e.push('Exclusividade ou cota regional exige justificativa específica (planejamento com metas e indicadores) e o Decreto Municipal nº 71/2026 juntado aos autos. Descreva a justificativa ou escolha a margem de preferência de 10% (art. 48, §3º, LC 123/2006).');
       if(!d.restricao_justificativa_b)e.push('Forneça a justificativa do planejamento estratégico com metas e indicadores.');
       const chkFornec = document.getElementById('chk-3-fornecedores');
       if(chkFornec && !chkFornec.checked) e.push('É obrigatório confirmar a existência de 3 fornecedores locais aptos (TCE-PR).');

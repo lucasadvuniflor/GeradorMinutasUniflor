@@ -438,7 +438,7 @@ function secVigencia(d, num) {
     if (d.tipo !== 'compras') {
       ps.push(item(0, [
         bold(`${num}.2. `),
-        run(`O prazo de vigência será automaticamente prorrogado, independentemente de termo aditivo, quando o objeto não for concluído no período firmado acima, ressalvadas as providências cabíveis no caso de culpa do CONTRATADO.`)
+        run(`Por se tratar de contratação com escopo predefinido, o prazo de vigência será automaticamente prorrogado, independentemente de termo aditivo, quando o objeto não for concluído no período firmado acima, nos termos do art. 111 da Lei nº 14.133, de 2021, ressalvadas as providências cabíveis no caso de culpa do CONTRATADO.`)
       ]));
     }
   }
@@ -1037,7 +1037,7 @@ function secSancoes(d, num) {
 
   ps.push(item(0, [
     bold(`${num}.1. `),
-    run('As regras acerca de infrações e sanções administrativas referentes à execução do contrato são aquelas definidas no Termo de Referência, anexo a este Contrato.')
+    run('Sem prejuízo das regras específicas do Termo de Referência, anexo a este Contrato, aplicam-se às infrações e sanções administrativas referentes à execução do contrato as disposições desta cláusula, cujos percentuais e bases de cálculo devem coincidir com os do Edital e do Termo de Referência e prevalecem em caso de divergência.')
   ]));
   ps.push(item(0, [
     bold(`${num}.2. `),
