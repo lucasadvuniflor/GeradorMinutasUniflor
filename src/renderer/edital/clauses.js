@@ -194,12 +194,14 @@ const CLAUSES = {
       {
         id: 'FECHADO', label: 'Fechado', icon: '🔒',
         desc: 'Somente propostas sigilosas — sem lances (obrigatório para Técnica e Preço)',
-        disponivel: (state) => state.modalidade === 'CONCORRÊNCIA ELETRÔNICA',
-        indisponivel_msg: 'O modo Fechado puro está disponível apenas na Concorrência. No Pregão, os lances são obrigatórios.',
+        // Art. 56, §1º: o modo fechado ISOLADO é vedado quando o critério for menor preço ou maior
+        // desconto. Só sobra a Concorrência por técnica e preço (e melhor técnica, não modelada aqui).
+        disponivel: (state) => state.modalidade === 'CONCORRÊNCIA ELETRÔNICA' && state.criterio === 'tecnica_preco',
+        indisponivel_msg: 'O modo Fechado isolado é vedado para menor preço e maior desconto (art. 56, §1º, Lei 14.133/2021) e não existe no Pregão. Só é admitido na Concorrência por Técnica e Preço.',
         info: {
-          quando_usar: 'OBRIGATÓRIO para Técnica e Preço. Pode ser usado em qualquer Concorrência onde se queira evitar a fase de lances.',
-          quando_nao: 'Não use no Pregão — é vedado por lei.',
-          fundamento: 'Art. 56, IV, da Lei nº 14.133/2021',
+          quando_usar: 'OBRIGATÓRIO para Técnica e Preço, e somente nele. Com menor preço ou maior desconto, use Aberto, Aberto e Fechado ou Fechado e Aberto.',
+          quando_nao: 'Nunca com menor preço ou maior desconto — o art. 56, §1º, veda o modo exclusivamente fechado nesses critérios. Também não existe no Pregão.',
+          fundamento: 'Art. 56, II e §1º, da Lei nº 14.133/2021',
           impacto: 'Não há fase de lances. Todos os licitantes submetem proposta sigilosa e o Agente de Contratação/Comissão abre simultaneamente na sessão. Vencedor: melhor preço/nota entre as propostas.'
         }
       }
@@ -538,6 +540,9 @@ function srpVedado(state) {
 function aplicarCascata(state) {
   const updates = {};
   if (state.criterio === 'tecnica_preco' && state.modo_disputa !== 'FECHADO') updates.modo_disputa = 'FECHADO';
+  // Caminho inverso: se o critério deixa de ser técnica e preço com o Fechado isolado ainda
+  // selecionado, o estado ficaria numa combinação vedada pelo art. 56, §1º — volta para Aberto.
+  if (state.criterio !== 'tecnica_preco' && state.modo_disputa === 'FECHADO') updates.modo_disputa = 'ABERTO';
   if (state.modalidade === 'PREGÃO ELETRÔNICO' && state.criterio === 'tecnica_preco') {
     updates.criterio = 'menor_preco';
     updates.modo_disputa = 'ABERTO';

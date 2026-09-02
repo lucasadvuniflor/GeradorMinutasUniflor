@@ -502,7 +502,10 @@ function secContratacao(d, numSec) {
   }
 
   if (d.valor_estimado) {
-    ps.push(item(`${numSec}.${n}.`, `O valor total estimado das contratações decorrentes deste credenciamento é de ${moeda(d.valor_estimado)}, conforme pesquisa de preços encartada nos autos do processo administrativo.`));
+    // No credenciamento não há disputa de preço: a Administração FIXA o valor da contratação com base
+    // em tabela ou critérios objetivos (art. 79, parágrafo único, II). O montante global é estimativa
+    // de demanda, mas o preço unitário pago a cada credenciado é o fixado — o texto precisa separar isso.
+    ps.push(item(`${numSec}.${n}.`, `O valor da contratação de cada credenciado é o fixado pela Administração na tabela de preços constante do Termo de Referência, elaborada com base em critérios objetivos e em pesquisa de preços encartada nos autos, nos termos do art. 79, parágrafo único, inciso II, da Lei nº 14.133, de 2021. O montante global estimado das contratações decorrentes deste credenciamento, para fins de dotação orçamentária, é de ${moeda(d.valor_estimado)}.`));
     n++;
   }
 

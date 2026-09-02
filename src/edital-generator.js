@@ -457,7 +457,15 @@ function secParticipacao(d, numSec) {
 
   if (d.consorcio) {
     const pct = d.consorcio_pct || '10';
-    ps.push(item(`${numSec}.${n}.`, 'Será permitida a participação de empresas em consórcio, observadas as regras do art. 15 da Lei nº 14.133, de 2021.'));
+    // Art. 15 não se satisfaz com remissão genérica: quando o edital admite consórcio, ele mesmo
+    // tem de fixar as condições dos incisos I a IV e do §1º (compromisso de constituição, empresa
+    // líder, responsabilidade solidária e vedação de participação dupla).
+    ps.push(item(`${numSec}.${n}.`, 'Será permitida a participação de empresas em consórcio, observadas as regras do art. 15 da Lei nº 14.133, de 2021, e as seguintes condições:'));
+    ps.push(subitem(`${numSec}.${n}.1.`, 'comprovação de compromisso público ou particular de constituição de consórcio, subscrito pelos consorciados, com indicação da empresa líder, que será responsável pelo consórcio e deverá atender às condições de liderança fixadas neste Edital e no Termo de Referência;'));
+    ps.push(subitem(`${numSec}.${n}.2.`, 'apresentação, por cada consorciado, dos documentos de habilitação exigidos neste Edital, admitindo-se o somatório dos quantitativos técnicos e dos valores econômico-financeiros na forma do subitem seguinte;'));
+    ps.push(subitem(`${numSec}.${n}.3.`, 'responsabilidade solidária dos integrantes pelos atos praticados em consórcio, tanto na fase de licitação quanto na de execução do contrato;'));
+    ps.push(subitem(`${numSec}.${n}.4.`, 'vedação de participação de empresa consorciada, na mesma licitação, em mais de um consórcio ou isoladamente;'));
+    ps.push(subitem(`${numSec}.${n}.5.`, 'o licitante vencedor, se consórcio, fica obrigado a promover, antes da celebração do contrato, a constituição e o registro do consórcio, nos termos do compromisso referido no subitem ' + `${numSec}.${n}.1.`));
     n++;
     ps.push(item(`${numSec}.${n}.`, `Quando permitida a participação de consórcio de empresas, a habilitação técnica, quando exigida, será feita por meio do somatório dos quantitativos de cada consorciado e, para efeito de habilitação econômico-financeira, será observado o somatório dos valores de cada consorciado, com acréscimo de ${pct}% (${pct === '10' ? 'dez' : pct === '20' ? 'vinte' : 'trinta'} por cento) nos requisitos econômico-financeiros em relação ao valor exigido para os licitantes individuais.`));
     n++;
@@ -492,7 +500,15 @@ function secOrcamento(d, numSec) {
     n++;
   }
   const indiceReajuste = d.indice_reajuste || 'IPCA';
-  ps.push(item(`${numSec}.${n}.`, `Os preços contratados poderão ser reajustados após o interregno mínimo de 1 (um) ano, contado da data-base da proposta ou do orçamento estimado a que essa se referir, mediante a aplicação do índice ${indiceReajuste}, apurado pelo IBGE, ou índice setorial específico que vier a substituí-lo, nos termos do art. 25, §7º, da Lei nº 14.133, de 2021 — previsão obrigatória independentemente do prazo de vigência da contratação, cuja disciplina detalhada consta da minuta de Contrato, Anexo III deste Edital.`));
+  // Art. 25, §7º fixa a data-base "vinculada à data do orçamento estimado" — não à da proposta.
+  ps.push(item(`${numSec}.${n}.`, `Os preços contratados poderão ser reajustados após o interregno mínimo de 1 (um) ano, contado da data do orçamento estimado elaborado pela Administração, mediante a aplicação do índice ${indiceReajuste}, apurado pelo IBGE, ou índice setorial específico que vier a substituí-lo, nos termos do art. 25, §7º, da Lei nº 14.133, de 2021 — previsão obrigatória independentemente do prazo de vigência da contratação, cuja disciplina detalhada consta da minuta de Contrato, Anexo III deste Edital.`));
+  n++;
+  // Art. 25, §8º, II, c/c art. 135: com mão de obra em regime de dedicação exclusiva, a variação
+  // dos custos de pessoal segue pela repactuação (convenção coletiva), não pelo índice de preços.
+  if (d.tipo_objeto === 'servicos_mo') {
+    ps.push(item(`${numSec}.${n}.`, 'Por se tratar de serviço contínuo com regime de dedicação exclusiva de mão de obra, os custos decorrentes de mão de obra serão objeto de repactuação, mediante demonstração analítica da variação dos custos, vinculada à convenção, acordo ou dissídio coletivo de trabalho da categoria, observado o interregno mínimo de 1 (um) ano contado da data do orçamento a que a proposta se referir ou da última repactuação, nos termos do art. 25, §8º, inciso II, e do art. 135 da Lei nº 14.133, de 2021; os demais insumos seguirão o reajuste por índice do item anterior.'));
+    n++;
+  }
   return ps;
 }
 
@@ -958,6 +974,10 @@ function secJulgamento(d, numSec) {
   if (isObras) {
     ps.push(item(`${numSec}.${n}.`, 'No caso de obras e serviços de engenharia, serão consideradas inexequíveis as propostas cujos valores forem inferiores a 75% (setenta e cinco por cento) do valor orçado pela Administração, independentemente do regime de execução.'));
     n++;
+    // Art. 59, §5º — a faixa entre 75% e 85% não é inexequível, mas exige garantia adicional igual
+    // à diferença entre 85% do orçamento e o valor da proposta. Faltava no edital.
+    ps.push(item(`${numSec}.${n}.`, 'Nas contratações de obras e serviços de engenharia, será exigida garantia adicional do licitante vencedor cuja proposta for inferior a 85% (oitenta e cinco por cento) do valor orçado pela Administração, equivalente à diferença entre este último e o valor da proposta, sem prejuízo das demais garantias exigíveis, nos termos do art. 59, §5º, da Lei nº 14.133, de 2021.'));
+    n++;
 
     ps.push(item(`${numSec}.${n}.`, 'Em contratação de obras e serviços de engenharia, além das disposições acima, a análise de exequibilidade e sobrepreço considerará o seguinte:'));
     ps.push(subitem(`${numSec}.${n}.1.`, 'Nos regimes de execução por tarefa, empreitada por preço global ou empreitada integral, contratação semi-integrada ou contratação integrada, a caracterização do sobrepreço se dará pela superação do valor global estimado;'));
@@ -1025,6 +1045,11 @@ function secHabilitacao(d, numSec) {
   let n = 1;
 
   ps.push(item(`${numSec}.${n}.`, 'Os documentos previstos no Termo de Referência, necessários e suficientes para demonstrar a capacidade do licitante de realizar o objeto da licitação, serão exigidos para fins de habilitação, nos termos dos arts. 62 a 70 da Lei nº 14.133, de 2021.'));
+  n++;
+
+  // Art. 63, §§2º e 3º: norma cogente — se o TR exigir vistoria, o edital tem de oferecer a
+  // substituição por declaração formal. Como a exigência mora no TR, a cláusula vale em qualquer caso.
+  ps.push(item(`${numSec}.${n}.`, 'Caso o Termo de Referência exija a avaliação prévia do local de execução como requisito de habilitação, a vistoria somente será exigida quando imprescindível e, em qualquer hipótese, poderá ser substituída por declaração formal, assinada pelo responsável técnico do licitante, de que conhece as condições locais para a execução do objeto e assume a responsabilidade por eventuais dificuldades daí decorrentes, nos termos do art. 63, §§2º e 3º, da Lei nº 14.133, de 2021.'));
   n++;
 
   ps.push(item(`${numSec}.${n}.`, 'A documentação exigida para fins de habilitação jurídica, fiscal, social e trabalhista e econômico-financeira poderá ser substituída pelo registro cadastral no SICAF.'));
@@ -1203,6 +1228,10 @@ function secContrato(d, numSec) {
   if (d.garantia) {
     const pct = d.percentual_garantia || '5';
     ps.push(item(`${numSec}.${n}.`, `O adjudicatário deverá apresentar, no prazo de 10 (dez) dias úteis após a assinatura do contrato, comprovante de prestação de garantia correspondente ao percentual de ${pct}% (${pct === '2' ? 'dois' : pct === '3' ? 'três' : pct === '5' ? 'cinco' : 'dez'} por cento) do valor do contrato, podendo optar por caução em dinheiro ou em títulos da dívida pública, seguro-garantia ou fiança bancária, nos termos do art. 96 da Lei nº 14.133, de 2021.`));
+    n++;
+    // Art. 96, §3º: quem opta pelo seguro-garantia tem prazo próprio, contado da homologação e
+    // anterior à assinatura — o prazo geral de 10 dias úteis pós-assinatura não se aplica a ele.
+    ps.push(item(`${numSec}.${n}.`, 'Caso o adjudicatário opte pela modalidade seguro-garantia, o prazo para a sua apresentação será de, no mínimo, 1 (um) mês, contado da data de homologação da licitação e anterior à assinatura do contrato, nos termos do art. 96, §3º, da Lei nº 14.133, de 2021, podendo ser prorrogado por igual período mediante solicitação justificada.'));
     n++;
   }
 
@@ -1409,6 +1438,9 @@ function secImpugnacao(d, numSec) {
   ps.push(item(`${numSec}.4.`, 'As impugnações e pedidos de esclarecimentos não suspendem os prazos previstos no certame.'));
   ps.push(item(`${numSec}.5.`, `A concessão de efeito suspensivo à impugnação é medida excepcional e deverá ser motivada pelo ${resp(d)}, nos autos do processo de licitação.`));
   ps.push(item(`${numSec}.6.`, 'Acolhida a impugnação, será definida e publicada nova data para a realização do certame.'));
+  // Art. 55, §1º — regra que faltava: toda modificação do edital exige nova divulgação pelos mesmos
+  // meios e devolução integral dos prazos, salvo quando não afetar a formulação das propostas.
+  ps.push(item(`${numSec}.7.`, 'Qualquer modificação no Edital será divulgada pelos mesmos meios de sua divulgação inicial, com a reabertura integral dos prazos originalmente estabelecidos para a apresentação de propostas e lances, exceto quando a alteração, inquestionavelmente, não comprometer a formulação das propostas, nos termos do art. 55, §1º, da Lei nº 14.133, de 2021.'));
 
   return ps;
 }

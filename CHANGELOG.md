@@ -10,6 +10,26 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+### Corrigido
+- **Modo de disputa Fechado isolado** deixou de ser selecionável com menor preço/maior desconto na
+  Concorrência (vedação do art. 56, §1º); a cascata devolve para Aberto se o critério mudar.
+- Ata: item 5.1 falava em adesão de órgãos "federais, estaduais, distritais e municipais" enquanto o 5.4
+  a restringia à Administração municipal (art. 86, §3º, II) — agora coerente.
+- Ata: células Marca/Modelo imprimiam "undefined" na minuta pré-sessão (itens vindos do Edital).
+- Aviso de Contratação Direta: vírgula dupla no preâmbulo quando SRP ativo.
+- Credenciamento: valor da contratação passa a ser descrito como **fixado** pela Administração em tabela
+  (art. 79, parágrafo único, II), não como "estimado".
+
+### Adicionado (auditoria contra checklist da Lei 14.133/2021)
+- Edital: cláusula de modificação do edital com republicação e reabertura de prazos (art. 55, §1º).
+- Edital: declaração formal substitutiva da vistoria técnica (art. 63, §§2º e 3º).
+- Edital: regras de consórcio quando admitido — compromisso de constituição, empresa líder,
+  responsabilidade solidária, vedação de participação dupla (art. 15).
+- Edital: prazo mínimo de 1 mês para o seguro-garantia, contado da homologação (art. 96, §3º).
+- Edital (obras/engenharia): garantia adicional para proposta abaixo de 85% do orçamento (art. 59, §5º).
+- Edital (serviços com mão de obra exclusiva): cláusula de repactuação (art. 25, §8º, II, c/c art. 135).
+- Edital: data-base do reajuste vinculada expressamente à data do orçamento estimado (art. 25, §7º).
+
 ## [3.0.0] - 2026-09-02
 
 ### Adicionado

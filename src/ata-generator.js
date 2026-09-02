@@ -92,11 +92,13 @@ function itensTable(itens, percentualMinimo) {
   });
   const rows = itens.map(it => new TableRow({
     children: [
-      tCell(it.item, { width: widths[0] }),
-      tCell(it.descricao, { width: widths[1], align: AlignmentType.LEFT }),
-      tCell(it.marca, { width: widths[2] }),
-      tCell(it.modelo, { width: widths[3] }),
-      tCell(it.unidade, { width: widths[4] }),
+      tCell(it.item ?? '', { width: widths[0] }),
+      tCell(it.descricao ?? '', { width: widths[1], align: AlignmentType.LEFT }),
+      // Na minuta pré-sessão os itens vêm do Edital importado, sem marca/modelo — sem o fallback a
+      // célula imprimia "undefined".
+      tCell(it.marca || '', { width: widths[2] }),
+      tCell(it.modelo || '', { width: widths[3] }),
+      tCell(it.unidade ?? '', { width: widths[4] }),
       tCell(qtdFmt(it.quantidade), { width: widths[5] }),
       tCell(qtdFmt(it.quantidade * pct), { width: widths[6] }),
       tCell(moeda(it.valorUnitario), { width: widths[7] }),
@@ -264,7 +266,10 @@ function secAdesao(ctx) {
   }
   return [
     secTitle('5. Da Adesão à Ata de Registro de Preços'),
-    item('5.1.', 'Durante a vigência da ata, os órgãos e as entidades da Administração Pública federal, estadual, distrital e municipal que não participaram do procedimento de Intenção de Registro de Preços (IRP) poderão aderir à ata de registro de preços na condição de não participantes, observados os seguintes requisitos: apresentação de justificativa da vantagem da adesão; demonstração de que os valores registrados estão compatíveis com os valores praticados pelo mercado, na forma do art. 23 da Lei nº 14.133, de 2021; e consulta e aceitação prévias do órgão gerenciador e do fornecedor.'),
+    // Ata gerenciada por Município: só a Administração municipal pode aderir (art. 86, §3º, II, com a
+    // redação da Lei nº 14.770/2023). O 5.1 tem de dizer isso desde já — antes dizia "federal,
+    // estadual, distrital e municipal" e o 5.4 restringia, deixando a Ata em contradição interna.
+    item('5.1.', 'Durante a vigência da ata, os órgãos e as entidades da Administração Pública municipal que não participaram do procedimento de Intenção de Registro de Preços (IRP) poderão aderir à ata de registro de preços na condição de não participantes, observados os seguintes requisitos: apresentação de justificativa da vantagem da adesão; demonstração de que os valores registrados estão compatíveis com os valores praticados pelo mercado, na forma do art. 23 da Lei nº 14.133, de 2021; e consulta e aceitação prévias do órgão gerenciador e do fornecedor.'),
     item('5.2.', 'As aquisições ou contratações adicionais decorrentes de adesão não poderão exceder, por órgão ou entidade aderente, a 50% (cinquenta por cento) dos quantitativos dos itens registrados nesta Ata, e o quantitativo decorrente das adesões não poderá exceder, na totalidade, ao dobro do quantitativo de cada item registrado, nos termos dos §§4º e 5º do art. 86 da Lei nº 14.133, de 2021, e do art. 32 do Decreto nº 11.462, de 2023.'),
     item('5.3.', 'É vedado efetuar acréscimos nos quantitativos fixados nesta Ata de Registro de Preços.'),
     item('5.4.', `Por se tratar de Ata de Registro de Preços gerenciada por órgão municipal, a adesão na condição de não participante fica restrita a órgãos e entidades da Administração Pública municipal, nos termos do art. 86, §3º, II, da Lei nº 14.133, de 2021, com a redação dada pela Lei nº 14.770, de 2023.`),
