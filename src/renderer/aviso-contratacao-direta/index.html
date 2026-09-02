@@ -3,43 +3,19 @@
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gerador de Minutas de Aviso de Contratação Direta – Uniflor/PR</title>
-  <link rel="stylesheet" href="../edital/app.css" />
-  <style>
-    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
-    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
-      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
-    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
-    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
-    .uniflor-doctype-nav { display:flex; background:#e8eef6; border-bottom:1px solid #c7d4e6; }
-    .uniflor-doctype-tab { flex:1; text-align:center; padding:8px 6px; font-size:.75rem; font-weight:600;
-      color:#3a5a86; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
-    .uniflor-doctype-tab:hover { background:#d7e2f2; }
-    .uniflor-doctype-tab.active { color:#0f2a4a; border-bottom-color:#0f2a4a; background:#fff; }
-  </style>
+  <link rel="stylesheet" href="../shared/theme.css" />
 </head>
 <body>
 
-<nav class="uniflor-anexo-nav">
-  <a href="../edital/index.html" class="uniflor-anexo-tab active">📄 Edital</a>
-  <a href="../ata/index.html" class="uniflor-anexo-tab">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
-  <a href="../contrato/index.html" class="uniflor-anexo-tab">📝 Anexo III – Minuta de Contrato</a>
-  <a href="../config/index.html" class="uniflor-anexo-tab">⚙️ Configurações e Histórico</a>
-</nav>
-<nav class="uniflor-doctype-nav">
-  <a href="../edital/index.html" class="uniflor-doctype-tab">🏷️ Pregão / Concorrência</a>
-  <a href="../credenciamento/index.html" class="uniflor-doctype-tab">🤝 Credenciamento</a>
-  <a href="../aviso-contratacao-direta/index.html" class="uniflor-doctype-tab active">⚡ Aviso de Contratação Direta</a>
-</nav>
+<div class="app-shell">
+<aside id="app-sidebar"></aside>
+<div class="app-main">
 
-<header class="app-header">
-  <div class="header-logo">
-    <img src="../../LOGO_UNIFLOR.png" class="brasao-img" alt="Brasão Uniflor" />
-    <div>
-      <div class="header-title">Município de Uniflor/PR</div>
-      <div class="header-sub">Procuradoria Jurídica · Gerador de Minutas de Aviso de Contratação Direta · Art. 75, Lei 14.133/2021 · Decreto Municipal nº 17/2023</div>
-    </div>
+<header class="page-header">
+  <div class="page-heading">
+    <div class="page-title">Aviso de Contratação Direta</div>
+    <div class="page-sub">Art. 75, I e II, da Lei nº 14.133/2021 · Decreto Municipal nº 17/2023</div>
   </div>
-  <div class="header-badge" id="app-version-badge">GERA-UNIFLOR</div>
 </header>
 
 <nav class="progress-bar" id="progress-bar">
@@ -340,9 +316,9 @@
     <p class="section-hint">Confira as escolhas abaixo antes de gerar o Aviso de Contratação Direta.</p>
     <div id="review-content" class="review-grid"></div>
     <div class="generate-zone">
-      <button id="btn-gerar" class="btn-generate"><span>📄</span> Gerar Aviso de Contratação Direta (.docx)</button>
+      <button id="btn-gerar" class="btn-generate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 18v-6M9 15l3 3 3-3"/></svg>Gerar Aviso de Contratação Direta (.docx)</button>
       <p class="generate-note">O arquivo será aberto automaticamente no Microsoft Word após salvo.</p>
-      <button id="btn-gerar-resumo" class="btn btn-secondary" style="margin-top:12px"><span>📋</span> Gerar Guia Rápido do Interessado (.docx)</button>
+      <button id="btn-gerar-resumo" class="btn btn-secondary">Gerar Guia Rápido do Interessado (.docx)</button>
       <p class="generate-note">Resumo em linguagem simples dos pontos essenciais, para quem participa de uma contratação direta pela primeira vez.</p>
     </div>
     <div id="result-msg" class="hidden result-box"></div>
@@ -356,6 +332,10 @@
   <button id="btn-next" class="btn btn-primary">Avançar →</button>
 </footer>
 
+</div>
+</div>
+
+<script src="../shared/shell.js"></script>
 <script src="clauses.js"></script>
 <script src="app.js"></script>
 <script src="../versao.js"></script>

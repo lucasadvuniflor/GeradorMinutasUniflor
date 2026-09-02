@@ -3,43 +3,30 @@
 <head>
 <meta charset="UTF-8" />
 <title>Gerador de Atas de Registro de Preços – Uniflor/PR</title>
-<link rel="stylesheet" href="style.css" />
-  <style>
-    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
-    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
-      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
-    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
-    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
-  </style>
+<link rel="stylesheet" href="../shared/theme.css" />
 </head>
 <body>
-  <nav class="uniflor-anexo-nav">
-    <a href="../edital/index.html" class="uniflor-anexo-tab">📄 Edital</a>
-    <a href="../ata/index.html" class="uniflor-anexo-tab active">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
-    <a href="../contrato/index.html" class="uniflor-anexo-tab">📝 Anexo III – Minuta de Contrato</a>
-    <a href="../config/index.html" class="uniflor-anexo-tab">⚙️ Configurações e Histórico</a>
-  </nav>
+<div class="app-shell">
+<aside id="app-sidebar"></aside>
+<div class="app-main">
 
-  <header class="topbar">
-    <div class="brand">
-      <img src="../../LOGO_UNIFLOR.png" alt="Brasão" class="logo" />
-      <div>
-        <h1>Gerador de Atas de Registro de Preços</h1>
-        <p>Procuradoria Jurídica · Município de Uniflor/PR · Lei 14.133/2021</p>
-      </div>
+  <header class="page-header">
+    <div class="page-heading">
+      <div class="page-title">Ata de Registro de Preços</div>
+      <div class="page-sub">Anexo II do Edital · minuta pré-sessão ou ata específica a partir do relatório do Licitanet</div>
     </div>
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="gerar">Gerar Atas</button>
-      <button class="tab-btn" data-tab="config">Configurações do Órgão</button>
+    <nav class="tabs page-actions">
+      <button class="tab-btn active" data-tab="gerar">Gerar atas</button>
+      <button class="tab-btn" data-tab="config">Dados do órgão</button>
     </nav>
   </header>
 
-  <main>
+  <main class="ata-main">
     <!-- TAB: GERAR ATAS -->
     <section id="tab-gerar" class="tab-content active">
 
       <div class="card hidden" id="card-importar-edital" style="background:#eef6ff; border:1px solid #b6d7ff;">
-        <p style="margin:0;">🔗 <strong>Dados do Edital <span id="importar-edital-label"></span> encontrados.</strong> Importar os dados em comum (nº licitação/processo, objeto, SRP, renovação de quantitativo, correção monetária) para esta Ata?</p>
+        <p style="margin:0;"><strong>Dados do Edital <span id="importar-edital-label"></span> encontrados.</strong> Importar os dados em comum (nº licitação/processo, objeto, SRP, renovação de quantitativo, correção monetária) para esta Ata?</p>
         <div style="display:flex; gap:10px; margin-top:10px;">
           <button id="btn-importar-edital" class="btn-primary">Importar dados do Edital</button>
           <button id="btn-ignorar-edital" class="btn-secondary">Ignorar</button>
@@ -52,12 +39,12 @@
         <div style="display:flex; gap:12px; margin-top:10px; flex-wrap:wrap;">
           <label style="flex:1; min-width:260px; border:2px solid #dee2e6; border-radius:8px; padding:14px; cursor:pointer; display:block;">
             <input type="radio" name="modo-geracao" id="modo-minuta" value="minuta" checked style="margin-right:8px;">
-            <strong>📋 Minuta (fase de planejamento, pré-sessão)</strong>
+            <strong>Minuta (fase de planejamento, pré-sessão)</strong>
             <p class="hint" style="margin-top:4px; margin-left:22px;">Documento genérico, sem fornecedor definido — para aprovar junto com o Edital como Anexo II, antes da sessão pública.</p>
           </label>
           <label style="flex:1; min-width:260px; border:2px solid #dee2e6; border-radius:8px; padding:14px; cursor:pointer; display:block;">
             <input type="radio" name="modo-geracao" id="modo-pos-sessao" value="pos-sessao" style="margin-right:8px;">
-            <strong>📄 Ata específica (pós-sessão, com fornecedor)</strong>
+            <strong>Ata específica (pós-sessão, com fornecedor)</strong>
             <p class="hint" style="margin-top:4px; margin-left:22px;">A partir do relatório de vencedores do LICITANET, já com fornecedor(es) e itens definidos após a sessão pública.</p>
           </label>
         </div>
@@ -66,7 +53,7 @@
       <div class="card" id="card-upload">
         <h2>1. Relatório de Vencedores (LICITANET)</h2>
         <p class="hint">Selecione o PDF "Vencedor(es) do(s) Item(s)" exportado pelo LICITANET após a homologação do pregão. O sistema extrai automaticamente fornecedores, CNPJs e itens vencidos.</p>
-        <button id="btn-selecionar-pdf" class="btn-primary">📄 Selecionar PDF do Relatório</button>
+        <button id="btn-selecionar-pdf" class="btn btn-primary">Selecionar PDF do relatório</button>
         <span id="pdf-status" class="status"></span>
       </div>
 
@@ -307,7 +294,7 @@
         <h2>3. Fornecedores Vencedores</h2>
         <p class="hint">Cada fornecedor marcado abaixo gerará uma Ata de Registro de Preços individual, contendo apenas os itens que ele venceu.</p>
         <div class="toolbar">
-          <button id="btn-buscar-cnpjs" class="btn-secondary">🔎 Buscar endereço dos fornecedores (CNPJ)</button>
+          <button id="btn-buscar-cnpjs" class="btn btn-secondary">Buscar endereço dos fornecedores (CNPJ)</button>
           <span id="cnpj-status" class="status"></span>
         </div>
         <div id="lista-fornecedores"></div>
@@ -316,13 +303,13 @@
       <div class="card hidden" id="card-gerar-minuta">
         <h2>3. Gerar Minuta</h2>
         <p class="hint">Gera um único documento com lacunas para o fornecedor (nome, CNPJ, itens e preços), a serem preenchidas após a sessão pública e a homologação.</p>
-        <button id="btn-gerar-minuta" class="btn-primary btn-large">⚙️ Gerar Minuta da Ata (.docx)</button>
+        <button id="btn-gerar-minuta" class="btn-generate btn-large">Gerar Minuta da Ata (.docx)</button>
         <div id="resultado-geracao-minuta"></div>
       </div>
 
       <div class="card hidden" id="card-gerar">
         <h2>4. Gerar Atas</h2>
-        <button id="btn-gerar" class="btn-primary btn-large">⚙️ Gerar Atas Selecionadas (.docx)</button>
+        <button id="btn-gerar" class="btn-generate btn-large">Gerar Atas Selecionadas (.docx)</button>
         <div id="resultado-geracao"></div>
       </div>
     </section>
@@ -351,12 +338,16 @@
           </div>
           <div class="form-group"><label>Vigência da Ata (meses)</label><input type="number" id="c-vigenciaMeses" value="12" /></div>
         </div>
-        <button id="btn-salvar-config" class="btn-primary">💾 Salvar Configurações</button>
+        <button id="btn-salvar-config" class="btn btn-primary">Salvar configurações</button>
         <span id="config-status" class="status"></span>
       </div>
     </section>
   </main>
 
+</div>
+</div>
+
+  <script src="../shared/shell.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

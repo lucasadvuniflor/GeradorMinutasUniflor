@@ -10,7 +10,7 @@
   if (!el || !api || typeof api.obterVersao !== 'function') return;
   try {
     const v = await api.obterVersao();
-    if (v) el.textContent = `GERA-UNIFLOR v${v}`;
+    if (v) el.textContent = `v${v} · Lei nº 14.133/2021`;
   } catch (e) {
     /* mantém o rótulo sem número */
   }

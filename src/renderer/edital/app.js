@@ -64,15 +64,16 @@ function atualizarPrazoArt55Banner() {
   const { dias: minimo, fundamento } = prazoMinimoArt55(d.tipo_objeto, d.criterio);
   const disponivel = diasUteisEntre(hojeISO(), d.data_sessao);
   const insuficiente = disponivel !== null && disponivel < minimo;
+  // Os três tons de aviso do tema: Nota (neutro), Atenção (âmbar) e OK (verde).
   if (disponivel === null) {
-    banner.innerHTML = `ℹ️ Prazo mínimo legal para este objeto/critério: <strong>${minimo} dias úteis</strong> (${fundamento}), contados de hoje até a sessão pública.`;
-    banner.style.background = '';
+    banner.className = 'callout';
+    banner.innerHTML = `<div>Prazo mínimo legal para este objeto/critério: <strong>${minimo} dias úteis</strong> (${fundamento}), contados de hoje até a sessão pública.</div>`;
   } else if (insuficiente) {
-    banner.innerHTML = `⚠️ Prazo mínimo legal: <strong>${minimo} dias úteis</strong> (${fundamento}). Há apenas <strong>${disponivel} dia(s) útil(eis)</strong> entre hoje e a sessão pública — abaixo do mínimo. A redução só é admissível em caráter excepcional, mediante justificativa.`;
-    banner.style.cssText += ';color:#856404;background-color:#fff3cd;border-color:#ffeeba';
+    banner.className = 'callout callout-atencao';
+    banner.innerHTML = `<div><strong>Prazo mínimo legal: ${minimo} dias úteis</strong> (${fundamento}). Há apenas <strong>${disponivel} dia(s) útil(eis)</strong> entre hoje e a sessão pública — abaixo do mínimo. A redução só é admissível em caráter excepcional, mediante justificativa.</div>`;
   } else {
-    banner.innerHTML = `✅ Prazo mínimo legal: <strong>${minimo} dias úteis</strong> (${fundamento}). Há ${disponivel} dias úteis entre hoje e a sessão pública — prazo atendido.`;
-    banner.style.cssText += ';color:#2a7d4f;background-color:#e8f5ec;border-color:#c3e6cb';
+    banner.className = 'callout callout-ok';
+    banner.innerHTML = `<div>Prazo mínimo legal: <strong>${minimo} dias úteis</strong> (${fundamento}). Há ${disponivel} dias úteis entre hoje e a sessão pública — prazo atendido.</div>`;
   }
   if (row) row.classList.toggle('hidden', !insuficiente);
   const inp = document.getElementById('input-justificativa-prazo');
@@ -148,12 +149,12 @@ function renderClauseGrid(containerId, clauseKey, opcoes, currentValue) {
     const infoOpen = state.openInfoPanel[clauseKey]===opt.id;
     return `<div class="clause-card ${sel?'selected':''} ${!avail?'disabled':''} ${infoOpen?'info-open':''}"
        data-clause="${clauseKey}" data-option="${opt.id}" data-avail="${avail}">
-      <div class="cc-header"><span class="cc-icon">${opt.icon||'📋'}</span><span class="cc-title">${opt.label}</span>
-        ${opt.info?`<button class="cc-info-btn" data-clause="${clauseKey}" data-option="${opt.id}">ℹ</button>`:''}
+      <span class="cc-radio"></span>
+      <div class="cc-header"><span class="cc-title">${opt.label}</span>
+        ${opt.info?`<button class="cc-info-btn" data-clause="${clauseKey}" data-option="${opt.id}" title="Nota explicativa"></button>`:''}
       </div>
       <div class="cc-desc">${opt.desc||''}</div>
-      ${sel?'<div class="cc-selected-badge">✓ Selecionado</div>':''}
-      ${!avail&&opt.indisponivel_msg?`<div class="cc-disabled-msg">🔒 ${opt.indisponivel_msg}</div>`:''}
+      ${!avail&&opt.indisponivel_msg?`<div class="cc-disabled-msg">${opt.indisponivel_msg}</div>`:''}
     </div>`;
   }).join('');
   container.querySelectorAll('.clause-card[data-avail="true"]').forEach(card=>{
@@ -202,12 +203,12 @@ function toggleInfoPanel(clauseKey,optionId,opcoes){
     const opt=opcoes.find(o=>o.id===optionId);
     if(!opt||!opt.info)return;
     const{quando_usar,quando_nao,fundamento,impacto}=opt.info;
-    panel.innerHTML=`<div class="info-panel-header">${opt.icon||''} ${opt.label}<button class="info-panel-close" data-clause="${clauseKey}">✕</button></div>
+    panel.innerHTML=`<div class="info-panel-header">${opt.label}<button class="info-panel-close" data-clause="${clauseKey}" title="Fechar">×</button></div>
     <div class="info-panel-body">
-      <div class="info-row"><span class="info-icon">✅</span><div><div class="info-label">Quando usar</div><div class="info-text">${quando_usar}</div></div></div>
-      ${quando_nao?`<div class="info-row"><span class="info-icon">⚠️</span><div><div class="info-label">Atenção / Quando NÃO usar</div><div class="info-text">${quando_nao}</div></div></div>`:''}
-      <div class="info-row"><span class="info-icon">📚</span><div><div class="info-label">Fundamento Legal</div><div class="info-text fundamento">${fundamento}</div></div></div>
-      ${impacto?`<div class="info-row"><span class="info-icon">📝</span><div><div class="info-label">O que muda no edital</div><div class="info-text impacto">${impacto}</div></div></div>`:''}
+      <div class="info-row"><div><div class="info-label">Quando usar</div><div class="info-text">${quando_usar}</div></div></div>
+      ${quando_nao?`<div class="info-row"><div><div class="info-label">Atenção / Quando NÃO usar</div><div class="info-text">${quando_nao}</div></div></div>`:''}
+      <div class="info-row"><div><div class="info-label">Fundamento Legal</div><div class="info-text fundamento">${fundamento}</div></div></div>
+      ${impacto?`<div class="info-row"><div><div class="info-label">O que muda no edital</div><div class="info-text impacto">${impacto}</div></div></div>`:''}
     </div>`;
     panel.classList.remove('hidden');
     panel.querySelector('.info-panel-close').addEventListener('click',()=>toggleInfoPanel(clauseKey,optionId,opcoes));
@@ -226,15 +227,15 @@ function renderInversaoAlert(optionId){
   if(!anchor)return;
   const div=document.createElement('div');
   div.className='inversao-alert-box';
-  div.innerHTML=`<div class="ia-header"><span class="ia-icon">⚠️</span><strong>ATENÇÃO — Jurisprudência TCE-PR + Nota AGU (COM 37)</strong></div>
+  div.innerHTML=`<div class="ia-header"><strong>Atenção — Jurisprudência TCE-PR + Nota AGU (COM 37)</strong></div>
   <div class="ia-body">
     <p>A inversão de fases é <strong>excepcional</strong> e exige cumprimento <strong>cumulativo</strong> de dois requisitos (art. 17, §1º, Lei 14.133/2021):</p>
     <ol><li>Previsão <strong>expressa</strong> no edital; e</li>
     <li>Ato motivado <strong>prévio</strong> no processo (ETP/TR) com benefícios concretos demonstrados.</li></ol>
     <p><strong>Nota AGU (COM 37):</strong> "A fase de habilitação poderá, mediante ato motivado com explicitação dos benefícios decorrentes, anteceder as fases de apresentação de propostas e lances."</p>
     <p>O TCE-PR tem julgado <strong>irregulares</strong> editais sem fundamentação técnica, determinando <strong>suspensão ou retificação</strong> do certame. <strong>Justificativas genéricas são rejeitadas.</strong></p>
-    <div class="ia-action">📋 <strong>Ação obrigatória:</strong> Inclua no ETP/TR tópico específico com: complexidade do objeto, riscos de inexecução, necessidade de filtrar licitantes inaptos, sensibilidade do ambiente.</div>
-    <div class="ia-note">⚖️ <em>Atenção:</em> A inversão altera o sistema recursal — abre recurso separado sobre habilitação (art. 165, §1º, I, Lei 14.133/2021).</div>
+    <div class="ia-action"><strong>Ação obrigatória:</strong> Inclua no ETP/TR tópico específico com: complexidade do objeto, riscos de inexecução, necessidade de filtrar licitantes inaptos, sensibilidade do ambiente.</div>
+    <div class="ia-note"><em>Atenção:</em> A inversão altera o sistema recursal — abre recurso separado sobre habilitação (art. 165, §1º, I, Lei 14.133/2021).</div>
   </div>`;
   document.getElementById('inversao-alert').appendChild(div);
 }
@@ -338,8 +339,8 @@ async function importarTR(){
     const r=await window.uniflorAPI.selecionarTR();
     if(r.cancelled){ statusEl.classList.add('hidden'); return; }
     if(!r.success){
-      statusEl.textContent=`❌ ${r.error||'Não foi possível ler o arquivo.'}`;
-      statusEl.style.cssText='color:#856404;background-color:#fff3cd;border-color:#ffeeba';
+      statusEl.className='callout callout-bloqueio';
+      statusEl.innerHTML=`<div>${r.error||'Não foi possível ler o arquivo.'}</div>`;
       return;
     }
 
@@ -364,14 +365,14 @@ async function importarTR(){
     atualizarValorEstimadoAutomatico();
 
     const partes=[];
-    partes.push(`✅ ${preenchidos.length} campo(s) preenchido(s) a partir do TR: ${preenchidos.join(', ')||'nenhum'}.${itensMsg}`);
-    if((r.avisos||[]).length) partes.push(...r.avisos.map(a=>`⚠️ ${a}`));
+    partes.push(`<strong>${preenchidos.length} campo(s) preenchido(s) a partir do TR:</strong> ${preenchidos.join(', ')||'nenhum'}.${itensMsg}`);
+    if((r.avisos||[]).length) partes.push(...r.avisos.map(a=>`Atenção: ${a}`));
     partes.push('Revise todas as etapas antes de gerar a minuta — nada foi gerado automaticamente.');
-    statusEl.innerHTML=partes.join('<br>');
-    statusEl.style.cssText='color:#1a4b8c;background-color:#e8effc;border-color:#c7d4e6';
+    statusEl.className=(r.avisos||[]).length?'callout callout-atencao':'callout callout-ok';
+    statusEl.innerHTML=`<div>${partes.join('<br>')}</div>`;
   }catch(e){
-    statusEl.textContent=`❌ Erro ao importar: ${e.message}`;
-    statusEl.style.cssText='color:#856404;background-color:#fff3cd;border-color:#ffeeba';
+    statusEl.className='callout callout-bloqueio';
+    statusEl.innerHTML=`<div>Erro ao importar: ${e.message}</div>`;
   }finally{
     btn.disabled=false; btn.innerHTML=label;
   }
@@ -437,11 +438,10 @@ function mostrarAvisoRetomada(dados){
   if(!dados) return;
   const banner=document.getElementById('tr-import-status');
   if(!banner) return;
-  banner.classList.remove('hidden');
-  banner.style.cssText='color:#1a4b8c;background-color:#e8effc;border-color:#c7d4e6';
+  banner.className='callout';
   banner.innerHTML=dados.modo==='duplicar'
-    ? `📑 <strong>Nova minuta duplicada de:</strong> ${dados.titulo||'minuta anterior'}.<br>O número da licitação, o processo e as datas foram limpos — informe os novos valores antes de gerar.`
-    : `✏️ <strong>Editando a minuta:</strong> ${dados.titulo||'minuta anterior'}.<br>Todos os campos foram restaurados. Gerar novamente cria um novo arquivo, sem sobrescrever o anterior.`;
+    ? `<div><strong>Nova minuta duplicada de:</strong> ${dados.titulo||'minuta anterior'}.<br>O número da licitação, o processo e as datas foram limpos — informe os novos valores antes de gerar.</div>`
+    : `<div><strong>Editando a minuta:</strong> ${dados.titulo||'minuta anterior'}.<br>Todos os campos foram restaurados. Gerar novamente cria um novo arquivo, sem sobrescrever o anterior.</div>`;
 }
 
 async function init(){
@@ -673,9 +673,10 @@ function validateStep(step){
   return e;
 }
 
-function showErrors(errs,step){const b=document.getElementById(`error-${step}`);if(b)b.innerHTML=`<div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:10px 14px;margin:0 0 12px;font-size:12px;color:var(--danger)">⚠️ ${errs.join('<br>⚠️ ')}</div>`;}
+function showErrors(errs,step){const b=document.getElementById(`error-${step}`);if(b)b.innerHTML=`<div class="callout form-errors"><div class="form-errors-list">${errs.map(e=>`<div>${e}</div>`).join('')}</div></div>`;}
 function clearErrors(){document.querySelectorAll('[id^="error-"]').forEach(b=>b.innerHTML='');}
-function showAlertBar(alertas){const bar=document.getElementById('alert-bar');const tipo=alertas.find(a=>a.nivel==='erro')?'has-errors':alertas.find(a=>a.nivel==='aviso')?'has-warns':'has-info';bar.className=`alert-bar ${tipo}`;bar.innerHTML=alertas.map(a=>`<span class="alert-item">${a.nivel==='erro'?'❌':a.nivel==='aviso'?'⚠️':'ℹ️'} ${a.msg}</span>`).join('');bar.classList.remove('hidden');}
+// O ícone de cada item vem do CSS (.alert-erro / .alert-aviso / .alert-info), não de emoji no texto.
+function showAlertBar(alertas){const bar=document.getElementById('alert-bar');const tipo=alertas.find(a=>a.nivel==='erro')?'has-errors':alertas.find(a=>a.nivel==='aviso')?'has-warns':'has-info';bar.className=`alert-bar ${tipo}`;bar.innerHTML=alertas.map(a=>`<span class="alert-item alert-${a.nivel==='erro'?'erro':a.nivel==='aviso'?'aviso':'info'}">${String(a.msg).replace(/^[\u2139\u26A0\u{1F6A8}\uFE0F\s]+/u, '')}</span>`).join('');bar.classList.remove('hidden');}
 function hideAlertBar(){document.getElementById('alert-bar').classList.add('hidden');}
 
 function renderReview(){
@@ -694,23 +695,23 @@ function renderReview(){
     {k:'Modo de Disputa',v:d.modo_disputa},{k:'Tipo do Objeto',v:cL('tipo_objeto',d.tipo_objeto)},
     {k:'Divisão do Objeto',v:cL('divisao_objeto',d.divisao_objeto)},
     {k:'Fase de Habilitação',v:cL('inversao_fases',d.inversao_fases)},
-    {k:'Intervalo entre Lances',v:d.intervalo_lances||'⚠️ Não informado'},
+    {k:'Intervalo entre Lances',v:d.intervalo_lances||'<span class="review-badge warn">Não informado</span>'},
     {k:'SRP',v:bL(d.srp)},{k:'ME/EPP Favorecido',v:bL(d.me_epp)},
     {k:'Margem de Preferência',v:bL(d.margem_preferencia)},{k:'Consórcio',v:bL(d.consorcio)},
     {k:'Restrição Geográfica',v:cL('restricao_geografica',d.restricao_geografica)},
-    {k:'Orçamento',v:d.valor_sigiloso==='true'?'🔒 Sigiloso':(d.valor_estimado?`R$ ${parseFloat(d.valor_estimado).toLocaleString('pt-BR',{minimumFractionDigits:2})}`:'Divulgado')},
+    {k:'Orçamento',v:d.valor_sigiloso==='true'?'Sigiloso':(d.valor_estimado?`R$ ${parseFloat(d.valor_estimado).toLocaleString('pt-BR',{minimumFractionDigits:2})}`:'Divulgado')},
     {k:'Garantia de Execução',v:bL(d.garantia)},{k:'Garantia da Proposta',v:bL(d.garantia_proposta)},
     {k:'Itens Cadastrados',v:(d.itens||[]).length?`${d.itens.length} item(ns)`:'Nenhum (valor manual)'},
     {k:'Pregoeiro/Agente',v:d.pregoeiro||'—'},
     {k:'Data Sessão',v:`${fD(d.data_sessao)} às ${d.hora_sessao}`},
-    ...(d.justificativa_prazo_reduzido?[{k:'⚠️ Justificativa (Prazo Reduzido, Art. 55)',v:d.justificativa_prazo_reduzido}]:[]),
+    ...(d.justificativa_prazo_reduzido?[{k:'Justificativa (prazo reduzido, art. 55)',v:d.justificativa_prazo_reduzido}]:[]),
     {k:'Plataforma',v:`${d.plataforma} — ${d.url_plataforma}`},
     {k:'Prazo Assinar Contrato',v:`${d.prazo_assinar_contrato||'—'} dias úteis`},
     {k:'Prazo Docs Habilitação',v:`${d.prazo_docs_habilitacao||'—'} horas`},
     {k:'Prazo Multa',v:`${d.prazo_multa||'—'} dias úteis`},
     {k:'E-mail Impugnação',v:d.email_impugnacao||'—'},
     {k:'Objeto',v:d.objeto||'—',full:true},
-    ...(campos_atencao.length?[{k:'⚠️ Campos para atenção pós-edital',v:campos_atencao.join(' | '),full:true}]:[])
+    ...(campos_atencao.length?[{k:'Campos para atenção pós-edital',v:campos_atencao.join(' · '),full:true}]:[])
   ];
   document.getElementById('review-content').innerHTML=items.map(it=>
     `<div class="review-item${it.full?' full':''}">${'<div class="review-key">'+it.k+'</div>'}<div class="review-value">${it.v}</div></div>`).join('');
@@ -733,28 +734,29 @@ function buildPayload(){
 async function gerarEdital(){
   const btn=document.getElementById('btn-gerar');
   const res=document.getElementById('result-msg');
+  const label=btn.innerHTML; // rótulo com o ícone SVG, definido no HTML
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Gerando…';res.className='hidden result-box';
   try{
     const result=await window.uniflorAPI.gerarEdital(buildPayload());
-    if(result.cancelled){btn.disabled=false;btn.innerHTML='<span>📄</span> Gerar Minuta (.docx)';return;}
-    if(result.success){res.className='result-box success';res.textContent=`✅ Salvo: ${result.path}`;}
+    if(result.cancelled){btn.disabled=false;btn.innerHTML=label;return;}
+    if(result.success){res.className='result-box success';res.textContent=`Salvo em ${result.path}`;}
     else throw new Error(result.error||'Erro desconhecido');
-  }catch(e){res.className='result-box error';res.textContent=`❌ ${e.message}`;}
+  }catch(e){res.className='result-box error';res.textContent=e.message;}
   res.classList.remove('hidden');
-  btn.disabled=false;btn.innerHTML='<span>📄</span> Gerar Minuta (.docx)';
+  btn.disabled=false;btn.innerHTML=label;
 }
 
 async function gerarResumoEdital(){
   const btn=document.getElementById('btn-gerar-resumo');
   const res=document.getElementById('result-msg');
-  const label='<span>📋</span> Gerar Guia Rápido do Licitante (.docx)';
+  const label=btn.innerHTML;
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Gerando…';res.className='hidden result-box';
   try{
     const result=await window.uniflorAPI.gerarResumoEdital(buildPayload());
     if(result.cancelled){btn.disabled=false;btn.innerHTML=label;return;}
-    if(result.success){res.className='result-box success';res.textContent=`✅ Salvo: ${result.path}`;}
+    if(result.success){res.className='result-box success';res.textContent=`Salvo em ${result.path}`;}
     else throw new Error(result.error||'Erro desconhecido');
-  }catch(e){res.className='result-box error';res.textContent=`❌ ${e.message}`;}
+  }catch(e){res.className='result-box error';res.textContent=e.message;}
   res.classList.remove('hidden');
   btn.disabled=false;btn.innerHTML=label;
 }

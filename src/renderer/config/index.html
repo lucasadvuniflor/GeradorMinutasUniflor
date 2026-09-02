@@ -3,17 +3,12 @@
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Configurações e Histórico – Uniflor/PR</title>
-  <link rel="stylesheet" href="../edital/app.css" />
+  <link rel="stylesheet" href="../shared/theme.css" />
   <style>
-    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
-    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
-      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
-    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
-    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
-    .cfg-tabs { display:flex; gap:6px; padding:10px 16px 0; background:var(--gray-100); }
-    .cfg-tab { padding:8px 18px; font-size:.8rem; font-weight:700; border:none; background:transparent;
-      color:var(--primary); cursor:pointer; border-bottom:3px solid transparent; }
-    .cfg-tab.active { border-bottom-color:var(--primary); background:#fff; border-radius:6px 6px 0 0; }
+    .cfg-tabs { display:flex; gap:28px; padding:0 28px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+    .cfg-tab { padding:12px 0; font-size:13px; font-weight:500; border:none; background:transparent;
+      color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; }
+    .cfg-tab.active { color:var(--primary); font-weight:600; border-bottom-color:var(--primary); }
     .cfg-panel { padding:16px; }
     .cfg-panel.hidden { display:none; }
     .hist-row { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center;
@@ -30,27 +25,20 @@
 </head>
 <body>
 
-<nav class="uniflor-anexo-nav">
-  <a href="../edital/index.html" class="uniflor-anexo-tab">📄 Edital</a>
-  <a href="../ata/index.html" class="uniflor-anexo-tab">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
-  <a href="../contrato/index.html" class="uniflor-anexo-tab">📝 Anexo III – Minuta de Contrato</a>
-  <a href="../config/index.html" class="uniflor-anexo-tab active">⚙️ Configurações e Histórico</a>
-</nav>
+<div class="app-shell">
+<aside id="app-sidebar"></aside>
+<div class="app-main">
 
-<header class="app-header">
-  <div class="header-logo">
-    <img src="../../LOGO_UNIFLOR.png" class="brasao-img" alt="Brasão Uniflor" />
-    <div>
-      <div class="header-title">Município de Uniflor/PR</div>
-      <div class="header-sub">Procuradoria Jurídica · Configurações Institucionais e Histórico de Minutas</div>
-    </div>
+<header class="page-header">
+  <div class="page-heading">
+    <div class="page-title">Configurações e Histórico</div>
+    <div class="page-sub">Dados institucionais que alimentam todos os wizards · registro de cada minuta gerada</div>
   </div>
-  <div class="header-badge" id="app-version-badge">GERA-UNIFLOR</div>
 </header>
 
 <div class="cfg-tabs">
-  <button class="cfg-tab active" data-panel="config">⚙️ Dados Institucionais</button>
-  <button class="cfg-tab" data-panel="historico">🗂️ Histórico de Minutas</button>
+  <button class="cfg-tab active" data-panel="config">Dados institucionais</button>
+  <button class="cfg-tab" data-panel="historico">Histórico de minutas</button>
 </div>
 
 <main class="wizard-body">
@@ -122,7 +110,7 @@
     </div>
 
     <div class="generate-zone">
-      <button id="btn-salvar-config" class="btn-generate"><span>💾</span> Salvar Configurações</button>
+      <button id="btn-salvar-config" class="btn-generate">Salvar Configurações</button>
       <p class="generate-note">As alterações valem para as próximas minutas geradas. Minutas já emitidas não são alteradas.</p>
     </div>
     <div id="config-status" class="hidden result-box"></div>
@@ -155,6 +143,10 @@
 
 </main>
 
+</div>
+</div>
+
+<script src="../shared/shell.js"></script>
 <script src="app.js"></script>
 <script src="../versao.js"></script>
 </body>

@@ -214,22 +214,21 @@ function hide(id) {
 function setVis(id, visible) { visible ? show(id) : hide(id); }
 
 // ─── Renderização do progresso ───────────────────────────────────────────────
+// Mesma barra de etapas dos wizards de Edital (tema compartilhado). Etapas concluídas são
+// clicáveis para voltar — o papel que a lista lateral de etapas tinha antes.
 function renderProgress() {
   const bar = document.getElementById('progressBar');
-  bar.innerHTML = STEPS.map((s, i) => {
-    const cls = s.id === state.step ? 'active' : (s.id < state.step ? 'done' : '');
-    const sep = i < STEPS.length - 1 ? '<span class="step-sep">›</span>' : '';
-    return `<span class="step-chip ${cls}">${s.id < state.step ? '✓ ' : ''}${s.label}</span>${sep}`;
+  bar.innerHTML = STEPS.map(s => {
+    const done = s.id < state.step;
+    const cls = s.id === state.step ? 'active' : (done ? 'done clickable' : '');
+    return `<div class="step ${cls}"${done ? ` onclick="goTo(${s.id})"` : ''}><span class="step-circle">${s.id}</span><span class="step-label">${s.label}</span></div>`;
   }).join('');
 }
 
 function renderSidebar() {
+  // A lista lateral saiu do layout (ver contrato.css); a navegação entre etapas vive na barra acima.
   const sb = document.getElementById('sidebar');
-  sb.innerHTML = '<div style="font-size:.72rem;font-weight:700;color:#a0aec0;text-transform:uppercase;margin-bottom:12px;padding:0 12px;">Etapas</div>' +
-    STEPS.map(s => {
-      const cls = s.id === state.step ? 'active' : (s.id < state.step ? 'done' : '');
-      return `<div class="sidebar-item ${cls}" onclick="goTo(${s.id})">${s.label}</div>`;
-    }).join('');
+  if (sb) sb.innerHTML = '';
 }
 function updateSidebar() { renderSidebar(); }
 
@@ -398,7 +397,7 @@ function bindCnpjLookup() {
 
     clearTimeout(cnpjDebounceTimer);
     if (raw.length === 14) {
-      cnpjStatus('🔍 Buscando…', 'loading');
+      cnpjStatus('Buscando…', 'loading');
       cnpjDebounceTimer = setTimeout(() => lookupCnpj(raw), 600);
     } else {
       cnpjStatus('', '');
@@ -407,12 +406,12 @@ function bindCnpjLookup() {
 }
 
 async function lookupCnpj(raw) {
-  cnpjStatus('🔍 Consultando Receita Federal…', 'loading');
+  cnpjStatus('Consultando Receita Federal…', 'loading');
   try {
     const data = await window.uniflorAPI.buscarCnpj(raw);
 
     if (!data || data.erro || data.message) {
-      cnpjStatus('❌ CNPJ não encontrado ou inativo', 'erro');
+      cnpjStatus('CNPJ não encontrado ou inativo', 'erro');
       return;
     }
 
@@ -441,12 +440,12 @@ async function lookupCnpj(raw) {
     const situacao = String(data.situacao_cadastral || '');
     const ativa = situacao.toUpperCase() === 'ATIVA';
     const statusMsg = ativa
-      ? `✅ ${toTitleCase(nome)}${fantasia && fantasia !== nome ? ' (' + toTitleCase(fantasia) + ')' : ''} – Ativa`
-      : `⚠️ Situação: ${situacao}`;
+      ? `${toTitleCase(nome)}${fantasia && fantasia !== nome ? ' (' + toTitleCase(fantasia) + ')' : ''} – Ativa`
+      : `Situação: ${situacao}`;
     cnpjStatus(statusMsg, ativa ? 'ok' : 'erro');
 
   } catch (e) {
-    cnpjStatus('❌ Erro na consulta: ' + e.message, 'erro');
+    cnpjStatus('Erro na consulta: ' + e.message, 'erro');
   }
 }
 
@@ -466,7 +465,7 @@ function renderStep3() {
       <div class="card-title">Modo de Geração</div>
       <div class="toggle-group">
         <input type="checkbox" id="modo_minuta" data-field="modo_minuta" ${state.data.modo_minuta?'checked':''}>
-        <label class="toggle-label" for="modo_minuta">📋 Gerar como MINUTA (Anexo III do Edital, fase de planejamento) — sem ${contratadoLabel.toUpperCase()} definido</label>
+        <label class="toggle-label" for="modo_minuta">Gerar como MINUTA (Anexo III do Edital, fase de planejamento) — sem ${contratadoLabel.toUpperCase()} definido</label>
       </div>
       <p class="hint" style="margin-top:6px;">Marque esta opção para aprovar a minuta do contrato junto com o Edital, antes da sessão pública. Os dados do ${contratadoLabel} abaixo podem ficar em branco — o documento será gerado com lacunas para preenchimento posterior.</p>
     </div>
@@ -626,7 +625,7 @@ function renderStep4() {
         </div>` : ''}
       </div>
       <div class="alert alert-warn" id="alert_emergencial" ${state.data.tipo_vigencia==='emergencial'?'':'style="display:none"'}>
-        ⚠️ Contratação emergencial (art. 75, VIII): prazo máximo de 1 (um) ano, improrrogável.
+        Contratação emergencial (art. 75, VIII): prazo máximo de 1 (um) ano, improrrogável.
       </div>
     </div>
 
@@ -1034,7 +1033,7 @@ function renderStep5() {
           </div>
           ${(state.data.tipo === 'compras' && !state.data.tem_garantia_objeto) ? `
           <div style="margin-top:8px;padding:8px 12px;background:#fff3cd;border:1px solid #ffeeba;border-radius:6px;font-size:.78rem;color:#856404">
-            ⚠️ Contratos de aquisição de bens normalmente exigem garantia mínima do produto (art. 92, XIII, da Lei nº 14.133/2021). Confira o Termo de Referência antes de deixar esta cláusula de fora.
+            Contratos de aquisição de bens normalmente exigem garantia mínima do produto (art. 92, XIII, da Lei nº 14.133/2021). Confira o Termo de Referência antes de deixar esta cláusula de fora.
           </div>` : ''}
         </div>
         <div class="form-group" id="row_prazo_garantia_objeto" ${!state.data.tem_garantia_objeto?'style="display:none"':''}>
@@ -1113,7 +1112,7 @@ function renderStep6() {
       </p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <button type="button" class="btn btn-secondary" onclick="sugerirInfracoes()" ${SANCOES_BIBLIOTECA.categoriaParaTipo(state.data.tipo) ? '' : 'disabled title="Sem biblioteca para este tipo de contrato"'}>
-          ✨ Carregar sugestões para ${SANCOES_BIBLIOTECA.categoriaParaTipo(state.data.tipo)?.rotulo || 'este tipo'}
+          Carregar sugestões para ${SANCOES_BIBLIOTECA.categoriaParaTipo(state.data.tipo)?.rotulo || 'este tipo'}
         </button>
         <button type="button" class="btn btn-secondary" onclick="addInfracao()">+ Adicionar infração</button>
         ${state.data.infracoes.length ? `<button type="button" class="btn btn-secondary" onclick="limparInfracoes()" style="color:#c53030;border-color:#c53030">Limpar todas</button>` : ''}
@@ -1278,9 +1277,7 @@ function renderStep7() {
 
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="prevStep()">← Anterior</button>
-      <button class="btn btn-generate" id="btnGerar" onclick="gerarContrato()">
-        📄 Gerar Minuta de Contrato
-      </button>
+      <button class="btn-generate" id="btnGerar" onclick="gerarContrato()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 18v-6M9 15l3 3 3-3"/></svg>Gerar Minuta de Contrato (.docx)</button>
     </div>`;
 }
 
@@ -1336,7 +1333,7 @@ function refreshInfracoesTable() {
   if (erros) {
     const lista = SANCOES_BIBLIOTECA.validar(state.data.infracoes);
     erros.innerHTML = lista.length
-      ? `<div style="background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;font-size:.76rem;color:#c53030">${lista.map(e => `⚠️ ${escHtml(e)}`).join('<br>')}</div>`
+      ? `<div style="background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;font-size:.76rem;color:#c53030">${lista.map(e => `${escHtml(e)}`).join('<br>')}</div>`
       : '';
   }
 }
@@ -1383,7 +1380,7 @@ window.updateInfracaoField = function(id, field, value) {
   if (erros) {
     const lista = SANCOES_BIBLIOTECA.validar(state.data.infracoes);
     erros.innerHTML = lista.length
-      ? `<div style="background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;font-size:.76rem;color:#c53030">${lista.map(e => `⚠️ ${escHtml(e)}`).join('<br>')}</div>`
+      ? `<div style="background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;font-size:.76rem;color:#c53030">${lista.map(e => `${escHtml(e)}`).join('<br>')}</div>`
       : '';
   }
 };
@@ -1397,31 +1394,32 @@ window.gerarContrato = async function() {
   // Piso e teto do art. 156, §3º são vinculantes — um percentual fora da faixa não pode virar minuta.
   const errosSancoes = SANCOES_BIBLIOTECA.validar(state.data.infracoes);
   if (errosSancoes.length) {
-    msg.innerHTML = `<div class="msg-error">❌ Corrija as infrações específicas (passo 5) antes de gerar:<br>${errosSancoes.map(e => `• ${escHtml(e)}`).join('<br>')}</div>`;
+    msg.innerHTML = `<div class="msg-error"><strong>Corrija as infrações específicas (passo 5) antes de gerar:</strong><br>${errosSancoes.map(e => `• ${escHtml(e)}`).join('<br>')}</div>`;
     return;
   }
 
+  const label = btn.innerHTML; // rótulo com o ícone SVG, definido em renderStep7
   btn.disabled = true;
-  btn.textContent = '⏳ Gerando…';
+  btn.innerHTML = '<span class="spinner"></span> Gerando…';
   msg.innerHTML = '';
 
   try {
     const result = await window.uniflorAPI.gerarContrato(state.data);
     if (result.success) {
-      msg.innerHTML = `<div class="msg-success">✅ Documento gerado com sucesso: ${result.path}</div>`;
-      btn.textContent = '✅ Gerado!';
+      msg.innerHTML = `<div class="msg-success">Documento gerado: ${result.path}</div>`;
+      btn.innerHTML = 'Gerado';
     } else if (result.cancelled) {
       msg.innerHTML = '<div class="msg-error">Operação cancelada.</div>';
-      btn.textContent = '📄 Gerar Minuta de Contrato';
+      btn.innerHTML = label;
       btn.disabled = false;
     } else {
-      msg.innerHTML = `<div class="msg-error">❌ Erro: ${result.error}</div>`;
-      btn.textContent = '📄 Gerar Minuta de Contrato';
+      msg.innerHTML = `<div class="msg-error">Erro: ${result.error}</div>`;
+      btn.innerHTML = label;
       btn.disabled = false;
     }
   } catch (e) {
-    msg.innerHTML = `<div class="msg-error">❌ Erro inesperado: ${e.message}</div>`;
-    btn.textContent = '📄 Gerar Minuta de Contrato';
+    msg.innerHTML = `<div class="msg-error">Erro inesperado: ${e.message}</div>`;
+    btn.innerHTML = label;
     btn.disabled = false;
   }
 };
@@ -1582,11 +1580,12 @@ function aplicarRetomadaContrato() {
 
   if (retomada) {
     const aviso = document.createElement('div');
-    aviso.style.cssText = 'margin:12px 0;padding:10px 14px;background:#e8effc;border:1px solid #c7d4e6;border-radius:6px;font-size:.8rem;color:#1a4b8c';
+    aviso.className = 'callout';
+    aviso.style.margin = '14px 28px 0';
     aviso.innerHTML = retomada.modo === 'duplicar'
-      ? `📑 <strong>Novo contrato duplicado de:</strong> ${retomada.titulo || 'contrato anterior'}. Número, processo, contratado e data foram limpos — informe os novos valores.`
-      : `✏️ <strong>Editando o contrato:</strong> ${retomada.titulo || 'contrato anterior'}. Gerar novamente cria um novo arquivo, sem sobrescrever o anterior.`;
-    document.querySelector('main')?.prepend(aviso);
+      ? `<div><strong>Novo contrato duplicado de:</strong> ${retomada.titulo || 'contrato anterior'}. Número, processo, contratado e data foram limpos — informe os novos valores.</div>`
+      : `<div><strong>Editando o contrato:</strong> ${retomada.titulo || 'contrato anterior'}. Gerar novamente cria um novo arquivo, sem sobrescrever o anterior.</div>`;
+    document.getElementById('content')?.parentNode?.insertBefore(aviso, document.getElementById('content'));
   }
 })();
 

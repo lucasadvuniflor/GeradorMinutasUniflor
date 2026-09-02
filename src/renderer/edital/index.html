@@ -3,43 +3,19 @@
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gerador de Minutas de Edital – Uniflor/PR</title>
-  <link rel="stylesheet" href="app.css" />
-  <style>
-    .uniflor-anexo-nav { display:flex; background:#0f2a4a; }
-    .uniflor-anexo-tab { flex:1; text-align:center; padding:10px 8px; font-size:.8rem; font-weight:600;
-      color:#b7c6dc; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
-    .uniflor-anexo-tab:hover { background:#16385f; color:#fff; }
-    .uniflor-anexo-tab.active { color:#fff; border-bottom-color:#4da3ff; background:#16385f; }
-    .uniflor-doctype-nav { display:flex; background:#e8eef6; border-bottom:1px solid #c7d4e6; }
-    .uniflor-doctype-tab { flex:1; text-align:center; padding:8px 6px; font-size:.75rem; font-weight:600;
-      color:#3a5a86; text-decoration:none; border-bottom:3px solid transparent; transition:.15s; }
-    .uniflor-doctype-tab:hover { background:#d7e2f2; }
-    .uniflor-doctype-tab.active { color:#0f2a4a; border-bottom-color:#0f2a4a; background:#fff; }
-  </style>
+  <link rel="stylesheet" href="../shared/theme.css" />
 </head>
 <body>
 
-<nav class="uniflor-anexo-nav">
-  <a href="../edital/index.html" class="uniflor-anexo-tab active">📄 Edital</a>
-  <a href="../ata/index.html" class="uniflor-anexo-tab">📑 Anexo II – Minuta de Ata de Registro de Preços</a>
-  <a href="../contrato/index.html" class="uniflor-anexo-tab">📝 Anexo III – Minuta de Contrato</a>
-  <a href="../config/index.html" class="uniflor-anexo-tab">⚙️ Configurações e Histórico</a>
-</nav>
-<nav class="uniflor-doctype-nav">
-  <a href="../edital/index.html" class="uniflor-doctype-tab active">🏷️ Pregão / Concorrência</a>
-  <a href="../credenciamento/index.html" class="uniflor-doctype-tab">🤝 Credenciamento</a>
-  <a href="../aviso-contratacao-direta/index.html" class="uniflor-doctype-tab">⚡ Aviso de Contratação Direta</a>
-</nav>
+<div class="app-shell">
+<aside id="app-sidebar"></aside>
+<div class="app-main">
 
-<header class="app-header">
-  <div class="header-logo">
-    <img src="../../LOGO_UNIFLOR.png" class="brasao-img" alt="Brasão Uniflor" />
-    <div>
-      <div class="header-title">Município de Uniflor/PR</div>
-      <div class="header-sub">Procuradoria Jurídica · Gerador de Minutas de Edital · Lei 14.133/2021</div>
-    </div>
+<header class="page-header">
+  <div class="page-heading">
+    <div class="page-title">Edital — Pregão / Concorrência</div>
+    <div class="page-sub">Lei nº 14.133/2021 · notas da AGU e jurisprudência do TCE-PR em cada opção</div>
   </div>
-  <div class="header-badge" id="app-version-badge">GERA-UNIFLOR</div>
 </header>
 
 <nav class="progress-bar" id="progress-bar">
@@ -65,12 +41,12 @@
   <!-- STEP 1: Modalidade -->
   <section class="step-content" id="step-1">
     <h2 class="section-title">Modalidade, Tipo e Objeto</h2>
-    <p class="section-hint">As escolhas desta etapa determinam quais critérios e modos de disputa estarão disponíveis nas etapas seguintes. Clique em ℹ para ver as notas explicativas da AGU.</p>
+    <p class="section-hint">As escolhas desta etapa determinam quais critérios e modos de disputa estarão disponíveis nas etapas seguintes. Clique no ícone de informação para ver as notas explicativas da AGU.</p>
     <div id="error-1"></div>
     <div class="card">
       <h3 class="card-title">Importar do Termo de Referência</h3>
       <p class="section-hint" style="margin-top:0">Selecione o TR do processo (.docx ou .pdf) para pré-preencher automaticamente os campos abaixo. Os campos identificados ficam marcados para revisão — nada é gerado sem você conferir todas as etapas. <strong>Prefira o .docx quando existir</strong>: a leitura é mais precisa, e o PDF assinado pode ser uma revisão anterior do TR.</p>
-      <button type="button" id="btn-importar-tr" class="btn btn-secondary">📎 Importar Termo de Referência (.docx ou .pdf)</button>
+      <button type="button" id="btn-importar-tr" class="btn btn-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Importar Termo de Referência (.docx ou .pdf)</button>
       <div id="tr-import-status" class="nota-explicativa hidden" style="margin-top:10px"></div>
     </div>
     <div class="card"><div class="clause-section-title">Modalidade de Licitação <span class="req">*</span></div><div class="clause-grid" id="cg-modalidade"></div><div class="info-panel hidden" id="ip-modalidade"></div></div>
@@ -115,7 +91,7 @@
             <option value="alimento_perecivel">Alimento perecível</option>
             <option value="servico_integrado">Serviço integrado ao fornecimento de bens</option>
           </select>
-          <div class="nota-explicativa" style="margin-top:5px; color:#dc3545;">🚨 Atenção: Ao marcar essa opção, a adesão (carona) por não participantes será vedada automaticamente no edital.</div>
+          <div class="nota-explicativa" style="margin-top:5px; color:#dc3545;">Atenção: Ao marcar essa opção, a adesão (carona) por não participantes será vedada automaticamente no edital.</div>
         </div>
 
         <div class="form-group wide" id="srp_irp_group">
@@ -200,7 +176,7 @@
       <div class="form-row">
         <div class="form-group wide"><label>Valor/percentual do intervalo mínimo <span class="req">*</span></label><input type="text" data-field="intervalo_lances" placeholder="ex: R$ 0,01 por item ou 0,1%" /></div>
       </div>
-      <p class="nota-explicativa">⚠️ O art. 22, §1º, da IN SEGES nº 73/2022 torna obrigatória a previsão de intervalo mínimo de diferença de valores ou percentuais entre os lances.</p>
+      <p class="nota-explicativa">O art. 22, §1º, da IN SEGES nº 73/2022 torna obrigatória a previsão de intervalo mínimo de diferença de valores ou percentuais entre os lances.</p>
     </div>
   </section>
 
@@ -254,7 +230,7 @@
             <option value="contratada">A empresa contratada (entrega/instalação por conta dela)</option>
           </select>
         </div>
-        <div id="alerta-transporta-contratada" class="nota-explicativa hidden" style="width:100%; color:#856404; background:#fff3cd; border-color:#ffeeba; padding:10px;">⚠️ Atenção (Ac. 732/22 TCE-PR, Lapa): se é a contratada quem arca com o deslocamento, a distância da sua sede deixa de ter relevância para a Administração — reavalie se a restrição geográfica ainda se justifica antes de prosseguir.</div>
+        <div id="alerta-transporta-contratada" class="nota-explicativa hidden" style="width:100%; color:#856404; background:#fff3cd; border-color:#ffeeba; padding:10px;">Atenção (Ac. 732/22 TCE-PR, Lapa): se é a contratada quem arca com o deslocamento, a distância da sua sede deixa de ter relevância para a Administração — reavalie se a restrição geográfica ainda se justifica antes de prosseguir.</div>
 
         <div class="form-group wide"><label>Abrangência Territorial <span class="req">*</span></label>
           <select data-field="restricao_c_abrangencia" id="sel-restricao-abrangencia">
@@ -282,10 +258,10 @@
             <option value="emergencial">Atendimento emergencial ou agilidade de assistência técnica (Ex: Equipamentos médicos)</option>
           </select>
         </div>
-        <div id="alerta-cbuq" class="nota-explicativa hidden" style="width:100%;">💡 Jurisprudência: Para usinas de asfalto, anexe laudo técnico comprovando o limite de distância para não haver perda da temperatura de aplicação.</div>
-        <div id="alerta-frota" class="nota-explicativa hidden" style="width:100%;">💡 Para retirada de pedras/cascalho com frota própria, a justificativa deve conter o cálculo do custo do KM rodado pelos caminhões do município, provando que distâncias maiores causam prejuízo ao erário.</div>
-        <div id="alerta-presenca" class="nota-explicativa hidden" style="width:100%;">💡 Caso confirmado pelo TCE-PR (Ac. 300/22, Cambará — cestas básicas): o beneficiário/execução precisa de um ponto físico local (ex: alvará de vigilância sanitária local), tornando inviável a operação por empresa de outra cidade.</div>
-        <div id="alerta-emergencial" class="nota-explicativa hidden" style="width:100%; color:#856404; background:#fff3cd; border-color:#ffeeba; padding:10px;">⚠️ Critério 4: a urgência só justifica a restrição se for genuína — o TCE-PR rejeitou alegação de urgência decorrente de falta de manutenção preventiva (PE 49/2025, Santo Antônio da Platina).</div>
+        <div id="alerta-cbuq" class="nota-explicativa hidden" style="width:100%;">Jurisprudência: Para usinas de asfalto, anexe laudo técnico comprovando o limite de distância para não haver perda da temperatura de aplicação.</div>
+        <div id="alerta-frota" class="nota-explicativa hidden" style="width:100%;">Para retirada de pedras/cascalho com frota própria, a justificativa deve conter o cálculo do custo do KM rodado pelos caminhões do município, provando que distâncias maiores causam prejuízo ao erário.</div>
+        <div id="alerta-presenca" class="nota-explicativa hidden" style="width:100%;">Caso confirmado pelo TCE-PR (Ac. 300/22, Cambará — cestas básicas): o beneficiário/execução precisa de um ponto físico local (ex: alvará de vigilância sanitária local), tornando inviável a operação por empresa de outra cidade.</div>
+        <div id="alerta-emergencial" class="nota-explicativa hidden" style="width:100%; color:#856404; background:#fff3cd; border-color:#ffeeba; padding:10px;">Critério 4: a urgência só justifica a restrição se for genuína — o TCE-PR rejeitou alegação de urgência decorrente de falta de manutenção preventiva (PE 49/2025, Santo Antônio da Platina).</div>
         <div id="urgencia_group" class="hidden form-group full-width" style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="chk-urgencia-planejada" /><label for="chk-urgencia-planejada" style="margin-bottom:0;">Confirmo que a urgência não decorre de falta de planejamento ou desorganização interna do Município <span class="req">*</span></label></div>
 
         <div class="form-group full-width"><label>Justificativa Financeira/Técnica no ETP <span class="req">*</span></label><textarea data-field="restricao_justificativa_c" rows="3" placeholder="Demonstre, com base no Estudo Técnico Preliminar, que o custo do frete ou o risco logístico supera o menor preço ofertado por empresas distantes..."></textarea></div>
@@ -304,7 +280,7 @@
       <div id="valor_input_row" class="form-row" style="margin-top:10px">
         <div class="form-group"><label>Valor Total Estimado (R$)</label><input type="number" data-field="valor_estimado" id="input-valor-estimado" placeholder="0.00" step="0.01" min="0" /></div>
       </div>
-      <div id="alerta-valor-80k" class="nota-explicativa hidden" style="color: #856404; background-color: #fff3cd; border-color: #ffeeba; padding: 10px; margin-top: 10px;">⚠️ Atenção: O valor estimado global ultrapassa R$ 80.000,00. A exclusividade para ME/EPP (Opção B de restrição geográfica ou tratamento diferenciado) só é obrigatória e legal para itens/lotes até este limite (Art. 48, I, LC 123/06). Verifique se a licitação está dividida em cotas ou itens adequados.</div>
+      <div id="alerta-valor-80k" class="nota-explicativa hidden" style="color: #856404; background-color: #fff3cd; border-color: #ffeeba; padding: 10px; margin-top: 10px;">Atenção: O valor estimado global ultrapassa R$ 80.000,00. A exclusividade para ME/EPP (Opção B de restrição geográfica ou tratamento diferenciado) só é obrigatória e legal para itens/lotes até este limite (Art. 48, I, LC 123/06). Verifique se a licitação está dividida em cotas ou itens adequados.</div>
     </div>
   </section>
 
@@ -327,7 +303,7 @@
           <label>Justificativa da Excepcionalidade (prazo abaixo do mínimo legal)</label>
           <div style="display:flex;gap:8px;align-items:flex-start">
             <input type="text" data-field="justificativa_prazo_reduzido" id="input-justificativa-prazo" readonly placeholder="Nenhuma justificativa registrada" style="flex:1" />
-            <button type="button" id="btn-justificar-prazo" class="btn btn-secondary" style="white-space:nowrap">✏️ Justificar Exceção</button>
+            <button type="button" id="btn-justificar-prazo" class="btn btn-secondary" style="white-space:nowrap">Justificar exceção</button>
           </div>
         </div>
       </div>
@@ -437,7 +413,7 @@
   <!-- STEP 6: Campos Obrigatórios do Edital -->
   <section class="step-content hidden" id="step-6">
     <h2 class="section-title">Campos Obrigatórios do Edital</h2>
-    <p class="section-hint">⚠️ Os campos abaixo correspondem a lacunas do modelo AGU que precisam ser preenchidas manualmente. Os marcados com <span class="req">*</span> são obrigatórios para gerar um edital completo. As notas explicativas da AGU estão indicadas em cada campo.</p>
+    <p class="section-hint">Os campos abaixo correspondem a lacunas do modelo AGU que precisam ser preenchidas manualmente. Os marcados com <span class="req">*</span> são obrigatórios para gerar um edital completo. As notas explicativas da AGU estão indicadas em cada campo.</p>
     <div id="error-6"></div>
 
     <div class="card">
@@ -450,7 +426,7 @@
 
     <div class="card">
       <h3 class="card-title">Prazo para Envio de Documentos de Habilitação <span class="nota-agu">Nota AGU (COM 85) — mínimo 2h</span></h3>
-      <div class="nota-explicativa">⚠️ "O prazo de duas horas é o mínimo possível, podendo ser aumentado caso a Administração entenda pertinente" (Nota AGU COM 85 — art. 29, §2º, IN SEGES nº 73/2022).</div>
+      <div class="nota-explicativa">"O prazo de duas horas é o mínimo possível, podendo ser aumentado caso a Administração entenda pertinente" (Nota AGU COM 85 — art. 29, §2º, IN SEGES nº 73/2022).</div>
       <div class="form-row">
         <div class="form-group"><label>Prazo para envio (horas) <span class="req">*</span></label><input type="number" data-field="prazo_docs_habilitacao" value="2" min="2" placeholder="mín. 2 horas" /></div>
         <div class="form-group wide"><label>Prazo adicional para complementação/saneamento (horas) <span class="nota-agu">Nota AGU (COM 110)</span></label><input type="number" data-field="prazo_complementacao_hab" value="2" min="2" placeholder="mín. 2 horas" /></div>
@@ -459,7 +435,7 @@
 
     <div class="card">
       <h3 class="card-title">Sanções — Prazo de Recolhimento da Multa <span class="nota-agu">Nota AGU (COM 149)</span></h3>
-      <div class="nota-explicativa">⚠️ "O valor da multa deverá observar o art. 156, §1º, da Lei nº 14.133/2021. A multa não poderá ser inferior a 0,5% nem superior a 30% do valor do contrato." (Nota AGU COM 149). Defina percentuais proporcionais à gravidade de cada infração.</div>
+      <div class="nota-explicativa">"O valor da multa deverá observar o art. 156, §1º, da Lei nº 14.133/2021. A multa não poderá ser inferior a 0,5% nem superior a 30% do valor do contrato." (Nota AGU COM 149). Defina percentuais proporcionais à gravidade de cada infração.</div>
       <div class="form-row">
         <div class="form-group"><label>Prazo de recolhimento da multa (dias úteis) <span class="req">*</span></label><input type="number" data-field="prazo_multa" value="15" min="1" placeholder="ex: 15" /></div>
         <div class="form-group"><label>Multa infrações leves (0,5%–15%)</label><input type="text" data-field="multa_leve_pct" value="0,5% a 15%" placeholder="ex: 0,5% a 15%" /></div>
@@ -469,7 +445,7 @@
 
     <div class="card">
       <h3 class="card-title">Índice de Reajuste <span class="nota-agu">Art. 25, §7º, Lei 14.133/2021</span></h3>
-      <div class="nota-explicativa">⚠️ A previsão do índice de reajustamento no Edital é obrigatória independentemente do prazo de duração da contratação (art. 25, §7º) — este mesmo índice deve ser usado depois na minuta de Contrato, para não gerar contradição entre os dois documentos.</div>
+      <div class="nota-explicativa">A previsão do índice de reajustamento no Edital é obrigatória independentemente do prazo de duração da contratação (art. 25, §7º) — este mesmo índice deve ser usado depois na minuta de Contrato, para não gerar contradição entre os dois documentos.</div>
       <div class="form-row">
         <div class="form-group wide"><label>Índice de reajuste <span class="req">*</span></label>
           <select data-field="indice_reajuste">
@@ -484,7 +460,7 @@
 
     <div class="card">
       <h3 class="card-title">Impugnação e Esclarecimentos <span class="nota-agu">Nota AGU (COM 158)</span></h3>
-      <div class="nota-explicativa">⚠️ "É importante que sejam indicados os meios para a recepção das impugnações e pedidos de esclarecimentos." (Nota AGU COM 158)</div>
+      <div class="nota-explicativa">"É importante que sejam indicados os meios para a recepção das impugnações e pedidos de esclarecimentos." (Nota AGU COM 158)</div>
       <div class="form-row">
         <div class="form-group wide"><label>E-mail para impugnações e esclarecimentos <span class="req">*</span></label><input type="email" data-field="email_impugnacao" value="procuradoriajuridica@uniflor.pr.gov.br" /></div>
         <div class="form-group wide"><label>URL do processo no PNCP / site do Município</label><input type="text" data-field="url_edital" placeholder="ex: www.uniflor.pr.gov.br/licitacoes" /></div>
@@ -494,7 +470,7 @@
     <!-- Campo condicional: MO exclusiva -->
     <div class="card hidden" id="card_cct">
       <h3 class="card-title">Serviços com MO Exclusiva — CCT Paradigma <span class="nota-agu">Acórdão TCU 1.207/2024</span></h3>
-      <div class="nota-explicativa">⚠️ O edital deve informar a convenção/acordo coletivo paradigma utilizado pela Administração para calcular o valor estimado. Os licitantes não são obrigados a adotá-la, mas os custos mínimos relevantes dela decorrentes devem ser observados (Acórdão TCU 1.207/2024).</div>
+      <div class="nota-explicativa">O edital deve informar a convenção/acordo coletivo paradigma utilizado pela Administração para calcular o valor estimado. Os licitantes não são obrigados a adotá-la, mas os custos mínimos relevantes dela decorrentes devem ser observados (Acórdão TCU 1.207/2024).</div>
       <div class="form-row">
         <div class="form-group full-width"><label>CCT/Acordo Coletivo utilizado como paradigma</label><input type="text" data-field="cct_paradigma" placeholder="ex: Convenção Coletiva 2026 — Sindicato dos Vigilantes do PR" /></div>
       </div>
@@ -503,7 +479,7 @@
     <!-- Campo condicional: SRP -->
     <div class="card hidden" id="card_arp_renovacao">
       <h3 class="card-title">ARP — Renovação de Quantitativo <span class="nota-agu">Acórdão nº 392/26 — TCE-PR</span></h3>
-      <div class="nota-explicativa">⚠️ O TCE-PR (Acórdão nº 392/26 — Tribunal Pleno, 26/02/2026) fixou que, na prorrogação da ARP, pode-se incluir apenas o saldo remanescente OU renovar a totalidade do quantitativo original, desde que: (a) previsto expressamente no edital e na ata; (b) exercido dentro do prazo de vigência original da ata; (c) comprovada a manutenção do preço vantajoso; e (d) a possibilidade tenha sido tratada pelo gestor no Plano Anual de Contratações (PCA) da entidade.</div>
+      <div class="nota-explicativa">O TCE-PR (Acórdão nº 392/26 — Tribunal Pleno, 26/02/2026) fixou que, na prorrogação da ARP, pode-se incluir apenas o saldo remanescente OU renovar a totalidade do quantitativo original, desde que: (a) previsto expressamente no edital e na ata; (b) exercido dentro do prazo de vigência original da ata; (c) comprovada a manutenção do preço vantajoso; e (d) a possibilidade tenha sido tratada pelo gestor no Plano Anual de Contratações (PCA) da entidade.</div>
       <div class="clause-grid" id="cg-renovar_arp"></div>
       <div class="info-panel hidden" id="ip-renovar_arp"></div>
 
@@ -522,14 +498,14 @@
             </select>
           </div>
         </div>
-        <div class="nota-explicativa" style="margin:0;">💡 A correção monetária apenas restabelece o valor real do preço já registrado (sem gerar vantagem econômica ao fornecedor) e não dispensa a comprovação de que, mesmo corrigido, o preço permanece vantajoso perante o mercado — exigência do Parecer nº 00075/2024/DECOR/CGU/AGU.</div>
+        <div class="nota-explicativa" style="margin:0;">A correção monetária apenas restabelece o valor real do preço já registrado (sem gerar vantagem econômica ao fornecedor) e não dispensa a comprovação de que, mesmo corrigido, o preço permanece vantajoso perante o mercado — exigência do Parecer nº 00075/2024/DECOR/CGU/AGU.</div>
       </div>
     </div>
 
     <!-- Campo condicional: grupo único -->
     <div class="card hidden" id="card_criterio_unit">
       <h3 class="card-title">Critério de Aceitabilidade de Preços Unitários (Grupos com SRP) <span class="nota-agu">Nota AGU (COM 6)</span></h3>
-      <div class="nota-explicativa">⚠️ "Nessa hipótese, se se tratar de registro de preços, será necessário fixar o critério de aceitabilidade de preços unitários máximos, conforme art. 13, I, do Decreto nº 11.462/2023." (Nota AGU COM 6)</div>
+      <div class="nota-explicativa">"Nessa hipótese, se se tratar de registro de preços, será necessário fixar o critério de aceitabilidade de preços unitários máximos, conforme art. 13, I, do Decreto nº 11.462/2023." (Nota AGU COM 6)</div>
       <div class="form-row">
         <div class="form-group full-width"><label>Descrição do critério de preço unitário máximo (se SRP com grupos)</label><input type="text" data-field="criterio_preco_unit" placeholder="ex: conforme tabela de preços unitários máximos constante do Anexo I do Termo de Referência" /></div>
       </div>
@@ -543,9 +519,9 @@
     <p class="section-hint">Confira as escolhas abaixo. Os campos em amarelo indicam itens que ainda precisam de atenção antes da aprovação final do edital.</p>
     <div id="review-content" class="review-grid"></div>
     <div class="generate-zone">
-      <button id="btn-gerar" class="btn-generate"><span>📄</span> Gerar Minuta de Edital (.docx)</button>
+      <button id="btn-gerar" class="btn-generate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 18v-6M9 15l3 3 3-3"/></svg>Gerar Minuta de Edital (.docx)</button>
       <p class="generate-note">O arquivo será aberto automaticamente no Microsoft Word após salvo.</p>
-      <button id="btn-gerar-resumo" class="btn btn-secondary" style="margin-top:12px"><span>📋</span> Gerar Guia Rápido do Licitante (.docx)</button>
+      <button id="btn-gerar-resumo" class="btn btn-secondary">Gerar Guia Rápido do Licitante (.docx)</button>
       <p class="generate-note">Resumo em linguagem simples dos pontos essenciais, para quem participa de uma licitação pela primeira vez.</p>
     </div>
     <div id="result-msg" class="hidden result-box"></div>
@@ -559,9 +535,12 @@
   <button id="btn-next" class="btn btn-primary">Avançar →</button>
 </footer>
 
+</div>
+</div>
+
 <div id="modal-prazo-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(15,42,74,.55);display:flex;align-items:center;justify-content:center;z-index:1000">
   <div class="card" style="max-width:520px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.35)">
-    <h3 class="card-title" style="color:var(--danger)">⚠️ Prazo Abaixo do Mínimo Legal (Art. 55)</h3>
+    <h3 class="card-title" style="color:var(--danger)">Prazo Abaixo do Mínimo Legal (Art. 55)</h3>
     <p id="modal-prazo-texto" style="font-size:13px;color:#444;line-height:1.5;margin:6px 0 12px"></p>
     <p style="font-size:12px;color:#666;margin-bottom:10px">A redução do prazo mínimo só é admissível em caráter excepcional e sob responsabilidade da autoridade competente. Registre abaixo a justificativa que fundamentará o processo administrativo — ela não integra o texto do edital.</p>
     <div class="form-group full-width">
@@ -574,6 +553,7 @@
   </div>
 </div>
 
+<script src="../shared/shell.js"></script>
 <script src="clauses.js"></script>
 <script src="app.js"></script>
 <script src="../versao.js"></script>

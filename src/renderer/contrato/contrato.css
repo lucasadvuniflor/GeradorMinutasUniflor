@@ -1,0 +1,33 @@
+/* Complementos do wizard de Contrato sobre o tema compartilhado (../shared/theme.css).
+   Só o que é exclusivo desta página; tokens e componentes gerais vêm do tema. */
+
+.content { flex: 1; overflow-y: auto; padding: 24px 28px 40px; }
+.content > * { max-width: 940px; }
+
+/* A lista lateral de etapas foi absorvida pela barra de etapas do topo (clicável nas concluídas). */
+#sidebar { display: none; }
+
+.alert { display: flex; gap: 10px; padding: 10px 14px; margin-bottom: 14px; border-radius: var(--radius); font-size: 13px; line-height: 1.5; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); }
+.alert-info { background: var(--surface); border-color: var(--border); color: var(--text-2); }
+.alert-warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-text); }
+.alert-hidden, .cond-hidden { display: none !important; }
+#card-importar-edital { margin: 14px 28px 0; }
+
+.tipo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 8px; }
+.tipo-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; text-align: left; transition: border-color .15s, background .15s, box-shadow .15s; }
+.tipo-card:hover { border-color: var(--primary-line); background: #f8fafd; }
+.tipo-card.selected { border-color: var(--primary); background: var(--surface); box-shadow: var(--ring); }
+.tipo-icon { display: none; }
+.tipo-name { font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.tipo-desc { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+.form-group .hint { font-size: 12px; color: var(--muted); }
+.review-section { margin-bottom: 18px; }
+.review-section h3 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.review-section .review-grid { display: grid; grid-template-columns: 220px 1fr; gap: 6px 12px; font-size: 13px; margin-bottom: 0; }
+.review-key { color: var(--muted); font-weight: 500; }
+.review-val { color: var(--text); }
+
+.btn-row { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
+.msg-success { color: #1a5c38; background: var(--success-tint); border: 1px solid #c3e6cb; border-radius: var(--radius); font-size: 13px; font-weight: 500; padding: 10px 14px; margin: 10px 0; }
+.msg-error { color: var(--danger-text); background: var(--danger-bg); border: 1px solid var(--danger-line); border-radius: var(--radius); font-size: 13px; font-weight: 500; padding: 10px 14px; margin: 10px 0; line-height: 1.5; }

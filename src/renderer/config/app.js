@@ -3,14 +3,21 @@
 const API = window.uniflorAPI;
 
 // ─── Navegação entre os dois painéis ──────────────────────────────────────────
-document.querySelectorAll('.cfg-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.cfg-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.cfg-panel').forEach(p => p.classList.add('hidden'));
-    btn.classList.add('active');
-    document.getElementById(`panel-${btn.dataset.panel}`).classList.remove('hidden');
-  });
+// O painel ativo vive no hash da URL (#config / #historico): a sidebar tem um item para cada um e
+// usa o hash para abrir a página já no painel certo e para marcar o item ativo.
+function abrirPainel(nome) {
+  const alvo = document.getElementById(`panel-${nome}`) ? nome : 'config';
+  document.querySelectorAll('.cfg-tab').forEach(b => b.classList.toggle('active', b.dataset.panel === alvo));
+  document.querySelectorAll('.cfg-panel').forEach(p => p.classList.toggle('hidden', p.id !== `panel-${alvo}`));
+  if ((location.hash || '').replace('#', '') !== alvo) history.replaceState(null, '', `#${alvo}`);
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+}
+document.querySelectorAll('.cfg-tab').forEach(btn => btn.addEventListener('click', () => abrirPainel(btn.dataset.panel)));
+window.addEventListener('hashchange', () => {
+  const nome = (location.hash || '').replace('#', '') || 'config';
+  if (!document.querySelector(`.cfg-tab[data-panel="${nome}"].active`)) abrirPainel(nome);
 });
+abrirPainel((location.hash || '').replace('#', '') || 'config');
 
 // ─── Dados institucionais ─────────────────────────────────────────────────────
 // Campos de texto/número; os dois campos booleanos/select são tratados à parte.
@@ -51,11 +58,11 @@ document.getElementById('btn-salvar-config').addEventListener('click', async () 
   data.vigenciaMeses = parseInt(data.vigenciaMeses, 10) || 12;
 
   if (!data.orgaoNome || !data.representanteNome) {
-    mostrarStatus('config-status', '❌ Nome do órgão e nome do representante legal são obrigatórios.', false);
+    mostrarStatus('config-status', 'Nome do órgão e nome do representante legal são obrigatórios.', false);
     return;
   }
   await API.salvarConfig(data);
-  mostrarStatus('config-status', '✅ Configurações salvas. Valem para as próximas minutas geradas.');
+  mostrarStatus('config-status', 'Configurações salvas. Valem para as próximas minutas geradas.');
 });
 
 // ─── Histórico ────────────────────────────────────────────────────────────────
@@ -119,10 +126,10 @@ function renderHistorico() {
         ${r.objeto ? `<div class="hist-objeto">${escHtml(r.objeto)}</div>` : ''}
       </div>
       <div class="hist-acoes">
-        <button class="btn btn-secondary" data-acao="abrir" data-id="${r.id}" title="Abrir o .docx gerado">📄 Abrir</button>
-        ${podeReabrir ? `<button class="btn btn-primary" data-acao="reabrir" data-id="${r.id}" title="Continuar editando esta mesma minuta">✏️ Reabrir</button>
-        <button class="btn btn-secondary" data-acao="duplicar" data-id="${r.id}" title="Criar uma nova minuta a partir desta">📑 Duplicar</button>` : ''}
-        <button class="btn btn-secondary" data-acao="remover" data-id="${r.id}" title="Remover do histórico">🗑️</button>
+        <button class="btn btn-secondary" data-acao="abrir" data-id="${r.id}" title="Abrir o .docx gerado">Abrir .docx</button>
+        ${podeReabrir ? `<button class="btn btn-primary" data-acao="reabrir" data-id="${r.id}" title="Continuar editando esta mesma minuta">Reabrir</button>
+        <button class="btn btn-secondary" data-acao="duplicar" data-id="${r.id}" title="Criar uma nova minuta a partir desta">Duplicar</button>` : ''}
+        <button class="btn btn-secondary" data-acao="remover" data-id="${r.id}" title="Remover do histórico">Remover</button>
       </div>
     </div>`;
   }).join('');
@@ -131,7 +138,7 @@ function renderHistorico() {
 async function acaoHistorico(acao, id) {
   if (acao === 'abrir') {
     const r = await API.abrirArquivoHistorico(id);
-    if (!r.success) mostrarStatus('hist-status', `❌ ${r.error}`, false);
+    if (!r.success) mostrarStatus('hist-status', `${r.error}`, false);
     return;
   }
 
@@ -141,16 +148,16 @@ async function acaoHistorico(acao, id) {
     await API.removerHistoricoItem(id);
     historico = historico.filter(x => x.id !== id);
     renderHistorico();
-    mostrarStatus('hist-status', '✅ Registro removido do histórico.');
+    mostrarStatus('hist-status', 'Registro removido do histórico.');
     return;
   }
 
   // reabrir / duplicar
   const resp = await API.carregarHistoricoItem(id);
-  if (!resp.success) { mostrarStatus('hist-status', `❌ ${resp.error}`, false); return; }
+  if (!resp.success) { mostrarStatus('hist-status', `${resp.error}`, false); return; }
 
   const destino = DESTINO_WIZARD[resp.registro.tipo];
-  if (!destino) { mostrarStatus('hist-status', '❌ Este tipo de minuta não pode ser reaberto no wizard.', false); return; }
+  if (!destino) { mostrarStatus('hist-status', 'Este tipo de minuta não pode ser reaberto no wizard.', false); return; }
 
   try {
     localStorage.setItem(CHAVE_RETOMAR, JSON.stringify({
@@ -160,7 +167,7 @@ async function acaoHistorico(acao, id) {
       payload: resp.registro.payload,
     }));
   } catch (e) {
-    mostrarStatus('hist-status', `❌ Não foi possível preparar os dados: ${e.message}`, false);
+    mostrarStatus('hist-status', `Não foi possível preparar os dados: ${e.message}`, false);
     return;
   }
   window.location.href = destino;

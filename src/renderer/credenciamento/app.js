@@ -36,12 +36,12 @@ function renderClauseGrid(containerId, clauseKey, opcoes, currentValue) {
     const infoOpen = state.openInfoPanel[clauseKey] === opt.id;
     return `<div class="clause-card ${sel ? 'selected' : ''} ${!avail ? 'disabled' : ''} ${infoOpen ? 'info-open' : ''}"
        data-clause="${clauseKey}" data-option="${opt.id}" data-avail="${avail}">
-      <div class="cc-header"><span class="cc-icon">${opt.icon || '📋'}</span><span class="cc-title">${opt.label}</span>
-        ${opt.info ? `<button class="cc-info-btn" data-clause="${clauseKey}" data-option="${opt.id}">ℹ</button>` : ''}
+      <span class="cc-radio"></span>
+      <div class="cc-header"><span class="cc-title">${opt.label}</span>
+        ${opt.info ? `<button class="cc-info-btn" data-clause="${clauseKey}" data-option="${opt.id}" title="Nota explicativa"></button>` : ''}
       </div>
       <div class="cc-desc">${opt.desc || ''}</div>
-      ${sel ? '<div class="cc-selected-badge">✓ Selecionado</div>' : ''}
-      ${!avail && opt.indisponivel_msg ? `<div class="cc-disabled-msg">🔒 ${opt.indisponivel_msg}</div>` : ''}
+      ${!avail && opt.indisponivel_msg ? `<div class="cc-disabled-msg">${opt.indisponivel_msg}</div>` : ''}
     </div>`;
   }).join('');
   container.querySelectorAll('.clause-card[data-avail="true"]').forEach(card => {
@@ -89,12 +89,12 @@ function toggleInfoPanel(clauseKey, optionId, opcoes) {
     const opt = opcoes.find(o => o.id === optionId);
     if (!opt || !opt.info) return;
     const { quando_usar, quando_nao, fundamento, impacto } = opt.info;
-    panel.innerHTML = `<div class="info-panel-header">${opt.icon || ''} ${opt.label}<button class="info-panel-close" data-clause="${clauseKey}">✕</button></div>
+    panel.innerHTML = `<div class="info-panel-header">${opt.label}<button class="info-panel-close" data-clause="${clauseKey}" title="Fechar">×</button></div>
     <div class="info-panel-body">
-      <div class="info-row"><span class="info-icon">✅</span><div><div class="info-label">Quando usar</div><div class="info-text">${quando_usar}</div></div></div>
-      ${quando_nao ? `<div class="info-row"><span class="info-icon">⚠️</span><div><div class="info-label">Atenção / Quando NÃO usar</div><div class="info-text">${quando_nao}</div></div></div>` : ''}
-      <div class="info-row"><span class="info-icon">📚</span><div><div class="info-label">Fundamento Legal</div><div class="info-text fundamento">${fundamento}</div></div></div>
-      ${impacto ? `<div class="info-row"><span class="info-icon">📝</span><div><div class="info-label">O que muda na minuta</div><div class="info-text impacto">${impacto}</div></div></div>` : ''}
+      <div class="info-row"><div><div class="info-label">Quando usar</div><div class="info-text">${quando_usar}</div></div></div>
+      ${quando_nao ? `<div class="info-row"><div><div class="info-label">Atenção / Quando NÃO usar</div><div class="info-text">${quando_nao}</div></div></div>` : ''}
+      <div class="info-row"><div><div class="info-label">Fundamento Legal</div><div class="info-text fundamento">${fundamento}</div></div></div>
+      ${impacto ? `<div class="info-row"><div><div class="info-label">O que muda na minuta</div><div class="info-text impacto">${impacto}</div></div></div>` : ''}
     </div>`;
     panel.classList.remove('hidden');
     panel.querySelector('.info-panel-close').addEventListener('click', () => toggleInfoPanel(clauseKey, optionId, opcoes));
@@ -312,9 +312,9 @@ function validateStep(step) {
   return e;
 }
 
-function showErrors(errs, step) { const b = document.getElementById(`error-${step}`); if (b) b.innerHTML = `<div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:10px 14px;margin:0 0 12px;font-size:12px;color:var(--danger)">⚠️ ${errs.join('<br>⚠️ ')}</div>`; }
+function showErrors(errs, step) { const b = document.getElementById(`error-${step}`); if (b) b.innerHTML = `<div class="callout form-errors"><div class="form-errors-list">${errs.map(e => `<div>${e}</div>`).join('')}</div></div>`; }
 function clearErrors() { document.querySelectorAll('[id^="error-"]').forEach(b => b.innerHTML = ''); }
-function showAlertBar(alertas) { const bar = document.getElementById('alert-bar'); const tipo = alertas.find(a => a.nivel === 'erro') ? 'has-errors' : alertas.find(a => a.nivel === 'aviso') ? 'has-warns' : 'has-info'; bar.className = `alert-bar ${tipo}`; bar.innerHTML = alertas.map(a => `<span class="alert-item">${a.nivel === 'erro' ? '❌' : a.nivel === 'aviso' ? '⚠️' : 'ℹ️'} ${a.msg}</span>`).join(''); bar.classList.remove('hidden'); }
+function showAlertBar(alertas) { const bar = document.getElementById('alert-bar'); const tipo = alertas.find(a => a.nivel === 'erro') ? 'has-errors' : alertas.find(a => a.nivel === 'aviso') ? 'has-warns' : 'has-info'; bar.className = `alert-bar ${tipo}`; bar.innerHTML = alertas.map(a => `<span class="alert-item alert-${a.nivel === 'erro' ? 'erro' : a.nivel === 'aviso' ? 'aviso' : 'info'}">${String(a.msg).replace(/^[\u2139\u26A0\u{1F6A8}\uFE0F\s]+/u, '')}</span>`).join(''); bar.classList.remove('hidden'); }
 function hideAlertBar() { document.getElementById('alert-bar').classList.add('hidden'); }
 
 function renderReview() {
@@ -354,28 +354,29 @@ function buildPayload() {
 async function gerarCredenciamento() {
   const btn = document.getElementById('btn-gerar');
   const res = document.getElementById('result-msg');
+  const label = btn.innerHTML; // rótulo com o ícone SVG, definido no HTML
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Gerando…'; res.className = 'hidden result-box';
   try {
     const result = await window.uniflorAPI.gerarCredenciamento(buildPayload());
-    if (result.cancelled) { btn.disabled = false; btn.innerHTML = '<span>📄</span> Gerar Minuta de Credenciamento (.docx)'; return; }
-    if (result.success) { res.className = 'result-box success'; res.textContent = `✅ Salvo: ${result.path}`; }
+    if (result.cancelled) { btn.disabled = false; btn.innerHTML = label; return; }
+    if (result.success) { res.className = 'result-box success'; res.textContent = `Salvo em ${result.path}`; }
     else throw new Error(result.error || 'Erro desconhecido');
-  } catch (e) { res.className = 'result-box error'; res.textContent = `❌ ${e.message}`; }
+  } catch (e) { res.className = 'result-box error'; res.textContent = e.message; }
   res.classList.remove('hidden');
-  btn.disabled = false; btn.innerHTML = '<span>📄</span> Gerar Minuta de Credenciamento (.docx)';
+  btn.disabled = false; btn.innerHTML = label;
 }
 
 async function gerarResumoCredenciamento() {
   const btn = document.getElementById('btn-gerar-resumo');
   const res = document.getElementById('result-msg');
-  const label = '<span>📋</span> Gerar Guia Rápido do Interessado (.docx)';
+  const label = btn.innerHTML;
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Gerando…'; res.className = 'hidden result-box';
   try {
     const result = await window.uniflorAPI.gerarResumoCredenciamento(buildPayload());
     if (result.cancelled) { btn.disabled = false; btn.innerHTML = label; return; }
-    if (result.success) { res.className = 'result-box success'; res.textContent = `✅ Salvo: ${result.path}`; }
+    if (result.success) { res.className = 'result-box success'; res.textContent = `Salvo em ${result.path}`; }
     else throw new Error(result.error || 'Erro desconhecido');
-  } catch (e) { res.className = 'result-box error'; res.textContent = `❌ ${e.message}`; }
+  } catch (e) { res.className = 'result-box error'; res.textContent = e.message; }
   res.classList.remove('hidden');
   btn.disabled = false; btn.innerHTML = label;
 }

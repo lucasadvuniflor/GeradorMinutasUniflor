@@ -10,6 +10,20 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+### Adicionado
+- **Nova interface (Direção A — Consolidação)**: barra lateral fixa com os cinco documentos agrupados em
+  Edital / Anexos / Sistema, cabeçalho de página padronizado e um único tema compartilhado
+  (`src/renderer/shared/theme.css`) para Edital, Credenciamento, Aviso, Ata, Contrato e Configurações.
+- Tipografia IBM Plex Sans, paleta institucional sóbria (azul `#1a4b8c`, verde só na ação de gerar) e
+  ícones vetoriais em traço no lugar dos emoji — em botões, passos, cartões de cláusula e notas.
+- Três tons de aviso com significado fixo: **Nota** (informativa), **Atenção** (exige justificativa nos autos)
+  e **Bloqueio** (impede avançar) — usados no art. 55, na importação do TR, nos erros de etapa e na barra de alertas.
+
+### Alterado
+- Cartões de cláusula ganharam marcador de rádio e botão de nota explicativa; o passo concluído no stepper
+  mostra marca de conferido; botões de gerar unificados ("Gerar … (.docx)").
+- Histórico e Configurações passam a ser acessados pela barra lateral (abas sincronizadas com a URL).
+
 ## [3.0.2] - 2026-09-02
 
 ### Corrigido

@@ -186,7 +186,7 @@ function renderFornecedores() {
         </div>
         <button class="btn-small toggle-itens" data-idx="${idx}">Ver itens</button>
       </div>
-      <div class="fornecedor-endereco" id="end-${idx}">${f.endereco ? '📍 ' + f.endereco : ''}${f.socioAdministrador ? '<br>👤 ' + f.socioAdministrador.nome + ' — ' + f.socioAdministrador.qualificacao : ''}</div>
+      <div class="fornecedor-endereco" id="end-${idx}">${f.endereco ? 'Endereço: ' + f.endereco : ''}${f.socioAdministrador ? '<br>' + f.socioAdministrador.nome + ' — ' + f.socioAdministrador.qualificacao : ''}</div>
       <div class="fornecedor-itens hidden" id="itens-${idx}">
         <table class="itens-table">
           <thead><tr><th>Item TR</th><th>Descrição</th><th>Marca</th><th>Modelo</th><th>Un</th><th>Qtd</th><th>Vlr Unit.</th></tr></thead>
