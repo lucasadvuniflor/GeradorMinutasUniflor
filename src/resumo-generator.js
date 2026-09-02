@@ -222,7 +222,7 @@ function contentEdital(d) {
     ['O que é', `${d.modalidade || 'Licitação'} nº ${d.numero_licitacao || '—'}/${d.ano_licitacao || ''}`],
     ['O que está sendo contratado', d.objeto || '—'],
     ['Quem está contratando', `Município de Uniflor/PR${d.orgao_solicitante ? ' — ' + d.orgao_solicitante : ''}`],
-    ['Onde participar', `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}`],
+    ['Onde participar', `${d.plataforma || 'LICITANET'} — ${d.url_plataforma || 'www.licitanet.com.br'}`],
     ['Prazo final para enviar proposta', `${fmtDate(d.data_limite_proposta)}${d.hora_limite_proposta ? ' às ' + d.hora_limite_proposta : ''}`],
     ['Data da sessão pública (lances)', `${fmtDate(d.data_sessao)}${d.hora_sessao ? ' às ' + d.hora_sessao : ''}`],
     ['Critério de julgamento', criterioTxt],
@@ -236,7 +236,7 @@ function contentEdital(d) {
 
   const passos = [
     'Leia com atenção o objeto e o Termo de Referência (Anexo I) — é ali que estão todas as especificações técnicas.',
-    `Cadastre-se na plataforma ${d.plataforma || 'BLL COMPRAS'}, caso ainda não tenha cadastro.`,
+    `Cadastre-se na plataforma ${d.plataforma || 'LICITANET'}, caso ainda não tenha cadastro.`,
     `Envie sua proposta até ${fmtDate(d.data_limite_proposta)}${d.hora_limite_proposta ? ', às ' + d.hora_limite_proposta : ''}, com o preço${d.criterio === 'maior_desconto' ? ' ou desconto' : ''} e as demais informações pedidas.`,
     `Acompanhe a sessão pública em ${fmtDate(d.data_sessao)}${d.hora_sessao ? ', às ' + d.hora_sessao : ''}, e participe da etapa de lances, se quiser melhorar sua oferta.`,
     `Se você for o(a) mais bem classificado(a), envie os documentos de habilitação assim que solicitado — o prazo mínimo é de ${d.prazo_docs_habilitacao || '2'} horas.`,
@@ -345,7 +345,7 @@ function contentAviso(d) {
     ['O que é', `Aviso de Contratação Direta nº ${d.numero_aviso || '—'}/${d.ano_aviso || ''} (dispensa de licitação por valor)`],
     ['O que está sendo contratado', d.objeto || '—'],
     ['Quem está contratando', `Município de Uniflor/PR${d.orgao_solicitante ? ' — ' + d.orgao_solicitante : ''}`],
-    ['Como participar', comLances ? `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}` : (d.meio_recebimento_propostas || 'e-mail institucional / protocolo geral')],
+    ['Como participar', comLances ? `${d.plataforma || 'LICITANET'} — ${d.url_plataforma || 'www.licitanet.com.br'}` : (d.meio_recebimento_propostas || 'e-mail institucional / protocolo geral')],
     ['Prazo final para manifestar interesse/enviar proposta', `${fmtDate(d.data_limite_manifestacao)}${d.hora_limite_manifestacao ? ' às ' + d.hora_limite_manifestacao : ''} (mínimo 3 dias úteis)`],
     ...(comLances ? [['Data da sessão de lances', `${fmtDate(d.data_sessao)}${d.hora_sessao ? ' às ' + d.hora_sessao : ''}`]] : []),
     ['Critério de julgamento', criterioTxt],
@@ -359,7 +359,7 @@ function contentAviso(d) {
 
   const passos = comLances ? [
     'Leia com atenção o objeto e o Termo de Referência — é ali que estão todas as especificações técnicas.',
-    `Cadastre-se na plataforma ${d.plataforma || 'BLL COMPRAS'}, caso ainda não tenha cadastro.`,
+    `Cadastre-se na plataforma ${d.plataforma || 'LICITANET'}, caso ainda não tenha cadastro.`,
     `Envie sua proposta até ${fmtDate(d.data_limite_manifestacao)}${d.hora_limite_manifestacao ? ', às ' + d.hora_limite_manifestacao : ''}.`,
     `Acompanhe a sessão de lances em ${fmtDate(d.data_sessao)}${d.hora_sessao ? ', às ' + d.hora_sessao : ''}.`,
     `Se for o(a) mais bem classificado(a), envie os documentos de habilitação no prazo indicado (mínimo ${d.prazo_docs_habilitacao || '2'} horas).`,

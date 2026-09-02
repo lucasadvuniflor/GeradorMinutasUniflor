@@ -198,7 +198,7 @@ function capaPage(d) {
     ['CONTRATANTE', 'MUNICÍPIO DE UNIFLOR/PR'],
     ['OBJETO', d.objeto || '[OBJETO]'],
     ['DATA LIMITE PARA MANIFESTAÇÃO/PROPOSTA', d.data_limite_manifestacao ? `${fmtDate(d.data_limite_manifestacao)} às ${d.hora_limite_manifestacao || '__:__'}` : null],
-    [comLances ? 'PLATAFORMA' : 'MEIO DE RECEBIMENTO', comLances ? `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}` : (d.meio_recebimento_propostas || null)],
+    [comLances ? 'PLATAFORMA' : 'MEIO DE RECEBIMENTO', comLances ? `${d.plataforma || 'LICITANET'} — ${d.url_plataforma || 'www.licitanet.com.br'}` : (d.meio_recebimento_propostas || null)],
     ['VALOR TOTAL ESTIMADO', moeda(d.valor_estimado)],
     ['CRITÉRIO DE JULGAMENTO', criterioTxt],
     ['SISTEMA DE REGISTRO DE PREÇOS', d.srp ? 'SIM' : 'NÃO'],
@@ -236,7 +236,7 @@ function secPreamble(d) {
     infoLine('Prazo mínimo para manifestação de interesse e propostas', `até ${fmtDate(d.data_limite_manifestacao)} às ${d.hora_limite_manifestacao || '__:__'} (mínimo de 3 dias úteis — Decreto Municipal nº 17/2023)`),
     ...(comLances ? [
       infoLine('Data e hora da sessão pública de lances', `${fmtDate(d.data_sessao)} às ${d.hora_sessao || '__:__'} (horário de Brasília)`),
-      infoLine('Local', `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}`),
+      infoLine('Local', `${d.plataforma || 'LICITANET'} — ${d.url_plataforma || 'www.licitanet.com.br'}`),
     ] : [
       infoLine('Meio de recebimento das propostas', d.meio_recebimento_propostas || 'e-mail institucional da Secretaria responsável e Protocolo Geral da Prefeitura de Uniflor'),
     ]),
@@ -339,7 +339,7 @@ function secParticipacao(d, numSec) {
   let n = 1;
 
   if (comLances) {
-    ps.push(item(`${numSec}.${n}.`, `A participação no presente procedimento ocorrerá por meio da plataforma eletrônica ${d.plataforma || 'BLL COMPRAS'} (${d.url_plataforma || 'www.bllcompras.com'}), sistema de contratações eletrônicas integrado ao Portal Nacional de Contratações Públicas — PNCP.`));
+    ps.push(item(`${numSec}.${n}.`, `A participação no presente procedimento ocorrerá por meio da plataforma eletrônica ${d.plataforma || 'LICITANET'} (${d.url_plataforma || 'www.licitanet.com.br'}), sistema de contratações eletrônicas integrado ao Portal Nacional de Contratações Públicas — PNCP.`));
     n++;
     ps.push(item(`${numSec}.${n}.`, 'O interessado é o responsável por qualquer transação efetuada diretamente ou por seu representante no sistema eletrônico, não cabendo ao provedor do sistema ou ao Município de Uniflor a responsabilidade por eventuais danos decorrentes de uso indevido da senha, ainda que por terceiros não autorizados.'));
     n++;

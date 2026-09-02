@@ -38,8 +38,8 @@ const DEFAULT_CONFIG = {
   indiceCorrecaoMonetaria: 'INPC',
 
   // Plataforma eletrônica padrão
-  plataformaNome: 'BLL COMPRAS',
-  plataformaUrl: 'www.bllcompras.com',
+  plataformaNome: 'LICITANET',
+  plataformaUrl: 'www.licitanet.com.br',
 
   // Padrões da Ata de Registro de Preços
   permitirAdesao: true,

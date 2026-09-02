@@ -209,7 +209,7 @@ function capaPage(d) {
     ['CONTRATANTE', 'MUNICÍPIO DE UNIFLOR/PR'],
     ['OBJETO', d.objeto || '[OBJETO]'],
     ['DATA DA SESSÃO PÚBLICA', d.data_sessao ? `${fmtDate(d.data_sessao)} às ${d.hora_sessao || '__:__'} (horário de Brasília)` : null],
-    ['PLATAFORMA', `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}`],
+    ['PLATAFORMA', `${d.plataforma || 'LICITANET'} — ${d.url_plataforma || 'www.licitanet.com.br'}`],
     ['VALOR TOTAL ESTIMADO', valorTxt],
     ['CRITÉRIO DE JULGAMENTO', criterioTxt],
     ['MODO DE DISPUTA', d.modo_disputa || 'ABERTO'],
@@ -249,7 +249,7 @@ function secPreamble(d) {
     secTitle('Informações Gerais'),
     infoLine('Data e hora da abertura da sessão pública', `${fmtDate(d.data_sessao)} às ${d.hora_sessao || '__:__'} (horário de Brasília)`),
     infoLine('Data limite para envio de propostas', `${fmtDate(d.data_limite_proposta)} às ${d.hora_limite_proposta || '__:__'} (horário de Brasília)`),
-    infoLine('Local', `${d.plataforma || 'BLL COMPRAS'} — ${d.url_plataforma || 'www.bllcompras.com'}`),
+    infoLine('Local', `${d.plataforma || 'LICITANET'} — ${d.url_plataforma || 'www.licitanet.com.br'}`),
     infoLine('Critério de Julgamento', d.criterio === 'menor_preco' ? 'Menor Preço' : d.criterio === 'maior_desconto' ? 'Maior Desconto' : 'Técnica e Preço'),
     infoLine('Modo de Disputa', d.modo_disputa || 'ABERTO'),
     infoLine('Tratamento Favorecido ME/EPP', d.me_epp ? 'SIM' : 'NÃO'),
@@ -363,7 +363,7 @@ function secParticipacao(d, numSec) {
   const ps = [secTitle(`${numSec}. Da Participação na Licitação`)];
   let n = 1;
 
-  ps.push(item(`${numSec}.${n}.`, `Poderão participar deste certame os interessados previamente credenciados no Sistema de Cadastramento Unificado de Fornecedores — SICAF e na plataforma eletrônica ${d.plataforma || 'BLL COMPRAS'} (${d.url_plataforma || 'www.bllcompras.com'}).`));
+  ps.push(item(`${numSec}.${n}.`, `Poderão participar deste certame os interessados previamente credenciados no Sistema de Cadastramento Unificado de Fornecedores — SICAF e na plataforma eletrônica ${d.plataforma || 'LICITANET'} (${d.url_plataforma || 'www.licitanet.com.br'}).`));
   n++;
 
   ps.push(item(`${numSec}.${n}.`, 'Os interessados deverão atender às condições exigidas no cadastramento no SICAF até o terceiro dia útil anterior à data prevista para recebimento das propostas.'));
@@ -724,7 +724,7 @@ function secAbertura(d, numSec) {
   const ps = [secTitle(`${numSec}. Da Abertura da Sessão, Classificação das Propostas e Formulação de Lances`)];
   let n = 1;
 
-  ps.push(item(`${numSec}.${n}.`, `A abertura da presente licitação dar-se-á automaticamente em sessão pública, por meio de sistema eletrônico, na data, horário e local indicados neste Edital (${fmtDate(d.data_sessao)} às ${d.hora_sessao || '__:__'}, na plataforma ${d.plataforma || 'BLL COMPRAS'}).`));
+  ps.push(item(`${numSec}.${n}.`, `A abertura da presente licitação dar-se-á automaticamente em sessão pública, por meio de sistema eletrônico, na data, horário e local indicados neste Edital (${fmtDate(d.data_sessao)} às ${d.hora_sessao || '__:__'}, na plataforma ${d.plataforma || 'LICITANET'}).`));
   n++;
 
   ps.push(item(`${numSec}.${n}.`, `Os licitantes poderão retirar ou substituir a proposta ou os documentos de habilitação, quando for o caso, anteriormente inseridos no sistema, até a abertura da sessão pública.`));

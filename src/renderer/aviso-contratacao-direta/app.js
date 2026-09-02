@@ -19,7 +19,7 @@ const state = {
     data_limite_manifestacao: '', hora_limite_manifestacao: '09:00',
     modo_disputa_dispensa: 'com_lances',
     data_sessao: '', hora_sessao: '09:01', intervalo_lances: '',
-    plataforma: 'BLL COMPRAS', url_plataforma: 'www.bllcompras.com',
+    plataforma: 'LICITANET', url_plataforma: 'www.licitanet.com.br',
     meio_recebimento_propostas: 'e-mail institucional da Secretaria responsável e Protocolo Geral da Prefeitura de Uniflor',
     prazo_validade_proposta: '60',
     // Step 4

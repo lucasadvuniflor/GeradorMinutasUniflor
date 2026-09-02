@@ -120,7 +120,7 @@ const state = {
     data_sessao:'', hora_sessao:'09:01',
     justificativa_prazo_reduzido:'',
     prazo_validade_proposta:'60', prazo_vigencia_contrato:'12', prazo_arp:'12',
-    plataforma:'BLL COMPRAS', url_plataforma:'www.bllcompras.com',
+    plataforma:'LICITANET', url_plataforma:'www.licitanet.com.br',
     // Step 5
     pregoeiro:'', decreto_pregoeiro:'', gestor_contrato:'', fiscal_contrato:'',
     dotacao_unidade:'', dotacao_funcional:'', dotacao_natureza:'', dotacao_fonte:'',

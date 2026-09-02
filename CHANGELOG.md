@@ -10,6 +10,10 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+### Corrigido
+- Plataforma eletrônica padrão corrigida para **Licitanet** (www.licitanet.com.br) em todos os pontos —
+  configuração institucional, seletores dos wizards e fallbacks dos geradores. Constava BLL Compras.
+
 ## [3.0.1] - 2026-09-02
 
 ### Corrigido
