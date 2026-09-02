@@ -9,6 +9,7 @@ const {
   LevelFormat, ShadingType, Table, TableRow, TableCell,
   ImageRun, VerticalAlign
 } = require('docx');
+const SANCOES = require('./sancoes-biblioteca');
 
 // ─── Constantes do Município ────────────────────────────────────────────────
 const MUNICIPIO = 'Município de Uniflor';
@@ -1014,22 +1015,85 @@ function secSancoes(d, num) {
     bold(`${num}.2. `),
     run(`Ao CONTRATADO que incorrer em infração poderão ser aplicadas, isolada ou cumulativamente, as seguintes sanções previstas no art. 156 da Lei nº 14.133, de 2021: I – advertência; II – multa; III – impedimento de licitar e contratar; IV – declaração de inidoneidade para licitar ou contratar.`)
   ]));
+  const infracoes = Array.isArray(d.infracoes) ? d.infracoes.filter(i => i && String(i.conduta || '').trim()) : [];
+  const moraEspecifica = infracoes.find(i => i.natureza === 'moratoria');
+  const compensatorias = infracoes.filter(i => i.natureza !== 'moratoria');
+  let n = 3;
+
+  if (!moraEspecifica) {
+    // Sem linha de mora na biblioteca, este item sai exatamente como sempre saiu.
+    ps.push(item(0, [
+      bold(`${num}.${n++}. `),
+      run(`Nos termos do Acórdão TCU nº 607/2016, a multa moratória será de `),
+      bold(`${d.pct_multa_mora || '0,5'}% ao dia`),
+      run(` sobre o valor da parcela inadimplida, limitada a 10% (dez por cento), e a multa compensatória, em caso de inexecução total ou parcial, será de `),
+      bold(`${d.pct_multa_compensatoria || '10'}% (${ext(d.pct_multa_compensatoria || '10')} por cento)`),
+      run(' sobre o valor total do contrato, sem prejuízo das demais sanções cabíveis.')
+    ]));
+  } else {
+    // A mora vem da linha específica: percentual diário, base e teto escolhidos no wizard, com a
+    // regra de conversão em inexecução ao atingir o teto (a compensatória residual vem adiante).
+    const tetoMora = moraEspecifica.teto || '10';
+    ps.push(item(0, [
+      bold(`${num}.${n++}. `),
+      run(`Nos termos do Acórdão TCU nº 607/2016, a multa moratória será de `),
+      bold(`${moraEspecifica.pct}% ao dia`),
+      run(` sobre o valor da parcela inadimplida${moraEspecifica.base ? ` (${moraEspecifica.base})` : ''}, limitada a ${tetoMora}% (${ext(tetoMora)} por cento); atingido esse limite, o atraso será tratado como inexecução, sujeitando o CONTRATADO à multa compensatória correspondente e, se for o caso, à extinção do contrato.`)
+    ]));
+  }
+
+  // Tabela de infrações específicas — só entra quando o usuário graduou condutas no wizard.
+  // Sem ela, a cláusula sai exatamente como antes (compatibilidade com minutas antigas).
+  if (compensatorias.length) {
+    ps.push(item(0, [
+      bold(`${num}.${n++}. `),
+      run('Sem prejuízo das regras do Termo de Referência, ficam desde já tipificadas as seguintes infrações específicas e as respectivas multas compensatórias, incidentes sobre o valor do contrato — ou sobre a base indicada — observados o piso de 0,5% (cinco décimos por cento) e o teto de 30% (trinta por cento) do art. 156, §3º, da Lei nº 14.133, de 2021, e graduadas conforme a natureza e a gravidade da conduta (art. 156, §1º):')
+    ]));
+
+    const cell = (text, opts = {}) => new TableCell({
+      width: { size: opts.w, type: WidthType.DXA },
+      shading: opts.head ? { type: ShadingType.CLEAR, fill: 'e4ecf6' } : undefined,
+      margins: { top: 60, bottom: 60, left: 100, right: 100 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [new Paragraph({
+        alignment: opts.center ? AlignmentType.CENTER : AlignmentType.LEFT,
+        children: [new TextRun({ text, font: 'Arial', size: 18, bold: !!opts.head, color: opts.head ? '1a4b8c' : undefined })],
+      })],
+    });
+    const W = { grav: 1700, cond: 5200, pct: 1100, nat: 1071 };
+    const rows = [new TableRow({ tableHeader: true, children: [
+      cell('Gravidade', { w: W.grav, head: true }),
+      cell('Conduta específica', { w: W.cond, head: true }),
+      cell('Multa', { w: W.pct, head: true, center: true }),
+      cell('Base de cálculo', { w: W.nat, head: true }),
+    ]})];
+    for (const inf of compensatorias) {
+      rows.push(new TableRow({ children: [
+        cell(SANCOES.rotuloGravidade(inf.gravidade) || '—', { w: W.grav }),
+        cell(String(inf.conduta).trim(), { w: W.cond }),
+        cell(`${inf.pct}%`, { w: W.pct, center: true }),
+        cell(inf.base ? String(inf.base) : 'valor do contrato', { w: W.nat }),
+      ]}));
+    }
+    ps.push(new Table({ width: { size: 9071, type: WidthType.DXA }, rows }));
+    ps.push(new Paragraph({ spacing: { after: 120 }, children: [] }));
+
+    ps.push(item(0, [
+      bold(`${num}.${n++}. `),
+      run(`Para as condutas não tipificadas na tabela acima, a multa compensatória por inexecução total ou parcial será de `),
+      bold(`${d.pct_multa_compensatoria || '10'}% (${ext(d.pct_multa_compensatoria || '10')} por cento)`),
+      run(' sobre o valor total do contrato, sem prejuízo das demais sanções cabíveis. Na aplicação de qualquer multa serão consideradas a natureza e a gravidade da infração, as peculiaridades do caso concreto, as circunstâncias agravantes ou atenuantes e os danos causados à Administração.')
+    ]));
+  }
+
   ps.push(item(0, [
-    bold(`${num}.3. `),
-    run(`Nos termos do Acórdão TCU nº 607/2016, a multa moratória será de `),
-    bold(`${d.pct_multa_mora || '0,5'}% ao dia`),
-    run(` sobre o valor da parcela inadimplida, limitada a 10% (dez por cento), e a multa compensatória, em caso de inexecução total ou parcial, será de `),
-    bold(`${d.pct_multa_compensatoria || '10'}% (${ext(d.pct_multa_compensatoria || '10')} por cento)`),
-    run(' sobre o valor total do contrato, sem prejuízo das demais sanções cabíveis.')
-  ]));
-  ps.push(item(0, [
-    bold(`${num}.4. `),
+    bold(`${num}.${n++}. `),
     run('A aplicação de qualquer das sanções previstas nesta cláusula deverá ser precedida de processo administrativo que assegure o contraditório e a ampla defesa ao CONTRATADO, o qual disporá do prazo de '),
     bold(d.prazo_defesa || '10 (dez) dias úteis'),
     run(' para apresentar defesa prévia, contado da respectiva notificação.')
   ]));
   ps.push(item(0, [
-    bold(`${num}.5. `),
+    bold(`${num}.${n++}. `),
     run('É vedada a intervenção indevida do CONTRATANTE na gestão interna do CONTRATADO, sendo a fiscalização limitada à verificação dos resultados e dos padrões de execução do objeto contratual, nos termos do art. 48, VI, da Lei nº 14.133, de 2021.')
   ]));
 

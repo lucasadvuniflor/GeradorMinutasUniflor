@@ -83,6 +83,9 @@ const state = {
     pct_multa_mora: '0,5',
     pct_multa_compensatoria: '10',
     prazo_defesa: '10 (dez) dias úteis',
+    // Infrações específicas com multa graduada (biblioteca em src/sancoes-biblioteca.js).
+    // Vazio = a cláusula sai como sempre saiu (só mora + compensatória genérica).
+    infracoes: [],
 
     // Programa de integridade (grande vulto)
     grande_vulto: false,
@@ -1104,6 +1107,35 @@ function renderStep6() {
     </div>
 
     <div class="card">
+      <div class="card-title">6. Infrações Específicas e Multas Graduadas</div>
+      <p style="font-size:.78rem;color:#4a5568;margin:0 0 10px;line-height:1.5">
+        Multa vinculada a <strong>conduta concreta</strong> do objeto, e não só à categoria genérica do art. 155 — atende à tipicidade e à proporcionalidade exigidas pelo TCU (Acórdãos 607/2016 e 805/2016, Plenário). Todas as faixas ficam entre <strong>0,5% e 30%</strong> (art. 156, §3º). Os percentuais sugeridos começam no piso de cada faixa: <strong>ajuste ao valor e ao risco deste contrato</strong>.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button type="button" class="btn btn-secondary" onclick="sugerirInfracoes()" ${SANCOES_BIBLIOTECA.categoriaParaTipo(state.data.tipo) ? '' : 'disabled title="Sem biblioteca para este tipo de contrato"'}>
+          ✨ Carregar sugestões para ${SANCOES_BIBLIOTECA.categoriaParaTipo(state.data.tipo)?.rotulo || 'este tipo'}
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="addInfracao()">+ Adicionar infração</button>
+        ${state.data.infracoes.length ? `<button type="button" class="btn btn-secondary" onclick="limparInfracoes()" style="color:#c53030;border-color:#c53030">Limpar todas</button>` : ''}
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.78rem">
+          <thead>
+            <tr style="background:#f7fafc">
+              <th style="text-align:left;padding:6px;border:1px solid #e2e8f0;width:130px">Gravidade</th>
+              <th style="text-align:left;padding:6px;border:1px solid #e2e8f0">Conduta específica</th>
+              <th style="text-align:left;padding:6px;border:1px solid #e2e8f0;width:150px">Multa</th>
+              <th style="text-align:left;padding:6px;border:1px solid #e2e8f0;width:130px">Base / observação</th>
+              <th style="border:1px solid #e2e8f0;width:34px"></th>
+            </tr>
+          </thead>
+          <tbody id="infracoesBody">${renderInfracoesRows()}</tbody>
+        </table>
+      </div>
+      <div id="infracoesErros" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
       <div class="card-title">6. Programa de Integridade</div>
       <div class="form-row">
         <div class="form-group full-width">
@@ -1252,11 +1284,122 @@ function renderStep7() {
     </div>`;
 }
 
+// ─── Infrações específicas (biblioteca de sanções) ───────────────────────────
+function renderInfracoesRows() {
+  const B = SANCOES_BIBLIOTECA;
+  if (!state.data.infracoes.length) {
+    return `<tr><td colspan="5" style="text-align:center;color:#a0aec0;padding:14px;font-size:.8rem">
+      Nenhuma infração específica. Sem elas, a cláusula sai só com a mora e a compensatória genérica acima.
+      Use <strong>Carregar sugestões</strong> para partir da escala da Procuradoria.
+    </td></tr>`;
+  }
+  const opcoesGrav = B.GRAVIDADES.map(g => `<option value="${g.id}">${g.rotulo} · ${g.faixa}</option>`).join('');
+  return state.data.infracoes.map(inf => {
+    const ehMora = inf.natureza === 'moratoria';
+    const multaCell = ehMora
+      ? `<div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
+           <input class="iinput" style="width:52px;text-align:right" type="text" value="${escHtml(inf.pct)}" placeholder="0,33"
+             oninput="updateInfracaoField(${inf.id},'pct',this.value)">% /dia · teto
+           <input class="iinput" style="width:44px;text-align:right" type="text" value="${escHtml(inf.teto)}" placeholder="10"
+             oninput="updateInfracaoField(${inf.id},'teto',this.value)">%
+         </div>`
+      : `<div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
+           <input class="iinput" style="width:60px;text-align:right" type="text" value="${escHtml(inf.pct)}" placeholder="0,5"
+             oninput="updateInfracaoField(${inf.id},'pct',this.value)">%
+         </div>`;
+    return `<tr>
+      <td style="padding:3px 4px;border:1px solid #e2e8f0">
+        <select class="iinput" style="width:100%" onchange="updateInfracaoField(${inf.id},'gravidade',this.value)">
+          ${opcoesGrav.replace(`value="${inf.gravidade}"`, `value="${inf.gravidade}" selected`)}
+        </select>
+      </td>
+      <td style="padding:3px 4px;border:1px solid #e2e8f0">
+        <input class="iinput" style="width:100%" type="text" value="${escHtml(inf.conduta)}" placeholder="Descreva a conduta"
+          oninput="updateInfracaoField(${inf.id},'conduta',this.value)">
+      </td>
+      <td style="padding:3px 4px;border:1px solid #e2e8f0">${multaCell}</td>
+      <td style="padding:3px 4px;border:1px solid #e2e8f0">
+        <input class="iinput" style="width:100%" type="text" value="${escHtml(inf.base)}" placeholder="ex: sobre o saldo faltante"
+          oninput="updateInfracaoField(${inf.id},'base',this.value)">
+      </td>
+      <td style="text-align:center;padding:0 4px;border:1px solid #e2e8f0">
+        <button onclick="removeInfracao(${inf.id})" style="background:none;border:none;color:#e53e3e;font-size:1rem;cursor:pointer;padding:2px 4px" title="Remover">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function refreshInfracoesTable() {
+  const body = document.getElementById('infracoesBody');
+  if (body) body.innerHTML = renderInfracoesRows();
+  const erros = document.getElementById('infracoesErros');
+  if (erros) {
+    const lista = SANCOES_BIBLIOTECA.validar(state.data.infracoes);
+    erros.innerHTML = lista.length
+      ? `<div style="background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;font-size:.76rem;color:#c53030">${lista.map(e => `⚠️ ${escHtml(e)}`).join('<br>')}</div>`
+      : '';
+  }
+}
+
+window.sugerirInfracoes = function() {
+  const sugestoes = SANCOES_BIBLIOTECA.sugerirParaTipo(state.data.tipo);
+  if (!sugestoes.length) return;
+  if (state.data.infracoes.length && !confirm('Substituir a lista atual pelas sugestões da biblioteca?')) return;
+  state.data.infracoes = sugestoes;
+  render();
+};
+window.addInfracao = function() {
+  state.data.infracoes.push({ id: Date.now(), gravidade: 'leve', conduta: '', natureza: 'compensatoria', pct: '0,5', teto: '', base: '', sugerida: false });
+  render();
+};
+window.removeInfracao = function(id) {
+  state.data.infracoes = state.data.infracoes.filter(i => i.id !== id);
+  render();
+};
+window.limparInfracoes = function() {
+  if (!confirm('Remover todas as infrações específicas? A cláusula voltará ao formato genérico.')) return;
+  state.data.infracoes = [];
+  render();
+};
+window.updateInfracaoField = function(id, field, value) {
+  const inf = state.data.infracoes.find(i => i.id === id);
+  if (!inf) return;
+  inf[field] = value;
+  // Trocar a gravidade para/de "mora" muda a natureza e o formato do campo de multa.
+  if (field === 'gravidade') {
+    const viraMora = value === 'mora';
+    if (viraMora && inf.natureza !== 'moratoria') {
+      inf.natureza = 'moratoria'; inf.pct = String(SANCOES_BIBLIOTECA.MORA_PADRAO.pctDia).replace('.', ','); inf.teto = String(SANCOES_BIBLIOTECA.MORA_PADRAO.teto);
+    } else if (!viraMora && inf.natureza === 'moratoria') {
+      inf.natureza = 'compensatoria'; inf.teto = '';
+      const g = SANCOES_BIBLIOTECA.CATEGORIAS.bens.infracoes.find(x => x.gravidade === value);
+      inf.pct = g ? String(g.pctMin).replace('.', ',') : '0,5';
+    }
+    refreshInfracoesTable();
+    return;
+  }
+  // Só revalida (sem redesenhar a tabela) para não roubar o foco do campo em edição.
+  const erros = document.getElementById('infracoesErros');
+  if (erros) {
+    const lista = SANCOES_BIBLIOTECA.validar(state.data.infracoes);
+    erros.innerHTML = lista.length
+      ? `<div style="background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;font-size:.76rem;color:#c53030">${lista.map(e => `⚠️ ${escHtml(e)}`).join('<br>')}</div>`
+      : '';
+  }
+};
+
 // ─── Geração ─────────────────────────────────────────────────────────────────
 window.gerarContrato = async function() {
   const btn = document.getElementById('btnGerar');
   const msg = document.getElementById('msgDiv');
   if (!btn || !msg) return;
+
+  // Piso e teto do art. 156, §3º são vinculantes — um percentual fora da faixa não pode virar minuta.
+  const errosSancoes = SANCOES_BIBLIOTECA.validar(state.data.infracoes);
+  if (errosSancoes.length) {
+    msg.innerHTML = `<div class="msg-error">❌ Corrija as infrações específicas (passo 5) antes de gerar:<br>${errosSancoes.map(e => `• ${escHtml(e)}`).join('<br>')}</div>`;
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = '⏳ Gerando…';
