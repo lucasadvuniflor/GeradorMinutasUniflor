@@ -10,6 +10,8 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+## [3.0.1] - 2026-09-02
+
 ### Corrigido
 - **Modo de disputa Fechado isolado** deixou de ser selecionável com menor preço/maior desconto na
   Concorrência (vedação do art. 56, §1º); a cascata devolve para Aberto se o critério mudar.
