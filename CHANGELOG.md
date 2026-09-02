@@ -10,6 +10,8 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+## [3.1.1] - 2026-09-02
+
 ### Corrigido
 - **Conformidade com o checklist da Lei nº 14.133/2021 (2ª rodada)** — todas as minutas foram geradas em 19 variantes
   e cruzadas item a item com o checklist da Procuradoria. Cláusulas incluídas nos três editais (Pregão/Concorrência,
