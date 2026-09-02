@@ -493,6 +493,12 @@ function secAceitacao(d, numSec) {
   n++;
   ps.push(item(`${numSec}.${n}.`, `Serão consideradas inexequíveis as propostas cujos valores forem inferiores a ${inexLimiar} do valor orçado pela Administração.`));
   n++;
+  // Art. 24, parágrafo único, c/c art. 34 (checklist 5.2): no maior desconto o preço de referência é público
+  // e o desconto incide linearmente sobre a tabela.
+  if (d.criterio === 'maior_desconto') {
+    ps.push(item(`${numSec}.${n}.`, 'Adotado o critério de julgamento por maior desconto, o preço estimado ou o máximo aceitável consta obrigatoriamente deste Aviso e de seus anexos (art. 24, parágrafo único, da Lei nº 14.133, de 2021), e o percentual de desconto ofertado incidirá linearmente sobre todos os preços unitários da tabela ou planilha de referência constante do Termo de Referência, nos termos do art. 34 da mesma Lei.'));
+    n++;
+  }
   if (isObras) {
     ps.push(item(`${numSec}.${n}.`, 'Será exigida garantia adicional do interessado vencedor cuja proposta for inferior a 85% (oitenta e cinco por cento) do valor orçado pela Administração, equivalente à diferença entre este último e o valor da proposta, sem prejuízo das demais garantias exigíveis de acordo com a Lei.'));
     n++;
