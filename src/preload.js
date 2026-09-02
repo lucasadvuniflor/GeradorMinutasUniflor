@@ -28,7 +28,7 @@ contextBridge.exposeInMainWorld('uniflorAPI', {
   carregarHistoricoItem: (id) => ipcRenderer.invoke('carregar-historico-item', id),
   removerHistoricoItem: (id) => ipcRenderer.invoke('remover-historico-item', id),
   abrirArquivoHistorico: (id) => ipcRenderer.invoke('abrir-arquivo-historico', id),
-  appVersion: process.env.npm_package_version || '1.0.0'
+  obterVersao: () => ipcRenderer.invoke('app-version'),
 });
 
 // Usado pela página do Anexo II – Ata de Registro de Preços
@@ -41,4 +41,5 @@ contextBridge.exposeInMainWorld('atasAPI', {
   gerarAtas: (payload) => ipcRenderer.invoke('gerar-atas', payload),
   gerarAtaMinuta: (payload) => ipcRenderer.invoke('gerar-ata-minuta', payload),
   carregarProcessoAtivo: () => ipcRenderer.invoke('carregar-processo-ativo'),
+  obterVersao: () => ipcRenderer.invoke('app-version'),
 });

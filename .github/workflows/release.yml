@@ -1,0 +1,53 @@
+# Compila o instalador e a versão portátil no Windows e publica em GitHub Releases.
+#
+# Gatilho: push de uma tag vX.Y.Z — que é o que `npm run release -- <bump>` cria. Não roda em
+# commits comuns, então o histórico de Releases só tem versões deliberadas.
+#
+# As notas da release saem da seção correspondente do CHANGELOG.md, para que a página de download
+# e o histórico do projeto contem a mesma história.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Compilar instalador (NSIS) e portátil
+        run: npx electron-builder --win nsis portable --x64 --publish never
+        env:
+          # Sem certificado de assinatura de código; evita que o builder tente descobrir um.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Extrair as notas desta versão do CHANGELOG
+        shell: bash
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VER" '/^## \[/{ p = index($0, "[" ver "]") > 0; next } p' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "Release ${GITHUB_REF_NAME}" > release-notes.md
+          fi
+          echo "--- notas ---"; cat release-notes.md
+
+      - name: Publicar em Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Gerador de Minutas Uniflor ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: |
+            dist/*.exe
+            dist/*.blockmap

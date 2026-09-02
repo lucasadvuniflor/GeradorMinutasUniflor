@@ -415,6 +415,10 @@ ipcMain.handle('selecionar-pdf', async () => {
 // no canal "buscar-cnpj". Mantidos separados para não quebrar nenhum dos dois.
 ipcMain.handle('buscar-cnpj-ata', async (_event, cnpj) => buscarCnpjAta(cnpj));
 
+// Versão da aplicação para a interface. app.getVersion() lê o package.json tanto em desenvolvimento
+// quanto no .exe empacotado — ao contrário de process.env.npm_package_version, que só existe via npm.
+ipcMain.handle('app-version', async () => app.getVersion());
+
 ipcMain.handle('carregar-config', async () => loadConfig(app.getPath('userData')));
 ipcMain.handle('salvar-config', async (_event, data) => {
   saveConfig(app.getPath('userData'), data);
