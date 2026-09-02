@@ -1,7 +1,7 @@
 {
   "name": "uniflor-gerador-minutas",
   "productName": "Gerador de Minutas – Edital, Ata e Contrato – Uniflor/PR",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "Gerador de Minutas de Edital, Ata de Registro de Preços (Anexo II) e Contrato (Anexo III) – Município de Uniflor/PR (Lei 14.133/2021)",
   "main": "src/main.js",
   "scripts": {

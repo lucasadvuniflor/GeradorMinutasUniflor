@@ -10,6 +10,8 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+## [3.1.0] - 2026-09-02
+
 ### Adicionado
 - **Nova interface (Direção A — Consolidação)**: barra lateral fixa com os cinco documentos agrupados em
   Edital / Anexos / Sistema, cabeçalho de página padronizado e um único tema compartilhado
