@@ -10,6 +10,8 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+## [3.1.2] - 2026-09-02
+
 ### Corrigido
 - Aviso de Contratação Direta: no critério de maior desconto, cláusula do preço de referência público e do desconto linear sobre a tabela do TR (art. 24, parágrafo único, c/c art. 34).
 
