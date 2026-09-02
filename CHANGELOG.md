@@ -10,6 +10,8 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+## [3.1.3] - 2026-09-02
+
 ### Corrigido
 - **Apontamentos dos Pareceres nº 065/2026 e 068/2026 incorporados aos modelos**: a Ata de Registro de Preços ganha
   cláusula com o índice de reajuste específico (o mesmo do Edital, importado automaticamente ou vindo das Configurações)
