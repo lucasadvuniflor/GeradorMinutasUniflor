@@ -204,7 +204,7 @@ function capaFactSheet(rows) {
 function capaPage(d) {
   const num = `${d.numero_licitacao || 'XXXX'}/${d.ano_licitacao || '20XX'}`;
   const criterioTxt = { menor_preco: 'Menor Preço', maior_desconto: 'Maior Desconto', tecnica_preco: 'Técnica e Preço' }[d.criterio] || d.criterio;
-  const valorTxt = d.valor_sigiloso ? 'Sigiloso até o fim do julgamento' : moeda(d.valor_estimado);
+  const valorTxt = (d.valor_sigiloso && d.criterio !== 'maior_desconto') ? 'Sigiloso até o fim do julgamento' : moeda(d.valor_estimado);
   const rows = [
     ['CONTRATANTE', 'MUNICÍPIO DE UNIFLOR/PR'],
     ['OBJETO', d.objeto || '[OBJETO]'],
@@ -300,6 +300,14 @@ function secObjeto(d) {
     ps.push(item('1.3.', criterioUnit));
   }
 
+  // Checklist 2.8 (art. 11, IV; art. 45) e 2.5/17.7 (arts. 41, I, e 42): o edital precisa dizer onde
+  // estão os critérios de sustentabilidade e em que condições o TR pode indicar marca.
+  let nObj = (isSRP && temGrupos) ? 4 : 3;
+  ps.push(item(`1.${nObj}.`, 'Os critérios e as práticas de sustentabilidade ambiental e de acessibilidade aplicáveis ao objeto, quando pertinentes à sua natureza, são os estabelecidos no Termo de Referência, nos termos do art. 11, inciso IV, e do art. 45 da Lei nº 14.133, de 2021.'));
+  nObj++;
+  ps.push(item(`1.${nObj}.`, 'Eventual indicação de marca ou modelo no Termo de Referência dá-se exclusivamente nas hipóteses do art. 41, inciso I, da Lei nº 14.133, de 2021, com justificativa nos autos, admitindo-se produto similar, equivalente ou de melhor qualidade, cuja compatibilidade será aferida pelos meios previstos no art. 42 da mesma Lei.'));
+  nObj++;
+
   if (Array.isArray(d.itens) && d.itens.length) {
     ps.push(blank());
     ps.push(itensTable(d.itens));
@@ -317,7 +325,7 @@ function secSRP(d) {
   const ps = [secTitle('2. Do Registro de Preços')];
   let n = 1;
 
-  ps.push(item(`2.${n}.`, 'As regras referentes aos órgãos gerenciador e participantes, bem como a eventuais adesões são as que constam da minuta de Ata de Registro de Preços, anexa a este Edital.'));
+  ps.push(item(`2.${n}.`, 'As regras referentes aos órgãos gerenciador e participantes, a eventuais adesões, ao cancelamento do registro e à alteração ou atualização dos preços registrados são as que constam da minuta de Ata de Registro de Preços, anexa a este Edital; a estimativa das quantidades a serem adquiridas pelo órgão gerenciador e por eventuais órgãos participantes, bem como a quantidade máxima de cada item, constam do Termo de Referência, nos termos do art. 82, incisos I, II e IX, da Lei nº 14.133, de 2021.'));
   n++;
 
   if (d.srp_indicacao_limitada === 'sim') {
@@ -480,11 +488,20 @@ function secParticipacao(d, numSec) {
 function secOrcamento(d, numSec) {
   const ps = [secTitle(`${numSec}. Do Orçamento Estimado`)];
   let n = 1;
-  if (!d.valor_sigiloso) {
+  // Art. 24, parágrafo único: no maior desconto o preço estimado/máximo consta obrigatoriamente do edital —
+  // o sigilo do orçamento é incompatível com esse critério (checklist 4.2 e 5.2).
+  const sigiloso = !!d.valor_sigiloso && d.criterio !== 'maior_desconto';
+  if (!sigiloso) {
     ps.push(item(`${numSec}.${n}.`, 'O orçamento estimado da presente contratação não será de caráter sigiloso.'));
     n++;
     if (d.valor_estimado) {
       ps.push(item(`${numSec}.${n}.`, `O custo estimado total da contratação é de ${moeda(d.valor_estimado)}, conforme pesquisa de preços encartada nos autos do processo administrativo.`));
+      n++;
+    }
+    ps.push(item(`${numSec}.${n}.`, 'A planilha de quantitativos e de preços unitários de referência, elaborada na fase preparatória, integra o Termo de Referência e fica disponível aos interessados juntamente com este Edital, nos termos do art. 23 e do art. 25, §3º, da Lei nº 14.133, de 2021.'));
+    n++;
+    if (d.criterio === 'maior_desconto') {
+      ps.push(item(`${numSec}.${n}.`, 'Adotado o critério de julgamento por maior desconto, o preço estimado ou o máximo aceitável consta obrigatoriamente deste Edital e de seus anexos (art. 24, parágrafo único, da Lei nº 14.133, de 2021), e o percentual de desconto ofertado incidirá linearmente sobre todos os preços unitários da tabela ou planilha de referência constante do Termo de Referência, nos termos do art. 34 da mesma Lei.'));
       n++;
     }
   } else {
@@ -493,6 +510,8 @@ function secOrcamento(d, numSec) {
     ps.push(item(`${numSec}.${n}.`, 'Para fins do disposto no item anterior, o orçamento estimado para a contratação não será tornado público antes de definido o resultado do julgamento das propostas.'));
     n++;
     ps.push(item(`${numSec}.${n}.`, 'O caráter sigiloso do orçamento estimado para a contratação não prevalecerá para os órgãos de controle interno e externo.'));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'Ainda que sigiloso o orçamento, os quantitativos e todas as demais informações necessárias à elaboração das propostas constam do Termo de Referência e de seus anexos, nos termos do art. 24 da Lei nº 14.133, de 2021.'));
     n++;
   }
   if (d.dotacao_funcional) {
@@ -523,7 +542,7 @@ function secApresentacao(d, numSec) {
   if (!isInvertida) {
     ps.push(item(`${numSec}.${n}.`, 'Na presente licitação, a fase de habilitação sucederá as fases de apresentação de propostas e lances e de julgamento.'));
     n++;
-    ps.push(item(`${numSec}.${n}.`, `Os licitantes encaminharão, exclusivamente por meio do sistema eletrônico, a proposta com o preço ou o percentual de desconto, conforme o critério de julgamento adotado neste Edital, até a data e o horário estabelecidos para abertura da sessão pública.`));
+    ps.push(item(`${numSec}.${n}.`, `Os licitantes encaminharão, exclusivamente por meio do sistema eletrônico, a proposta com o preço ou o percentual de desconto, conforme o critério de julgamento adotado neste Edital, até a data e o horário estabelecidos para abertura da sessão pública, permanecendo as propostas em sigilo até a abertura da sessão.`));
     n++;
   } else {
     ps.push(item(`${numSec}.${n}.`, 'Na presente licitação, a fase de habilitação antecederá as fases de apresentação de propostas e lances e de julgamento, mediante ato motivado constante do processo administrativo.'));
@@ -611,7 +630,7 @@ function secApresentacao(d, numSec) {
 
   if (d.garantia_proposta) {
     const pctProp = d.percentual_garantia_proposta || '1';
-    ps.push(item(`${numSec}.${n}.`, `Será exigida, como requisito de pré-habilitação, garantia de proposta correspondente a ${pctProp}% (${pctProp.toString().replace('.', ',')} por cento) do valor estimado da contratação, podendo o licitante optar por caução em dinheiro ou em títulos da dívida pública, seguro-garantia ou fiança bancária, nos termos do art. 58 da Lei nº 14.133, de 2021.`));
+    ps.push(item(`${numSec}.${n}.`, `Será exigida, como requisito de pré-habilitação, garantia de proposta correspondente a ${pctProp}% (${/^\d+$/.test(String(pctProp)) ? n2w(parseInt(pctProp, 10)) : pctProp.toString().replace('.', ',')} por cento) do valor estimado da contratação, podendo o licitante optar por caução em dinheiro ou em títulos da dívida pública, seguro-garantia ou fiança bancária, nos termos do art. 58 da Lei nº 14.133, de 2021.`));
     n++;
     ps.push(item(`${numSec}.${n}.`, 'A garantia de proposta deverá ser comprovada até a data definida para entrega das propostas e será devolvida no prazo de 10 (dez) dias úteis, contado da assinatura do contrato ou da data em que a licitação for declarada fracassada.'));
     n++;
@@ -747,9 +766,9 @@ function secAbertura(d, numSec) {
 
   // Intervalo mínimo
   if (d.intervalo_lances) {
-    ps.push(item(`${numSec}.${n}.`, `O intervalo mínimo de diferença de valores ou percentuais entre os lances, que incidirá tanto em relação aos lances intermediários quanto em relação à proposta que cobrir a melhor oferta, deverá ser de ${d.intervalo_lances}, nos termos do art. 22, §1º, da IN SEGES nº 73, de 2022.`));
+    ps.push(item(`${numSec}.${n}.`, `O intervalo mínimo de diferença de valores ou percentuais entre os lances, que incidirá tanto em relação aos lances intermediários quanto em relação à proposta que cobrir a melhor oferta, deverá ser de ${d.intervalo_lances}, nos termos do art. 57 da Lei nº 14.133, de 2021.`));
   } else {
-    ps.push(item(`${numSec}.${n}.`, 'O intervalo mínimo de diferença de valores ou percentuais entre os lances obedecerá às regras estabelecidas pelo sistema eletrônico adotado, nos termos do art. 22, §1º, da IN SEGES nº 73, de 2022.'));
+    ps.push(item(`${numSec}.${n}.`, 'O intervalo mínimo de diferença de valores ou percentuais entre os lances obedecerá às regras estabelecidas pelo sistema eletrônico adotado, nos termos do art. 57 da Lei nº 14.133, de 2021.'));
   }
   n++;
 
@@ -867,6 +886,10 @@ function secAbertura(d, numSec) {
   ps.push(subitem(`${numSec}.${n}.4.`, 'declaração do licitante de que desenvolve programa de integridade, conforme Decreto nº 12.304, de 2024.'));
   n++;
 
+  // Checklist 7.2 — o padrão documental dos critérios sociais de desempate precisa estar no edital.
+  ps.push(item(`${numSec}.${n}.`, `A comprovação dos critérios de desempate referidos nos subitens anteriores far-se-á por declaração do licitante em campo próprio do sistema, acompanhada, quando solicitado pelo ${resp(d)}, de documentos comprobatórios — relatórios ou políticas internas de equidade de gênero, certificações ou selos, código de conduta e demais evidências do programa de integridade —, vedado o julgamento por critérios não previstos neste Edital, nos termos do art. 60, incisos III e IV, da Lei nº 14.133, de 2021.`));
+  n++;
+
   ps.push(item(`${numSec}.${n}.`, 'Persistindo o empate, será assegurada preferência, sucessivamente, aos bens e serviços produzidos ou prestados por:'));
   ps.push(subitem(`${numSec}.${n}.1.`, 'empresas estabelecidas no território do Estado do Paraná;'));
   ps.push(subitem(`${numSec}.${n}.2.`, 'empresas brasileiras;'));
@@ -913,6 +936,12 @@ function secJulgamento(d, numSec) {
   const isObras = d.tipo_objeto === 'obras_engenharia' || d.tipo_objeto === 'servico_comum_engenharia';
   const ps = [secTitle(`${numSec}. Da Fase de Julgamento`)];
   let n = 1;
+
+  // Checklist 5.3 — técnica e preço: critérios objetivos e teto de 70% para a proposta técnica (art. 36).
+  if (d.criterio === 'tecnica_preco') {
+    ps.push(item(`${numSec}.${n}.`, 'No julgamento por técnica e preço, a proposta técnica será avaliada segundo os fatores, quesitos e pontuações objetivamente definidos no Termo de Referência e seus anexos, vedada a atribuição de pontuação genérica ou subjetiva; a valoração da proposta técnica não excederá 70% (setenta por cento) da nota final, que resultará da ponderação das notas técnica e de preço conforme os pesos ali fixados, nos termos dos arts. 36 a 38 da Lei nº 14.133, de 2021.'));
+    n++;
+  }
 
   ps.push(item(`${numSec}.${n}.`, `Encerrada a etapa de negociação, o ${resp(d)} verificará se o licitante provisoriamente classificado em primeiro lugar atende às condições de participação no certame, conforme previsto no art. 14 da Lei nº 14.133, de 2021, legislação correlata e neste Edital, especialmente quanto à existência de sanção que impeça a participação no certame ou a futura contratação, mediante a consulta aos seguintes cadastros:`));
   ps.push(subitem(`${numSec}.${n}.1.`, 'SICAF;'));
@@ -1050,6 +1079,17 @@ function secHabilitacao(d, numSec) {
   // Art. 63, §§2º e 3º: norma cogente — se o TR exigir vistoria, o edital tem de oferecer a
   // substituição por declaração formal. Como a exigência mora no TR, a cláusula vale em qualquer caso.
   ps.push(item(`${numSec}.${n}.`, 'Caso o Termo de Referência exija a avaliação prévia do local de execução como requisito de habilitação, a vistoria somente será exigida quando imprescindível e, em qualquer hipótese, poderá ser substituída por declaração formal, assinada pelo responsável técnico do licitante, de que conhece as condições locais para a execução do objeto e assume a responsabilidade por eventuais dificuldades daí decorrentes, nos termos do art. 63, §§2º e 3º, da Lei nº 14.133, de 2021.'));
+  n++;
+
+  // Checklist 8.2/8.3, 8.6-8.8, 8.10-8.12, 18.13/18.14: limites legais das exigências de habilitação
+  // que o TR pode veicular — o edital fixa o teto para que a exigência seja aplicável.
+  ps.push(item(`${numSec}.${n}.`, `Não serão exigidos do licitante documentos de habilitação que constem de registro cadastral unificado ou de bancos de dados oficiais de acesso público, cuja verificação será feita diretamente pelo ${resp(d)}, nos termos do art. 63, inciso III, da Lei nº 14.133, de 2021; tampouco será exigido reconhecimento de firma ou autenticação cartorária de documentos, admitidas a conferência pelo agente público e a declaração de veracidade sob as penas da lei, salvo dúvida fundada quanto à autenticidade (art. 12, inciso IV, da mesma Lei).`));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'Quando o Termo de Referência exigir atestados de capacidade técnico-operacional, a exigência limitar-se-á às parcelas de maior relevância técnica e de valor significativo do objeto, admitida a comprovação de, no máximo, 50% (cinquenta por cento) dos quantitativos licitados (art. 67, §§1º e 2º); não serão fixados quantitativos mínimos nem prazos máximos para os atestados de capacidade técnico-profissional (art. 67, §2º); em serviços contínuos, o prazo de experiência exigido não excederá 3 (três) anos (art. 67, §5º); e a comprovação por atestado de potencial subcontratado fica limitada a 25% (vinte e cinco por cento) do objeto (art. 67, §9º), tudo nos termos da Lei nº 14.133, de 2021.'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'A comprovação do vínculo do responsável técnico indicado com o licitante poderá ser feita por contrato social, registro na carteira profissional, ficha de empregado, contrato de prestação de serviços ou declaração de compromisso de contratação futura, vedada a exigência de vínculo empregatício na data da sessão pública, conforme jurisprudência consolidada do Tribunal de Contas da União, aplicável ao art. 67, incisos I e III, da Lei nº 14.133, de 2021.'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, `Os índices contábeis e a eventual exigência de capital social mínimo ou de patrimônio líquido mínimo, quando previstos no Termo de Referência, observam a justificativa constante dos autos e o limite de 10% (dez por cento) do valor estimado da contratação, nos termos do art. 69, caput e §4º, da Lei nº 14.133, de 2021${d.garantia_proposta ? ', não se cumulando a exigência de capital ou de patrimônio líquido mínimo com a garantia de proposta exigida neste Edital' : ', vedada a sua cumulação com a exigência de garantia de proposta'}.`));
   n++;
 
   ps.push(item(`${numSec}.${n}.`, 'A documentação exigida para fins de habilitação jurídica, fiscal, social e trabalhista e econômico-financeira poderá ser substituída pelo registro cadastral no SICAF.'));
@@ -1215,6 +1255,30 @@ function secContrato(d, numSec) {
   ps.push(item(`${numSec}.${n}.`, `O prazo de vigência da contratação é de ${prazo} (${prazoMap[parseInt(prazo)] || prazo}) meses, contados da data de assinatura do instrumento contratual, podendo ser prorrogado nos termos do art. 107 da Lei nº 14.133, de 2021.`));
   n++;
 
+  // Checklist 11.1-11.3, 11.6, 17.6, 18.5, 18.6: remissão às regras de execução e vedações que a lei
+  // manda constar do instrumento convocatório.
+  const isEng = d.tipo_objeto === 'obras_engenharia' || d.tipo_objeto === 'servico_comum_engenharia';
+  ps.push(item(`${numSec}.${n}.`, 'As regras de gestão e fiscalização do contrato (art. 117), de recebimento provisório e definitivo do objeto (art. 140), de liquidação e pagamento, observada a ordem cronológica de exigibilidade (art. 141), bem como as obrigações das partes, constam do Termo de Referência e da minuta de Contrato, Anexo III deste Edital. É vedado o pagamento antecipado, ressalvadas as hipóteses do art. 145 da Lei nº 14.133, de 2021, devidamente justificadas nos autos e condicionadas à prestação de garantia.'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'A subcontratação de partes do objeto somente será admitida se expressamente prevista no Termo de Referência, nos limites e condições lá fixados e mediante autorização prévia da Administração; em qualquer caso, é vedada a subcontratação de pessoa física ou jurídica que mantenha vínculo de natureza técnica, comercial, econômica, financeira, trabalhista ou civil com dirigente do Município de Uniflor ou com agente público que desempenhe função na licitação ou atue na fiscalização ou na gestão do contrato, ou que deles seja cônjuge, companheiro ou parente em linha reta, colateral ou por afinidade, até o terceiro grau, nos termos do art. 122, §§2º e 3º, da Lei nº 14.133, de 2021.'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'É vedado ao contratado contratar, durante a execução do contrato, cônjuge, companheiro ou parente em linha reta, colateral ou por afinidade, até o terceiro grau, de dirigente do Município de Uniflor ou de agente público que desempenhe função na licitação ou atue na fiscalização ou na gestão do contrato (art. 48, parágrafo único), sendo igualmente vedada a intervenção da Administração na gestão interna do contratado (art. 48, inciso VI), nos termos da Lei nº 14.133, de 2021.'));
+  n++;
+  if (isEng) {
+    ps.push(item(`${numSec}.${n}.`, 'O regime de execução da obra ou do serviço de engenharia é o definido no Termo de Referência ou Projeto Básico, dentre os previstos no art. 46 da Lei nº 14.133, de 2021; a matriz de alocação de riscos, quando exigida (contratações de grande vulto, contratação integrada ou semi-integrada) ou adotada pela Administração, integra o Projeto Básico ou Termo de Referência, nos termos dos arts. 22 e 103 da mesma Lei.'));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'A responsabilidade pela obtenção do licenciamento ambiental e pela realização de eventuais desapropriações é a definida no Termo de Referência ou Projeto Básico (art. 25, §§5º e 6º); quando a cargo da Administração, a manifestação ou licença prévia foi obtida antes da divulgação deste Edital, nos termos do art. 115, §4º, da Lei nº 14.133, de 2021.'));
+    n++;
+    if (d.tipo_objeto === 'obras_engenharia') {
+      ps.push(item(`${numSec}.${n}.`, 'O prazo de garantia da obra, pela sua solidez e segurança, é de, no mínimo, 5 (cinco) anos, contado do recebimento definitivo, sem prejuízo de prazo superior fixado no Termo de Referência ou Projeto Básico, nos termos do art. 140, §6º, da Lei nº 14.133, de 2021.'));
+      n++;
+    }
+  }
+  if (isMO) {
+    ps.push(item(`${numSec}.${n}.`, 'Nos serviços com regime de dedicação exclusiva de mão de obra, o Termo de Referência e a minuta de Contrato disciplinam o provisionamento dos encargos trabalhistas em conta vinculada ou o pagamento pelo fato gerador (art. 142), a fiscalização mensal do cumprimento das obrigações trabalhistas e previdenciárias, inclusive guias de recolhimento do FGTS e do INSS (art. 121, §3º), e a retenção da garantia até a comprovação da quitação das verbas rescisórias, nos termos da Lei nº 14.133, de 2021.'));
+    n++;
+  }
+
   ps.push(item(`${numSec}.${n}.`, 'Na assinatura do contrato ou instrumento equivalente será exigida a comprovação das condições de habilitação e contratação consignadas neste Edital, que deverão ser mantidas pelo fornecedor durante a vigência do contrato.'));
   n++;
 
@@ -1232,6 +1296,8 @@ function secContrato(d, numSec) {
     // Art. 96, §3º: quem opta pelo seguro-garantia tem prazo próprio, contado da homologação e
     // anterior à assinatura — o prazo geral de 10 dias úteis pós-assinatura não se aplica a ele.
     ps.push(item(`${numSec}.${n}.`, 'Caso o adjudicatário opte pela modalidade seguro-garantia, o prazo para a sua apresentação será de, no mínimo, 1 (um) mês, contado da data de homologação da licitação e anterior à assinatura do contrato, nos termos do art. 96, §3º, da Lei nº 14.133, de 2021, podendo ser prorrogado por igual período mediante solicitação justificada.'));
+    n++;
+    ps.push(item(`${numSec}.${n}.`, 'A garantia será liberada ou restituída após o recebimento definitivo do objeto e a extinção do contrato, comprovada, quando houver dedicação exclusiva de mão de obra, a quitação das obrigações trabalhistas e previdenciárias dos empregados alocados, nas condições e prazos fixados na minuta de Contrato.'));
     n++;
   }
 
@@ -1432,7 +1498,7 @@ function secImpugnacao(d, numSec) {
   const emailImp = d.email_impugnacao || 'procuradoriajuridica@uniflor.pr.gov.br';
   const ps = [secTitle(`${numSec}. Da Impugnação ao Edital e do Pedido de Esclarecimento`)];
 
-  ps.push(item(`${numSec}.1.`, 'Qualquer pessoa é parte legítima para impugnar este Edital por irregularidade na aplicação da Lei nº 14.133, de 2021, devendo protocolar o pedido até 3 (três) dias úteis antes da data da abertura do certame.'));
+  ps.push(item(`${numSec}.1.`, 'Qualquer pessoa é parte legítima para impugnar este Edital por irregularidade na aplicação da Lei nº 14.133, de 2021, ou para solicitar esclarecimento sobre os seus termos, devendo protocolar o pedido até 3 (três) dias úteis antes da data da abertura do certame, nos termos do art. 164 da referida Lei.'));
   ps.push(item(`${numSec}.2.`, 'A resposta à impugnação ou ao pedido de esclarecimento será divulgada em sítio eletrônico oficial no prazo de até 3 (três) dias úteis, limitado ao último dia útil anterior à data da abertura do certame.'));
   ps.push(item(`${numSec}.3.`, `A impugnação e o pedido de esclarecimento poderão ser realizados por forma eletrônica, pelo seguinte endereço: ${emailImp}.`));
   ps.push(item(`${numSec}.4.`, 'As impugnações e pedidos de esclarecimentos não suspendem os prazos previstos no certame.'));
@@ -1461,7 +1527,7 @@ function secDisposicoes(d, numSec) {
   ps.push(item(`${numSec}.7.`, 'Na contagem dos prazos estabelecidos neste Edital e seus Anexos, excluir-se-á o dia do início e incluir-se-á o do vencimento. Só se iniciam e vencem os prazos em dias de expediente no Município de Uniflor.'));
   ps.push(item(`${numSec}.8.`, 'O desatendimento de exigências formais não essenciais não importará o afastamento do licitante, desde que seja possível o aproveitamento do ato, observados os princípios da isonomia e do interesse público.'));
   ps.push(item(`${numSec}.9.`, 'Em caso de divergência entre disposições deste Edital e de seus anexos ou demais peças que compõem o processo, prevalecerão as deste Edital.'));
-  ps.push(item(`${numSec}.10.`, `O Edital e seus anexos estão disponíveis, na íntegra, no Portal Nacional de Contratações Públicas (PNCP — www.pncp.gov.br)${urlEdital ? ', em ' + d.url_edital : ''} e no site do Município de Uniflor.`));
+  ps.push(item(`${numSec}.10.`, `O Edital e seus anexos estão disponíveis, na íntegra, no Portal Nacional de Contratações Públicas (PNCP — www.pncp.gov.br)${urlEdital ? ', em ' + d.url_edital : ''} e no site do Município de Uniflor. O acesso ao Edital, ao Termo de Referência, ao Estudo Técnico Preliminar, à pesquisa de preços e aos demais documentos da fase preparatória é gratuito e irrestrito, sem exigência de cadastro, identificação ou pagamento (art. 25, §3º, art. 54, §2º, e art. 87, §2º, da Lei nº 14.133, de 2021), e o extrato deste Edital será publicado no Diário Oficial do Município, nos termos do art. 54, §1º, da mesma Lei.`));
 
   // Anexos
   ps.push(item(`${numSec}.11.`, 'Integram este Edital, para todos os fins e efeitos, os seguintes anexos:'));

@@ -10,6 +10,33 @@ Para lançar uma versão: descreva as mudanças em "Não lançado" e rode `npm r
 
 ## [Não lançado]
 
+### Corrigido
+- **Conformidade com o checklist da Lei nº 14.133/2021 (2ª rodada)** — todas as minutas foram geradas em 19 variantes
+  e cruzadas item a item com o checklist da Procuradoria. Cláusulas incluídas nos três editais (Pregão/Concorrência,
+  Credenciamento e Aviso de Contratação Direta): critérios de sustentabilidade e regras de indicação de marca
+  (arts. 11, IV, 41 e 42); planilha de referência e acesso gratuito sem cadastro (arts. 23, 25, §3º, 54 e 87, §2º);
+  extrato no Diário Oficial; vedação de exigir documentos de cadastros públicos e reconhecimento de firma (arts. 12, IV,
+  e 63, III); limites da qualificação técnica e vínculo do responsável técnico (art. 67); índices e capital mínimo sem
+  cumulação com garantia de proposta (art. 69); remissão às regras de gestão, recebimento e pagamento e vedação de
+  pagamento antecipado (arts. 117, 140, 141 e 145); subcontratação e conflito de interesse (art. 122, §§2º e 3º);
+  vedação de contratar parente de dirigente e de ingerência na gestão (art. 48).
+- Edital: orçamento sigiloso passa a ser bloqueado no critério de maior desconto (art. 24, parágrafo único), com cláusula
+  do desconto linear sobre a tabela de referência (art. 34); técnica e preço ganha o teto de 70% para a proposta técnica
+  (art. 36); comprovação documental dos critérios sociais de desempate (art. 60); sigilo das propostas até a abertura;
+  obras: regime de execução, matriz de riscos, licenciamento ambiental e garantia de 5 anos (arts. 46, 103, 115, §4º,
+  e 140, §6º); mão de obra exclusiva: conta vinculada e fiscalização de FGTS/INSS (arts. 121, §3º, e 142); SRP: remissão
+  às quantidades máximas e estimativas (art. 82). O intervalo mínimo de lances cita o art. 57 da Lei, não mais a IN SEGES
+  nº 73/2022 (norma do Executivo Federal).
+- Aviso de Contratação Direta: cláusulas de reajuste (art. 25, §7º), negociação (art. 61), desempate (art. 60),
+  declaração de faturamento ME/EPP (art. 4º, §2º), regras completas de consórcio (art. 15), garantia à escolha do
+  contratado (art. 96) e reabertura de prazos em caso de alteração do aviso.
+- Credenciamento: reajuste anual da tabela de preços (art. 79, parágrafo único, II), recurso com efeito suspensivo
+  (art. 168), regras completas de consórcio e modalidades de garantia.
+- Contrato: data-base do reajuste vinculada ao orçamento estimado (art. 25, §7º); cláusula de garantia do objeto sempre
+  presente (art. 92, X), com o mínimo de 5 anos em obras (art. 140, §6º); liberação da garantia condicionada ao
+  recebimento definitivo e, na mão de obra exclusiva, à quitação trabalhista (art. 121, §3º); comprovantes mensais de
+  FGTS/INSS; prazos informados só com o número saem completos ("5 (cinco) dias") e datas em formato ISO saem por extenso.
+
 ## [3.1.0] - 2026-09-02
 
 ### Adicionado

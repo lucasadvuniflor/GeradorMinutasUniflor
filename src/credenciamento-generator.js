@@ -257,6 +257,9 @@ function secObjeto(d) {
   ps.push(item('1.1.', `O objeto do presente procedimento é o credenciamento de interessados em ${natureza} ${d.objeto || '[OBJETO]'}, conforme condições, quantidades e exigências estabelecidas neste Edital e seus anexos.`));
   ps.push(item('1.2.', `O presente credenciamento se enquadra na hipótese do art. 79, ${d.art79_inciso || 'I'}, da Lei nº 14.133, de 2021.`));
   ps.push(item('1.3.', 'O credenciamento não obriga a Administração Pública a contratar, sendo facultada a convocação dos credenciados de acordo com a necessidade da Administração e os critérios de ordem de contratação previstos neste Edital.'));
+  // Checklist 2.8 (art. 11, IV; art. 45) e 2.5/17.7 (arts. 41, I, e 42).
+  ps.push(item('1.4.', 'Os critérios e as práticas de sustentabilidade ambiental e de acessibilidade aplicáveis ao objeto, quando pertinentes à sua natureza, são os estabelecidos no Termo de Referência, nos termos do art. 11, inciso IV, e do art. 45 da Lei nº 14.133, de 2021.'));
+  ps.push(item('1.5.', 'Eventual indicação de marca ou modelo no Termo de Referência dá-se exclusivamente nas hipóteses do art. 41, inciso I, da Lei nº 14.133, de 2021, com justificativa nos autos, admitindo-se produto similar, equivalente ou de melhor qualidade, cuja compatibilidade será aferida pelos meios previstos no art. 42 da mesma Lei.'));
   if (Array.isArray(d.itens) && d.itens.length) {
     ps.push(blank());
     ps.push(itensTable(d.itens));
@@ -308,7 +311,13 @@ function secParticipacao(d, numSec) {
 
   if (d.consorcio) {
     const pct = d.consorcio_pct || '10';
-    ps.push(item(`${numSec}.${n}.`, 'Será permitida a participação de empresas em consórcio, observadas as regras do art. 15 da Lei nº 14.133, de 2021.'));
+    // Art. 15 (checklist 3.2): quando o edital admite consórcio, ele mesmo fixa as condições.
+    ps.push(item(`${numSec}.${n}.`, 'Será permitida a participação de empresas em consórcio, observadas as regras do art. 15 da Lei nº 14.133, de 2021, e as seguintes condições:'));
+    ps.push(subitem(`${numSec}.${n}.1.`, 'comprovação de compromisso público ou particular de constituição de consórcio, subscrito pelos consorciados, com indicação da empresa líder, responsável pelo consórcio perante a Administração;'));
+    ps.push(subitem(`${numSec}.${n}.2.`, 'responsabilidade solidária dos integrantes pelos atos praticados em consórcio, tanto na fase do credenciamento quanto na de execução do contrato;'));
+    ps.push(subitem(`${numSec}.${n}.3.`, 'vedação à participação de empresa consorciada, no mesmo objeto, em mais de um consórcio ou isoladamente;'));
+    ps.push(subitem(`${numSec}.${n}.4.`, `acréscimo de ${pct}% (${n2w(parseInt(pct, 10))} por cento) sobre os valores exigidos de interessado individual para a qualificação econômico-financeira, salvo para consórcios compostos, em sua totalidade, de microempresas e empresas de pequeno porte (art. 15, §1º);`));
+    ps.push(subitem(`${numSec}.${n}.5.`, 'obrigatoriedade de constituição e registro do consórcio antes da celebração do contrato.'));
     n++;
     ps.push(item(`${numSec}.${n}.`, `Quando permitida a participação de consórcio de empresas, a habilitação técnica, quando exigida, será feita por meio do somatório dos quantitativos de cada consorciado e, para efeito de habilitação econômico-financeira, será observado o somatório dos valores de cada consorciado, com acréscimo de ${pct}% (${pct === '10' ? 'dez' : pct === '20' ? 'vinte' : 'trinta'} por cento) em relação ao valor exigido para os interessados individuais.`));
     n++;
@@ -360,6 +369,15 @@ function secHabilitacao(d, numSec) {
 
   ps.push(item(`${numSec}.${n}.`, 'Os documentos previstos no Termo de Referência, necessários e suficientes para demonstrar a capacidade do interessado de realizar o objeto do credenciamento, serão exigidos para fins de habilitação, nos termos dos arts. 62 a 70 da Lei nº 14.133, de 2021, e apresentados diretamente pelo interessado, em formato digital, no mesmo ato do requerimento de participação.'));
   n++;
+  // Checklist 8.2/8.3, 8.6-8.9, 8.10-8.11: limites legais das exigências de habilitação que o TR pode veicular.
+  ps.push(item(`${numSec}.${n}.`, 'Não serão exigidos documentos de habilitação que constem de registro cadastral unificado ou de bancos de dados oficiais de acesso público, cuja verificação será feita diretamente pelo Agente de Contratação ou pela Comissão de Contratação, nos termos do art. 63, inciso III, da Lei nº 14.133, de 2021; tampouco será exigido reconhecimento de firma ou autenticação cartorária de documentos, admitidas a conferência pelo agente público e a declaração de veracidade sob as penas da lei, salvo dúvida fundada quanto à autenticidade (art. 12, inciso IV, da mesma Lei).'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'Caso o Termo de Referência exija a avaliação prévia do local de execução como requisito de habilitação, a vistoria somente será exigida quando imprescindível e, em qualquer hipótese, poderá ser substituída por declaração formal, assinada pelo responsável técnico do interessado, de que conhece as condições locais para a execução do objeto e assume a responsabilidade por eventuais dificuldades daí decorrentes, nos termos do art. 63, §§2º e 3º, da Lei nº 14.133, de 2021.'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'Quando o Termo de Referência exigir atestados de capacidade técnico-operacional, a exigência limitar-se-á às parcelas de maior relevância técnica e de valor significativo do objeto, admitida a comprovação de, no máximo, 50% (cinquenta por cento) dos quantitativos (art. 67, §§1º e 2º); não serão fixados quantitativos mínimos nem prazos máximos para os atestados de capacidade técnico-profissional (art. 67, §2º), e a comprovação do vínculo do responsável técnico poderá ser feita por contrato social, registro profissional, contrato de prestação de serviços ou declaração de compromisso de contratação futura, vedada a exigência de vínculo empregatício na data do requerimento, conforme jurisprudência consolidada do Tribunal de Contas da União.'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'Os índices contábeis e a eventual exigência de capital social mínimo ou de patrimônio líquido mínimo, quando previstos no Termo de Referência, observam a justificativa constante dos autos e o limite de 10% (dez por cento) do valor estimado da contratação, nos termos do art. 69, caput e §4º, da Lei nº 14.133, de 2021.'));
+  n++;
   ps.push(item(`${numSec}.${n}.`, 'Quando permitida a participação de empresas estrangeiras que não funcionem no País, as exigências de habilitação serão atendidas mediante documentos equivalentes, inicialmente apresentados em tradução livre.'));
   n++;
   ps.push(item(`${numSec}.${n}.`, 'Na hipótese de o interessado ser empresa estrangeira que não funcione no País, para fins de assinatura do contrato, os documentos exigidos para a habilitação serão traduzidos por tradutor juramentado no País e apostilados nos termos do Decreto nº 8.660, de 29 de janeiro de 2016, ou de outro que venha a substituí-lo, ou consularizados pelos respectivos consulados ou embaixadas.'));
@@ -395,7 +413,7 @@ function secRecursos(d, numSec) {
   ps.push(item(`${numSec}.3.`, `Os recursos deverão ser encaminhados por meio eletrônico (${d.meio_manifestacao || 'e-mail institucional da Secretaria responsável e Protocolo Geral da Prefeitura de Uniflor'}).`));
   ps.push(item(`${numSec}.4.`, 'O recurso será dirigido ao Agente de Contratação ou à Comissão de Contratação, que poderá reconsiderar sua decisão no prazo de 3 (três) dias úteis, ou, nesse mesmo prazo, encaminhá-lo à autoridade superior, devidamente motivado, para decisão.'));
   ps.push(item(`${numSec}.5.`, 'Os recursos interpostos fora do prazo não serão conhecidos.'));
-  ps.push(item(`${numSec}.6.`, 'O recurso não terá efeito suspensivo, salvo decisão motivada em contrário do Agente de Contratação, da Comissão de Contratação ou da autoridade superior.'));
+  ps.push(item(`${numSec}.6.`, 'O recurso e o pedido de reconsideração terão efeito suspensivo do ato ou da decisão recorrida até que sobrevenha decisão final da autoridade competente, nos termos do art. 168 da Lei nº 14.133, de 2021.'));
   ps.push(item(`${numSec}.7.`, 'O acolhimento do recurso invalida tão somente os atos insuscetíveis de aproveitamento.'));
   ps.push(item(`${numSec}.8.`, `Os autos do processo permanecerão com vista franqueada aos interessados no sítio eletrônico ${d.url_edital || 'www.uniflor.pr.gov.br'} ou mediante solicitação junto à Procuradoria Jurídica Municipal.`));
   return ps;
@@ -455,6 +473,8 @@ function secImpugnacao(d, numSec) {
   ps.push(item(`${numSec}.3.`, 'A resposta à impugnação ou ao pedido de esclarecimento será divulgada por meio eletrônico no prazo de até 3 (três) dias úteis, contado da data de recebimento do pedido.'));
   ps.push(item(`${numSec}.4.`, 'As impugnações e pedidos de esclarecimentos não suspendem os prazos previstos neste Edital.'));
   ps.push(item(`${numSec}.5.`, 'Acolhida a impugnação, o Edital retificado será publicado no Portal Nacional de Contratações Públicas — PNCP.'));
+  // Art. 55, §1º (checklist 1.6), aplicado por analogia ao edital permanente de credenciamento.
+  ps.push(item(`${numSec}.6.`, 'Qualquer modificação neste Edital será divulgada pelos mesmos meios de sua divulgação inicial; tratando-se de alteração que afete as condições de credenciamento, será assegurado aos interessados prazo razoável para adequação de seus requerimentos, aplicando-se por analogia o art. 55, §1º, da Lei nº 14.133, de 2021.'));
   return ps;
 }
 
@@ -487,12 +507,19 @@ function secContratacao(d, numSec) {
   n++;
   ps.push(item(`${numSec}.${n}.`, 'Os contratos decorrentes de credenciamento poderão ser alterados, observado o disposto no art. 124 da Lei nº 14.133, de 2021.'));
   n++;
-  ps.push(item(`${numSec}.${n}.`, 'É vedado o cometimento a terceiros do objeto contratado sem autorização expressa da Administração.'));
+  ps.push(item(`${numSec}.${n}.`, 'É vedado o cometimento a terceiros do objeto contratado sem autorização expressa da Administração; em qualquer caso, é vedada a subcontratação de pessoa física ou jurídica que mantenha vínculo de natureza técnica, comercial, econômica, financeira, trabalhista ou civil com dirigente do Município de Uniflor ou com agente público que desempenhe função no credenciamento ou atue na fiscalização ou na gestão do contrato, ou que deles seja cônjuge, companheiro ou parente até o terceiro grau, nos termos do art. 122, §§2º e 3º, da Lei nº 14.133, de 2021.'));
+  n++;
+  // Checklist 10.1-10.3 (art. 25, §7º c/c art. 79, p.u., II), 11.1-11.3, 11.6, 18.5, 18.6.
+  ps.push(item(`${numSec}.${n}.`, `A tabela de preços fixada pela Administração poderá ser reajustada após o interregno mínimo de 1 (um) ano, contado da data do orçamento ou da pesquisa de preços que a fundamentou, mediante a aplicação do índice ${d.indice_reajuste || 'IPCA'}, apurado pelo IBGE, ou índice setorial específico que vier a substituí-lo, aplicando-se o novo valor de forma isonômica a todos os credenciados, nos termos do art. 25, §7º, do art. 79, parágrafo único, inciso II, e do art. 92, inciso V, da Lei nº 14.133, de 2021.`));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'As regras de gestão e fiscalização do contrato (art. 117), de recebimento provisório e definitivo do objeto (art. 140), de liquidação e pagamento, observada a ordem cronológica de exigibilidade (art. 141), bem como as obrigações das partes, constam do Termo de Referência e da minuta de Contrato anexa. É vedado o pagamento antecipado, ressalvadas as hipóteses do art. 145 da Lei nº 14.133, de 2021, devidamente justificadas nos autos e condicionadas à prestação de garantia.'));
+  n++;
+  ps.push(item(`${numSec}.${n}.`, 'É vedado ao credenciado contratar, durante a execução do contrato, cônjuge, companheiro ou parente em linha reta, colateral ou por afinidade, até o terceiro grau, de dirigente do Município de Uniflor ou de agente público que desempenhe função no credenciamento ou atue na fiscalização ou na gestão do contrato (art. 48, parágrafo único), sendo igualmente vedada a intervenção da Administração na gestão interna do credenciado (art. 48, inciso VI), nos termos da Lei nº 14.133, de 2021.'));
   n++;
 
   if (d.garantia) {
     const pct = d.percentual_garantia || '5';
-    ps.push(item(`${numSec}.${n}.`, `Será exigida do credenciado convocado a apresentação de garantia de execução contratual, no percentual de ${pct}% (${pct === '2' ? 'dois' : pct === '3' ? 'três' : pct === '5' ? 'cinco' : 'dez'} por cento) do valor do contrato, em uma das modalidades previstas no art. 96 da Lei nº 14.133, de 2021, no prazo de até 10 (dez) dias úteis contados da assinatura do contrato.`));
+    ps.push(item(`${numSec}.${n}.`, `Será exigida do credenciado convocado a apresentação de garantia de execução contratual, no percentual de ${pct}% (${pct === '2' ? 'dois' : pct === '3' ? 'três' : pct === '5' ? 'cinco' : 'dez'} por cento) do valor do contrato, em uma das modalidades do art. 96, §1º, da Lei nº 14.133, de 2021 — caução em dinheiro ou em títulos da dívida pública, seguro-garantia ou fiança bancária —, à escolha do credenciado, observado, no seguro-garantia, o prazo mínimo de 1 (um) mês contado da convocação (art. 96, §3º), e com liberação após o recebimento definitivo do objeto e a extinção do contrato, no prazo de até 10 (dez) dias úteis contados da assinatura do contrato.`));
     n++;
   }
 
@@ -573,6 +600,7 @@ function secDisposicoes(d, numSec) {
   ps.push(item(`${numSec}.${n}.`, 'O desatendimento de exigências formais não essenciais não importará no afastamento do interessado, desde que seja possível o aproveitamento do ato, observados os princípios da isonomia e do interesse público.')); n++;
   ps.push(item(`${numSec}.${n}.`, 'Em caso de divergência entre disposições deste Edital e de seus anexos ou demais peças que compõem o processo, prevalecerão as deste Edital.')); n++;
   ps.push(item(`${numSec}.${n}.`, `O Edital e seus anexos estão disponíveis, na íntegra, no Portal Nacional de Contratações Públicas — PNCP (www.pncp.gov.br)${d.url_edital ? ', em ' + d.url_edital : ''} e no site do Município de Uniflor.`)); n++;
+  ps.push(item(`${numSec}.${n}.`, 'O acesso a este Edital, ao Termo de Referência e aos demais documentos da fase preparatória é gratuito e irrestrito, sem exigência de cadastro, identificação ou pagamento (art. 25, §3º, art. 54, §2º, e art. 87, §2º, da Lei nº 14.133, de 2021), e o extrato deste Edital será publicado no Diário Oficial do Município, nos termos do art. 54, §1º, da mesma Lei.')); n++;
   ps.push(item(`${numSec}.${n}.`, 'Integram este Edital, para todos os fins e efeitos, os seguintes anexos:'));
   ps.push(subitem(`${numSec}.${n}.1.`, 'ANEXO I — Termo de Referência;'));
   ps.push(subitem(`${numSec}.${n}.2.`, 'ANEXO II — Minuta de Termo de Contrato.'));

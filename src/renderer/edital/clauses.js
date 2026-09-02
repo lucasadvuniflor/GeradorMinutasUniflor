@@ -498,7 +498,9 @@ const CLAUSES = {
       {
         id: 'true', label: 'Orçamento Sigiloso', icon: '🔒',
         desc: 'Valor não publicado antes do julgamento — exige justificativa',
-        disponivel: () => true,
+        // Art. 24, parágrafo único: no maior desconto o preço estimado/máximo consta obrigatoriamente do edital.
+        disponivel: (d) => d.criterio !== 'maior_desconto',
+        indisponivel_msg: 'Vedado no critério de maior desconto — o preço estimado ou máximo aceitável deve constar do edital (art. 24, parágrafo único).',
         alerta_selecao: {
           nivel: 'aviso',
           titulo: '⚠️ Orçamento sigiloso exige justificativa nos autos',
@@ -548,6 +550,8 @@ function aplicarCascata(state) {
     updates.modo_disputa = 'ABERTO';
   }
   if (state.srp === 'true' && srpVedado(state).vedado) updates.srp = 'false';
+  // Art. 24, parágrafo único: orçamento sigiloso é incompatível com maior desconto.
+  if (state.criterio === 'maior_desconto' && state.valor_sigiloso === 'true') updates.valor_sigiloso = 'false';
   return updates;
 }
 

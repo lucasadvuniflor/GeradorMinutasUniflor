@@ -197,7 +197,7 @@ const CONFIG_PARA_CAMPO = {
   orgaoUF:'uf', orgaoCEP:'cep', representanteNome:'prefeito',
   procuradorNome:'procurador_juridico', procuradorOAB:'oab_procurador',
   emailImpugnacao:'email_impugnacao', plataformaNome:'plataforma', plataformaUrl:'url_plataforma',
-  comarca:'comarca',
+  comarca:'comarca', indiceReajustePadrao:'indice_reajuste',
 };
 
 async function aplicarConfigInstitucional() {

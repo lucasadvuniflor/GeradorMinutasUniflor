@@ -163,6 +163,24 @@ function prazoExt(prazo, unidade) {
   return `${n} (${ext(n)}) ${label}`;
 }
 
+// Campos de prazo são texto livre ("15 (quinze) dias"); quando vem só o número (importação, histórico
+// antigo), completa-se com extenso e unidade para não sair "no prazo de 5,".
+function prazoTxt(v, unidade = 'dias') {
+  if (v === undefined || v === null || v === '') return '';
+  const s = String(v).trim();
+  if (/^\d+$/.test(s)) return `${s} (${ext(parseInt(s, 10))}) ${unidade}`;
+  return s;
+}
+
+// Datas em ISO (vindas do histórico ou da importação) saem por extenso; texto livre passa intacto.
+function dataTxt(v) {
+  const s = String(v || '').trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return s;
+  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  return `${parseInt(m[3], 10)} de ${meses[parseInt(m[2], 10) - 1]} de ${m[1]}`;
+}
+
 function fmtMoney(v) {
   if (!v) return '[VALOR]';
   const n = parseFloat(v.toString().replace(/[^\d,]/g, '').replace(',', '.'));
@@ -333,7 +351,7 @@ function secObjeto(d, num) {
     ps.push(item(0, [
       bold(`${num}.${sub3++}. `),
       run(`A proposta apresentada pelo CONTRATADO, datada de `),
-      bold(d.contratado_proposta_data),
+      bold(dataTxt(d.contratado_proposta_data)),
       run(`, no valor de `),
       bold(fmtMoney(d.valor_total)),
       run(`, é parte integrante deste Contrato, independentemente de transcrição.`)
@@ -475,8 +493,8 @@ function secModelosExecucao(d, num) {
 // Cláusula Recebimento do Objeto (art. 140)
 function secRecebimento(d, num) {
   const ps = [clausula(num, 'DO RECEBIMENTO DO OBJETO')];
-  const prazoProvisorio = d.prazo_recebimento_provisorio || (d.tipo === 'obras' ? '15 (quinze) dias' : '5 (cinco) dias úteis');
-  const prazoDefinitivo = d.prazo_recebimento_definitivo || (d.tipo === 'obras' ? '90 (noventa) dias' : '15 (quinze) dias');
+  const prazoProvisorio = prazoTxt(d.prazo_recebimento_provisorio) || (d.tipo === 'obras' ? '15 (quinze) dias' : '5 (cinco) dias úteis');
+  const prazoDefinitivo = prazoTxt(d.prazo_recebimento_definitivo) || (d.tipo === 'obras' ? '90 (noventa) dias' : '15 (quinze) dias');
 
   ps.push(item(0, [
     bold(`${num}.1. `),
@@ -709,7 +727,7 @@ function secReajuste(d, num) {
   const indice = d.indice_reajuste || 'IPCA';
   ps.push(item(0, [
     bold(`${num}.1. `),
-    run(`Os preços contratados poderão ser reajustados após o interregno mínimo de 1 (um) ano, contado da data-base da proposta ou do orçamento a que essa se referir, mediante a aplicação do índice `),
+    run(`Os preços contratados poderão ser reajustados após o interregno mínimo de 1 (um) ano, contado da data do orçamento estimado elaborado pela Administração (art. 25, §7º), mediante a aplicação do índice `),
     bold(indice),
     run(`, apurado pelo IBGE, ou índice setorial específico que vier a substituí-lo, na forma do art. 92, V, da Lei nº 14.133, de 2021.`)
   ]));
@@ -799,13 +817,13 @@ function secObrigacoesContratante(d, num) {
   ps.push(item(1, [
     bold(`${num}.1.9. `),
     run(`A Administração terá o prazo de `),
-    bold(d.prazo_decisao || '30 (trinta) dias'),
+    bold(prazoTxt(d.prazo_decisao) || '30 (trinta) dias'),
     run(`, a contar da data do protocolo do requerimento, para decidir, admitida a prorrogação motivada, por igual período;`)
   ]));
   ps.push(item(1, [
     bold(`${num}.1.10. `),
     run(`Responder eventuais pedidos de reestabelecimento do equilíbrio econômico-financeiro feitos pelo CONTRATADO no prazo máximo de `),
-    bold(d.prazo_equilibrio || '30 (trinta) dias'),
+    bold(prazoTxt(d.prazo_equilibrio) || '30 (trinta) dias'),
     run(';')
   ]));
   ps.push(item(1, [bold(`${num}.1.11. `), run('Notificar os emitentes das garantias quanto ao início de processo administrativo para apuração de descumprimento de cláusulas contratuais.')]));
@@ -882,7 +900,7 @@ function secObrigacoesContratado(d, num) {
 
   if (d.tipo === 'servicos_com_mo') {
     // Obrigações trabalhistas extensas para MO exclusiva
-    ps.push(sub('Apresentar, quando solicitado, documentos comprobatórios do cumprimento das obrigações trabalhistas e previdenciárias dos empregados alocados na execução do contrato;'));
+    ps.push(sub('Apresentar mensalmente, junto com a nota fiscal, e sempre que solicitado, os comprovantes do cumprimento das obrigações trabalhistas e previdenciárias dos empregados alocados na execução do contrato — folha de pagamento, guias de recolhimento do FGTS e das contribuições previdenciárias, comprovantes de férias, décimo terceiro e verbas rescisórias —, nos termos do art. 121, §3º, da Lei nº 14.133, de 2021;'));
     ps.push(sub('Assumir integralmente a responsabilidade pelo pagamento das verbas trabalhistas, rescisórias, previdenciárias e demais encargos decorrentes da relação de emprego com os trabalhadores alocados na execução dos serviços;'));
     ps.push(sub('Vedar o afastamento dos empregados e garantir a substituição daqueles que se ausentarem, de modo a não prejudicar a execução dos serviços;'));
     ps.push(sub([
@@ -956,7 +974,7 @@ function secGarantia(d, num) {
   ps.push(item(0, [
     bold(`${num}.${nx()}. `),
     run(`A garantia deverá ser apresentada no prazo de até `),
-    bold(d.prazo_apresentacao_garantia || '30 (trinta) dias'),
+    bold(prazoTxt(d.prazo_apresentacao_garantia) || '30 (trinta) dias'),
     run(` contado da assinatura do contrato, observado, quando a modalidade escolhida for o seguro-garantia, o prazo mínimo de 1 (um) mês contado da homologação da licitação, anterior à assinatura do contrato.`)
   ]));
   ps.push(item(0, [
@@ -977,7 +995,7 @@ function secGarantia(d, num) {
   ]));
   ps.push(item(0, [
     bold(`${num}.${nx()}. `),
-    run('Após a extinção do contrato, a garantia prestada será devolvida ao CONTRATADO no prazo de até 90 (noventa) dias, desde que não haja pendências.')
+    run('Após o recebimento definitivo do objeto e a extinção do contrato, a garantia prestada será liberada ou restituída ao CONTRATADO no prazo de até 90 (noventa) dias, desde que não haja pendências, e, nos serviços com regime de dedicação exclusiva de mão de obra, somente após a comprovação do pagamento das verbas rescisórias e das demais obrigações trabalhistas e previdenciárias dos empregados alocados, nos termos do art. 121, §3º, da Lei nº 14.133, de 2021.')
   ]));
 
   return ps;
@@ -986,11 +1004,21 @@ function secGarantia(d, num) {
 // Cláusula Garantia do Objeto e Assistência Técnica (distinta da garantia de execução)
 function secGarantiaObjeto(d, num) {
   const ps = [clausula(num, 'GARANTIA DO OBJETO E ASSISTÊNCIA TÉCNICA')];
+  // Art. 92, X: o prazo de garantia mínima do objeto é cláusula necessária mesmo quando o usuário não
+  // fixou um prazo específico — remete-se então ao TR e à garantia legal.
+  if (!d.tem_garantia_objeto && d.tipo !== 'obras') {
+    ps.push(item(0, [
+      bold(`${num}.1. `),
+      run('O prazo de garantia do objeto é o fixado no Termo de Referência ou, na sua falta, o previsto na legislação aplicável (Código de Defesa do Consumidor e Código Civil), contado do recebimento definitivo, sem prejuízo da garantia e da assistência técnica do fabricante, nos termos do art. 92, inciso X, da Lei nº 14.133, de 2021.')
+    ]));
+    return ps;
+  }
+  const prazoObj = prazoTxt(d.prazo_garantia_objeto, 'meses') || (d.tipo === 'obras' ? '5 (cinco) anos' : '12 (doze) meses');
   ps.push(item(0, [
     bold(`${num}.1. `),
     run(`O objeto fornecido/executado deverá possuir garantia mínima de `),
-    bold(d.prazo_garantia_objeto || '12 (doze) meses'),
-    run(`, contados do recebimento definitivo, sem prejuízo de prazos superiores estabelecidos pelo fabricante, pelo Código de Defesa do Consumidor ou por norma técnica aplicável.`)
+    bold(prazoObj),
+    run(`, contados do recebimento definitivo, sem prejuízo de prazos superiores estabelecidos pelo fabricante, pelo Código de Defesa do Consumidor ou por norma técnica aplicável.${d.tipo === 'obras' ? ' Em se tratando de obra, a garantia pela solidez e segurança observa o mínimo legal de 5 (cinco) anos, nos termos do art. 140, §6º, da Lei nº 14.133, de 2021.' : ''}`)
   ]));
   ps.push(item(0, [
     bold(`${num}.2. `),
@@ -1089,7 +1117,7 @@ function secSancoes(d, num) {
   ps.push(item(0, [
     bold(`${num}.${n++}. `),
     run('A aplicação de qualquer das sanções previstas nesta cláusula deverá ser precedida de processo administrativo que assegure o contraditório e a ampla defesa ao CONTRATADO, o qual disporá do prazo de '),
-    bold(d.prazo_defesa || '10 (dez) dias úteis'),
+    bold(prazoTxt(d.prazo_defesa, 'dias úteis') || '10 (dez) dias úteis'),
     run(' para apresentar defesa prévia, contado da respectiva notificação.')
   ]));
   ps.push(item(0, [
@@ -1492,7 +1520,7 @@ function secAssinaturas(d) {
     children: [
       run(d.local_assinatura || 'Uniflor'),
       run(', '),
-      run(d.data_assinatura || '[dia] de [mês] de [ano]'),
+      run(dataTxt(d.data_assinatura) || '[dia] de [mês] de [ano]'),
       run('.')
     ],
     alignment: AlignmentType.CENTER,
@@ -1617,9 +1645,7 @@ async function generateContract(d) {
     }
 
     children.push(...secGarantia(d, c++));
-    if (d.tem_garantia_objeto) {
-      children.push(...secGarantiaObjeto(d, c++));
-    }
+    children.push(...secGarantiaObjeto(d, c++));
     children.push(...secSancoes(d, c++));
     children.push(...secExtincao(d, c++));
     children.push(...secAlteracoes(d, c++));
